@@ -1,0 +1,5 @@
+### health
+GET http://localhost:8001/health
+
+### latest
+GET http://localhost:8001/latest?symbol=EURUSD&timeframe=M1&limit=5

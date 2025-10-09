@@ -1,0 +1,33 @@
+.venv/
+ml/.venv/
+**/__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# dados/artefatos
+api/logs/
+api/data_raw/
+ml/data/
+
+# envs (não versionar)
+.env
+env/.env*
+# volumes e logs
+volumes/
+logs/
+api/logs/
+api/data_raw/
+
+# envs e secrets
+.env
+env/.env*
+api/.env
+
+# venvs
+.venv/
+ml/.venv/
+**/__pycache__/
+*.pyc

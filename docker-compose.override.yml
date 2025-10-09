@@ -1,0 +1,5 @@
+# compose/docker-compose.override.yml
+services:
+  mt5_api:
+    volumes:
+      - ../api:/app:rw
