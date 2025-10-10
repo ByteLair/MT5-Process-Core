@@ -17,9 +17,9 @@ def _load_dotenv_if_present() -> None:
         return
     # tenta nas localizações mais comuns do seu projeto
     candidates = [
-        Path(__file__).resolve().parents[2] / ".env",        # raiz do repo (../..../.env)
+        Path(__file__).resolve().parents[3] / ".env",        # raiz do repo (../..../.env)
         Path(__file__).resolve().parents[2] / ".env",        # api/.env
-        Path(__file__).resolve().parents[2] / "compose" / ".env",
+        Path(__file__).resolve().parents[3] / "compose" / ".env",
         Path.cwd() / ".env",
     ]
     for p in candidates:

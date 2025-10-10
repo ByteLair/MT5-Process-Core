@@ -1,0 +1,21 @@
+from pathlib import Path
+import os
+
+def _load_dotenv_if_present():
+    try:
+        from dotenv import load_dotenv, find_dotenv
+    except Exception:
+        return  # sem python-dotenv, ignore
+
+    # 1) use .env já injetado pelo docker (env_file). nada a fazer.
+    # 2) se não vier via docker, procure .env subindo diretórios.
+    found = find_dotenv(filename=".env", usecwd=True)
+    if found:
+        load_dotenv(found, override=False)
+        return
+
+    for p in Path(__file__).resolve().parents:
+        env_path = p / ".env"
+        if env_path.exists():
+            load_dotenv(env_path, override=False)
+            break
