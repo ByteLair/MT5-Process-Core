@@ -1,4 +1,3 @@
--- Features em M1 diretamente de market_data
 CREATE OR REPLACE VIEW public.features_m1 AS
 SELECT
   md.symbol,
@@ -21,7 +20,6 @@ SELECT
 FROM public.market_data md
 WHERE md.timeframe = 'M1';
 
--- Labels: retorno futuro em 5 minutos
 CREATE OR REPLACE VIEW public.labels_m1 AS
 SELECT
   symbol, timeframe, ts,
@@ -30,7 +28,6 @@ SELECT
 FROM public.market_data
 WHERE timeframe='M1';
 
--- Dataset de treino
 CREATE OR REPLACE VIEW public.trainset_m1 AS
 SELECT
   f.symbol, f.ts,

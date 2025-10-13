@@ -1,37 +1,73 @@
+version: '3.8'
+
 services:
   db:
     image: timescale/timescaledb:2.14.2-pg16
+    container_name: mt5_db
+    restart: unless-stopped
+    env_file: .env
     environment:
-      # The repository's .env defines DB_NAME/DB_USER/DB_PASS — map them to the
-      # Postgres entrypoint variables expected by the image.
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${POSTGRES_DB:-mt5_trading}
+      POSTGRES_USER: ${POSTGRES_USER:-trader}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trader123}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      # Use DB_USER/DB_NAME which are defined in the project's .env
-      test: ["CMD-SHELL","pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trader} -d ${POSTGRES_DB:-mt5_trading} || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 20
-    # Map Postgres container port 5432 to host. Default to 6005 to avoid
-    # colliding with a host Postgres on 5432.
-    ports: [ "${DB_PORT:-6005}:5432" ]
-    volumes: [ "db_data:/var/lib/postgresql/data", "./db/init:/docker-entrypoint-initdb.d" ]
-    restart: unless-stopped
+    networks:
+      - mt5_net
 
   api:
-    build: ./api
-    environment:
-      # Prefer an explicit DATABASE_URL if provided, otherwise construct one
-      # from the mapped DB_* variables. The host should be the service name `db`.
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}}
-      API_HOST: 0.0.0.0
-      API_PORT: 8001
-      ALLOW_ORIGINS: "*"
-    depends_on:
-      db: { condition: service_healthy }
-    ports: ["${API_PORT:-8001}:8001"]
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: mt5_api
     restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-trader}:${POSTGRES_PASSWORD:-trader123}@db:5432/${POSTGRES_DB:-mt5_trading}}
+      PORT: ${API_PORT:-8001}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
+      MODEL_PATH: ${MODEL_PATH:-/models/rf_m1.pkl}
+      THRESHOLD: ${THRESHOLD:-0.55}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8001}:8001"
+    volumes:
+      - ./api/app:/app/app
+      - ./models:/models
+    networks:
+      - mt5_net
+
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: mt5_pgadmin
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
+    depends_on:
+      - db
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - mt5_net
+
+networks:
+  mt5_net:
+    name: mt5_net
 
 volumes:
   db_data:
+    name: mt5_db_data
+  models_mt5:
+    name: models_mt5
