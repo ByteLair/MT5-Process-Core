@@ -1,4 +1,4 @@
-# api/app/main.py
+# api/main.py
 from __future__ import annotations
 
 import importlib
@@ -15,7 +15,7 @@ log = logging.getLogger("uvicorn.error")
 
 
 def _include_router_if_exists(app: FastAPI, module_path: str, *, prefix: str = "", tag: Optional[str] = None) -> None:
-    """Tenta importar um módulo de router e incluir, se existir e expuser 'router'."""
+    """Importa um módulo que expõe `router` e inclui se existir."""
     try:
         module = importlib.import_module(module_path)
         router = getattr(module, "router", None)
@@ -26,7 +26,7 @@ def _include_router_if_exists(app: FastAPI, module_path: str, *, prefix: str = "
         app.include_router(router, prefix=prefix, tags=tags)
         log.info("Router %s montado em prefix='%s'.", module_path, prefix)
     except ModuleNotFoundError:
-        # Router opcional: não quebra a app
+        # Router opcional
         pass
 
 
@@ -49,28 +49,34 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Rotas básicas/saúde
+    # Saúde
     @app.get("/healthz", tags=["health"])
-    def health() -> dict[str, Any]:
+    def healthz() -> dict[str, Any]:
         return {
             "app": settings.APP_NAME,
             "env": settings.APP_ENV,
             "db_ok": check_db_connection(),
         }
 
+    @app.get("/health", tags=["health"])
+    def health() -> dict[str, str]:
+        ok = check_db_connection()
+        return {"status": "ok" if ok else "degraded"}
+
+    # Raiz
     @app.get("/", tags=["meta"])
     def root() -> dict[str, Any]:
         return {"message": f"{settings.APP_NAME} is up", "env": settings.APP_ENV}
 
-    # === Routers da aplicação ===
-    base = "app.routers"
-    _include_router_if_exists(app, f"{base}.latest", prefix="/latest", tag="latest")
+    # Routers da aplicação (pacote `api`, arquivos no mesmo nível do main.py)
+    base = "api"
+    _include_router_if_exists(app, f"{base}.latest",   prefix="/latest",  tag="latest")
     _include_router_if_exists(app, f"{base}.backtest", prefix="/backtest", tag="backtest")
-    _include_router_if_exists(app, f"{base}.metrics", prefix="/metrics", tag="metrics")
-    _include_router_if_exists(app, f"{base}.predict", prefix="/predict", tag="predict")
-    _include_router_if_exists(app, f"{base}.query", prefix="/query", tag="query")
-    _include_router_if_exists(app, f"{base}.signals", prefix="/signals", tag="signals")
-    _include_router_if_exists(app, f"{base}.symbols", prefix="/symbols", tag="symbols")
+    _include_router_if_exists(app, f"{base}.metrics",  prefix="/metrics", tag="metrics")
+    _include_router_if_exists(app, f"{base}.predict",  prefix="/predict", tag="predict")
+    _include_router_if_exists(app, f"{base}.query",    prefix="/query",   tag="query")
+    _include_router_if_exists(app, f"{base}.signals",  prefix="/signals", tag="signals")
+    _include_router_if_exists(app, f"{base}.symbols",  prefix="/symbols", tag="symbols")
 
     return app
 

@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 
 router = APIRouter(tags=["ml"])
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
 MODELS_DIR = os.getenv("MODELS_DIR", "/models")
 MODEL_PATH = os.path.join(MODELS_DIR, "rf_m1.pkl")
 MANIFEST = Path(MODELS_DIR) / "manifest.json"

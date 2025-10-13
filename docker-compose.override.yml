@@ -1,5 +1,38 @@
-# compose/docker-compose.override.yml
 services:
-  mt5_api:
+  api:
+    ports:
+      - "${API_PORT}:8000"
     volumes:
-      - ../api:/app:rw
+      - models_mt5:/models
+
+  ml-scheduler:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    command: python -u ml/scheduler.py
+    depends_on: [db]
+    env_file: [.env]
+    volumes:
+      - models_mt5:/models
+    networks: [mt5_net]
+    restart: unless-stopped
+
+  ml-trainer:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    command: python -u ml/train_worker.py
+    depends_on: [db]
+    env_file: [.env]
+    volumes:
+      - models_mt5:/models
+    networks: [mt5_net]
+    restart: "no"
+
+networks:
+  mt5_net:
+    name: mt5_net
+
+volumes:
+  models_mt5:
+    name: models_mt5

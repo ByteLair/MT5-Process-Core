@@ -1,59 +1,57 @@
 services:
   db:
-    image: timescale/timescaledb:2.16.1-pg16
-    container_name: mt5_db
-    env_file: .env
+    image: timescale/timescaledb:latest-pg14
     environment:
-      POSTGRES_USER: "${POSTGRES_USER:-trader}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-trader123}"
-      POSTGRES_DB: "${POSTGRES_DB:-mt5_trading}"
+      - POSTGRES_DB=mt5_trading
+      - POSTGRES_USER=trader
+      - POSTGRES_PASSWORD=trader123
     ports:
-      - "5432:5432"
-    volumes:
-      - ./volumes/timescaledb:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+      - "6005:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trader} -d ${POSTGRES_DB:-mt5_trading}"]
+      test: ["CMD-SHELL","pg_isready -U trader -d mt5_trading"]
       interval: 5s
       timeout: 3s
       retries: 20
-    restart: unless-stopped
+    volumes:
+      - timescaledb:/var/lib/postgresql/data
 
-  mt5_api:
+  api:
     build:
       context: ./api
-      dockerfile: Dockerfile
-    container_name: mt5_api
-    env_file: .env
     environment:
-      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg://trader:trader123@db:5432/mt5_trading}"
-      API_PORT: "8001"
-      PYTHONPATH: "/app"
+      - DATABASE_URL=postgresql://trader:trader123@db:5432/mt5_trading
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8001:8001"
+      - "8005:8000"   # trocado de 8001 -> 8005
     volumes:
-      - ./api:/app/api:rw       # agora existe /app/api/main.py
-      - ./logs:/app/logs
-      - ./data/raw:/app/data_raw
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8001
-    restart: unless-stopped
+      - models_mt5:/models
 
-  pgadmin:
-    image: dpage/pgadmin4:8.12
-    container_name: mt5_pgadmin
-    env_file: .env
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL:-admin@example.com}"
-      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD:-admin123}"
+  ml-trainer:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
     depends_on:
-      - db
-    ports:
-      - "5050:80"
+      db:
+        condition: service_healthy
+    networks: [default]
+    volumes:
+      - models_mt5:/models
+
+  ml-scheduler:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    command: python -u ml/scheduler.py
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [default]
+    volumes:
+      - models_mt5:/models
     restart: unless-stopped
 
-networks:
-  default:
-    name: mt5-trading-db_default
+volumes:
+  timescaledb:
+  models_mt5:

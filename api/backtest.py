@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 
 router = APIRouter(tags=["ml"])
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
 engine = create_engine(DB_URL)
 
 @router.get("/backtest")
