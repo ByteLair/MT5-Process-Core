@@ -1,0 +1,19 @@
+# HOWTO: Wire security + CORS in your api/main.py
+
+from fastapi.middleware.cors import CORSMiddleware
+from api.middleware_auth import APIKeyAndRateLimitMiddleware
+import os
+
+def apply_middlewares(app):
+    # CORS
+    allow = os.getenv("ALLOW_ORIGINS", "*")
+    origins = [o.strip() for o in allow.split(",")] if allow else ["*"]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    # API key + rate limit
+    app.add_middleware(APIKeyAndRateLimitMiddleware)

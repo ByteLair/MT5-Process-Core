@@ -3,7 +3,7 @@
 Script para desenvolvimento local da API
 """
 import uvicorn
-from api.app.app.db import app
+from api.main import app
 
 if __name__ == "__main__":
     uvicorn.run(

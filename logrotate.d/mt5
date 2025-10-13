@@ -1,0 +1,15 @@
+# logrotate.d/mt5
+/var/log/mt5/*.log /var/log/mt5/*.err {
+  weekly
+  rotate 8
+  compress
+  delaycompress
+  missingok
+  notifempty
+  create 0640 mt5 mt5
+  sharedscripts
+  postrotate
+    systemctl kill -s USR1 mt5-api.service 2>/dev/null || true
+    systemctl kill -s USR1 mt5-scheduler.service 2>/dev/null || true
+  endscript
+}

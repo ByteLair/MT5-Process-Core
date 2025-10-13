@@ -1,57 +1,36 @@
 services:
   db:
-    image: timescale/timescaledb:latest-pg14
+    image: timescale/timescaledb:2.14.2-pg16
     environment:
-      - POSTGRES_DB=mt5_trading
-      - POSTGRES_USER=trader
-      - POSTGRES_PASSWORD=trader123
-    ports:
-      - "6005:5432"
+      # The repository's .env defines DB_NAME/DB_USER/DB_PASS — map them to the
+      # Postgres entrypoint variables expected by the image.
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U trader -d mt5_trading"]
+      test: ["CMD-SHELL","pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
-    volumes:
-      - timescaledb:/var/lib/postgresql/data
+    # Map Postgres container port 5432 to host. Default to 6005 to avoid
+    # colliding with a host Postgres on 5432.
+    ports: [ "${DB_PORT:-6005}:5432" ]
+    volumes: [ "db_data:/var/lib/postgresql/data", "./db/init:/docker-entrypoint-initdb.d" ]
+    restart: unless-stopped
 
   api:
-    build:
-      context: ./api
+    build: ./api
     environment:
-      - DATABASE_URL=postgresql://trader:trader123@db:5432/mt5_trading
+      # Prefer an explicit DATABASE_URL if provided, otherwise construct one
+      # from the mapped DB_* variables. The host should be the service name `db`.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}}
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      ALLOW_ORIGINS: "*"
     depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "8005:8000"   # trocado de 8001 -> 8005
-    volumes:
-      - models_mt5:/models
-
-  ml-trainer:
-    build:
-      context: .
-      dockerfile: ml/Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    networks: [default]
-    volumes:
-      - models_mt5:/models
-
-  ml-scheduler:
-    build:
-      context: .
-      dockerfile: ml/Dockerfile
-    command: python -u ml/scheduler.py
-    depends_on:
-      db:
-        condition: service_healthy
-    networks: [default]
-    volumes:
-      - models_mt5:/models
+      db: { condition: service_healthy }
+    ports: ["${API_PORT:-8001}:8001"]
     restart: unless-stopped
 
 volumes:
-  timescaledb:
-  models_mt5:
+  db_data:

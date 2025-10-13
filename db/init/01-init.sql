@@ -1,29 +1,34 @@
--- init-scripts/01_init.sql
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
--- Exemplo de tabela base (ajuste nomes/colunas conforme seu ingest)
-CREATE TABLE IF NOT EXISTS candles_m1 (
-    ts        TIMESTAMPTZ      NOT NULL,
-    symbol    TEXT             NOT NULL,
-    open      DOUBLE PRECISION NOT NULL,
-    high      DOUBLE PRECISION NOT NULL,
-    low       DOUBLE PRECISION NOT NULL,
-    close     DOUBLE PRECISION NOT NULL,
-    volume    DOUBLE PRECISION NOT NULL,
-    CONSTRAINT pk_candles_m1 PRIMARY KEY (symbol, ts)
+CREATE TABLE IF NOT EXISTS public.market_data(
+  symbol    TEXT NOT NULL,
+  timeframe TEXT NOT NULL,
+  ts        TIMESTAMPTZ NOT NULL,
+  open      DOUBLE PRECISION,
+  high      DOUBLE PRECISION,
+  low       DOUBLE PRECISION,
+  close     DOUBLE PRECISION,
+  volume    DOUBLE PRECISION,
+  spread    DOUBLE PRECISION,
+  rsi       DOUBLE PRECISION,
+  macd      DOUBLE PRECISION,
+  macd_signal DOUBLE PRECISION,
+  macd_hist DOUBLE PRECISION,
+  atr       DOUBLE PRECISION,
+  bb_upper  DOUBLE PRECISION,
+  bb_middle DOUBLE PRECISION,
+  bb_lower  DOUBLE PRECISION,
+  PRIMARY KEY(symbol, timeframe, ts)
 );
 
-SELECT create_hypertable('candles_m1', by_range('ts'), if_not_exists => TRUE);
+SELECT create_hypertable('public.market_data','ts', if_not_exists=>TRUE);
+ALTER TABLE public.market_data
+  SET (timescaledb.compress=true, timescaledb.compress_segmentby='symbol,timeframe');
+SELECT add_compression_policy('public.market_data', INTERVAL '7 days');
+SELECT add_retention_policy('public.market_data', INTERVAL '90 days');
 
--- Índices úteis
-CREATE INDEX IF NOT EXISTS idx_candles_m1_ts    ON candles_m1 (ts DESC);
-CREATE INDEX IF NOT EXISTS idx_candles_m1_symts ON candles_m1 (symbol, ts DESC);
-
--- Política de compressão (opcional)
-ALTER TABLE candles_m1 SET (
-  timescaledb.compress = TRUE
-);
-SELECT add_compression_policy('candles_m1', INTERVAL '3 days');
-
--- Política de retenção (opcional)
--- SELECT add_retention_policy('candles_m1', INTERVAL '365 days');
+CREATE OR REPLACE VIEW public.market_data_latest AS
+SELECT DISTINCT ON (symbol, timeframe)
+  symbol, timeframe, ts, open, high, low, close, volume, spread
+FROM public.market_data
+ORDER BY symbol, timeframe, ts DESC;

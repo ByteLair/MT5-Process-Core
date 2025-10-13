@@ -1,0 +1,18 @@
+# systemd/mt5-scheduler.service
+[Unit]
+Description=MT5 ML Scheduler
+After=network.target postgresql.service mt5-api.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/mt5/api.env
+WorkingDirectory=/opt/mt5
+ExecStart=/usr/bin/env bash -lc '. .venv/bin/activate && python ml/scheduler.py'
+Restart=on-failure
+User=mt5
+Group=mt5
+StandardOutput=append:/var/log/mt5/scheduler.log
+StandardError=append:/var/log/mt5/scheduler.err
+
+[Install]
+WantedBy=multi-user.target

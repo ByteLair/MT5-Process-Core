@@ -1,17 +1,22 @@
-.PHONY: up down logs api-logs db-logs build test ingest-one
-up:
-	docker compose up -d --build
-down:
-	docker compose down
-logs:
-	docker compose logs -f
-api-logs:
-	docker compose logs -f api
-db-logs:
-	docker compose logs -f db
-build:
-	docker compose build
-test:
-	bash scripts/smoke_test_single.sh
-ingest-one:
-	bash scripts/smoke_test_single.sh
+.PHONY: venv dev run seed lint train schedule
+
+venv:
+	python3 -m venv .venv && . .venv/bin/activate && pip install -U pip && pip install -r api/requirements.txt
+
+dev:
+	. .venv/bin/activate && uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
+
+run:
+	. .venv/bin/activate && uvicorn api.main:app --host 0.0.0.0 --port 8001
+
+seed:
+	psql "$${DATABASE_URL}" -f db/init/01-init.sql && psql "$${DATABASE_URL}" -f db/init/02-ml.sql
+
+lint:
+	. .venv/bin/activate && python -m pip install ruff black && ruff check api && black --check api
+
+train:
+	. .venv/bin/activate && python ml/worker/train.py
+
+schedule:
+	. .venv/bin/activate && python ml/scheduler.py

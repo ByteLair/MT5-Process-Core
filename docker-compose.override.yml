@@ -1,7 +1,7 @@
 services:
   api:
     ports:
-      - "${API_PORT}:8000"
+      - "${API_PORT:-8001}:8001"
     volumes:
       - models_mt5:/models
 

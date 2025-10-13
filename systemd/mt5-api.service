@@ -1,0 +1,18 @@
+# systemd/mt5-api.service
+[Unit]
+Description=MT5 API (FastAPI + Uvicorn)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/mt5/api.env
+WorkingDirectory=/opt/mt5
+ExecStart=/usr/bin/env bash -lc '. .venv/bin/activate && uvicorn api.main:app --host 0.0.0.0 --port ${API_PORT:-8001} --log-level info --access-log'
+Restart=on-failure
+User=mt5
+Group=mt5
+StandardOutput=append:/var/log/mt5/api.log
+StandardError=append:/var/log/mt5/api.err
+
+[Install]
+WantedBy=multi-user.target

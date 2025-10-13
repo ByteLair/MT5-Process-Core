@@ -1,81 +1,31 @@
-import os, json
-from pathlib import Path
-import joblib
-import pandas as pd
+import os, joblib, pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import create_engine
+from api.config import get_db_url
 
-router = APIRouter(tags=["ml"])
+router = APIRouter(prefix="/predict", tags=["predict"])
+engine = create_engine(get_db_url(), pool_pre_ping=True, future=True)
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
-MODELS_DIR = os.getenv("MODELS_DIR", "/models")
-MODEL_PATH = os.path.join(MODELS_DIR, "rf_m1.pkl")
-MANIFEST = Path(MODELS_DIR) / "manifest.json"
+FEATURES = ["close","volume","spread","rsi","macd","macd_signal","macd_hist","atr","ma60","ret_1"]
 
-engine = create_engine(DB_URL)
+def load_model():
+    models_dir = os.getenv("MODELS_DIR", "./models")
+    path = os.path.join(models_dir, "rf_m1.pkl")
+    if not os.path.exists(path):
+        raise FileNotFoundError("modelo não encontrado: rf_m1.pkl")
+    return joblib.load(path)
 
-_model_bundle = None
-_best_threshold = 0.5  # fallback
-
-def _load_manifest_threshold():
-    global _best_threshold
-    try:
-        if MANIFEST.exists():
-            data = json.loads(MANIFEST.read_text())
-            t = data.get("metrics", {}).get("best_threshold", 0.5)
-            _best_threshold = float(t)
-    except Exception:
-        _best_threshold = 0.5
-
-def get_model():
-    global _model_bundle
-    if _model_bundle is None:
-        try:
-            _model_bundle = joblib.load(MODEL_PATH)
-        except FileNotFoundError:
-            raise HTTPException(500, detail="Modelo não encontrado. Treine primeiro.")
-        except Exception as e:
-            raise HTTPException(500, detail=f"Falha ao carregar modelo: {e}")
-        _load_manifest_threshold()
-    return _model_bundle["model"], _model_bundle["features"]
-
-@router.get("/predict")
-def predict(
-    symbol: str = Query(..., description="Símbolo, ex: EURUSD"),
-    n: int = Query(30, ge=1, le=500, description="Qtde de linhas recentes"),
-    threshold: float | None = Query(None, ge=0.0, le=1.0, description="Opcional: sobrescreve o threshold")
-):
-    model, features = get_model()
-
+@router.get("")
+def predict(symbol: str = Query(..., min_length=3, max_length=10), limit: int = 30):
+    m = load_model()
     q = """
-        SELECT * FROM public.features_m1
-        WHERE symbol = %(symbol)s AND timeframe='M1'
-        ORDER BY ts DESC
-        LIMIT %(n)s
+      SELECT * FROM public.features_m1
+      WHERE symbol=:symbol ORDER BY ts DESC LIMIT :limit
     """
-    df = pd.read_sql(q, engine, params={"symbol": symbol, "n": n})
+    df = pd.read_sql(q, engine, params={"symbol":symbol,"limit":limit})
     if df.empty:
-        raise HTTPException(404, f"Sem features para {symbol}")
-
-    X = df[features].astype(float).fillna(0.0).values
-
-    # prob de classe 1, compatível com RF e Dummy
-    if hasattr(model, "predict_proba"):
-        pf = model.predict_proba(X)
-        if pf.shape[1] == 1:
-            cls = int(getattr(model, "classes_", [0])[0])
-            p0 = pf[:, 0]
-            proba_1 = p0 if cls == 1 else (1.0 - p0)
-        else:
-            proba_1 = pf[:, 1]
-    else:
-        yhat = model.predict(X)
-        proba_1 = yhat.astype(float)
-
-    th = _best_threshold if threshold is None else float(threshold)
-    label = (proba_1 >= th).astype(int)
-
-    out = [{"ts": ts, "prob_up": float(p), "label": int(y)}
-           for ts, p, y in zip(df["ts"].tolist(), proba_1.tolist(), label.tolist())]
-    out.reverse()  # cronológico crescente
-    return out
+        raise HTTPException(404, detail="sem dados")
+    X = df[FEATURES].fillna(0)
+    proba = m.predict_proba(X)[:,1]
+    val = float(proba[0])
+    return {"symbol": symbol, "n": int(len(proba)), "prob_up_latest": val, "ts_latest": df["ts"].iloc[0].isoformat()}
