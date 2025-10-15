@@ -1,0 +1,23 @@
+services:
+  db:
+    image: timescale/timescaledb:2.14.2-pg16
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+
+  api:
+    image: mt5-api
+    depends_on: [db]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "18001:8001"
