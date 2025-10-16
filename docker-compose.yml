@@ -43,6 +43,7 @@ services:
       DB_PORT: "5432"
       DB_USER: "trader"
       DB_PASS: "trader123"
+      PRED_THRESHOLD: "0.60"
     depends_on:
       db:
         condition: service_healthy
@@ -53,11 +54,14 @@ services:
       --host 0.0.0.0
       --port 8001
       --access-log
+    
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request, sys;\n\ntry:\n    r=urllib.request.urlopen('http://localhost:8001/health', timeout=2)\n    if r.read().strip():\n        sys.exit(0)\n    else:\n        sys.exit(1)\nexcept Exception:\n    sys.exit(1)\n\" || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 30
+      
+
 
   pgadmin:
     image: dpage/pgadmin4:8.12
@@ -77,19 +81,25 @@ services:
     build:
       context: ./ml
     image: ml-trainer
+    container_name: mt5_ml_trainer
+    restart: unless-stopped
     environment:
-      - DB_HOST=db
-      - DB_NAME=mt5_trading
-      - DB_USER=trader
-      - DB_PASS=trader123
+      DB_HOST: "db"
+      DB_NAME: "${POSTGRES_DB:-mt5_trading}"
+      DB_USER: "${POSTGRES_USER:-trader}"
+      DB_PASS: "${POSTGRES_PASSWORD:-trader123}"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      - ./ml/data:/app/data
-      - ./ml/models:/app/models
+      - ./ml/data:/app/data:rw
+      - models_mt5:/app/models:rw
     command: ["python", "prepare_dataset.py"]
-    networks:
-      - default
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /app/data/dataset.csv || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   db_data:
