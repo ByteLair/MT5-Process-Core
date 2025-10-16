@@ -6,12 +6,14 @@ import pandas as pd
 import numpy as np
 import psycopg2
 
-# Lê variáveis do .env da raiz se quiser (opcional)
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "mt5_db")
-POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5432"))
-POSTGRES_DB   = os.getenv("POSTGRES_DB", "trading")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
+
+# Variáveis padronizadas para conexão com o banco
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_NAME = os.getenv("DB_NAME", "mt5_trading")
+DB_USER = os.getenv("DB_USER", "trader")
+DB_PASS = os.getenv("DB_PASS", "traderpass")
+
+dsn = f"host={DB_HOST} dbname={DB_NAME} user={DB_USER} password={DB_PASS}"
 
 SYMBOL   = os.getenv("ML_SYMBOL", "EURUSD")
 TIMEFRAME= os.getenv("ML_TIMEFRAME", "M1")
@@ -29,7 +31,6 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 def fetch_market_data(limit: int = 20000) -> pd.DataFrame:
-    dsn = f"host={POSTGRES_HOST} port={POSTGRES_PORT} dbname={POSTGRES_DB} user={POSTGRES_USER} password={POSTGRES_PASS}"
     with psycopg2.connect(dsn) as conn:
         sql = """
         SELECT ts, symbol, timeframe, open, high, low, close, volume
