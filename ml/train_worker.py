@@ -8,11 +8,11 @@ conn = psycopg2.connect(
     host=os.getenv("DB_HOST","db"),
 )
 sql = """
-SELECT f.mean_close, f.volatility, f.pct_change, l.label
+SELECT f.mean_close, f.volatility, f.pct_change, l.fwd_ret_5 AS fwd_ret_5
 FROM features_h1 f
 JOIN labels_h1  l
     ON f.symbol = l.symbol AND f.ts = l.ts
-WHERE l.label IS NOT NULL
+WHERE l.fwd_ret_5 IS NOT NULL
     AND f.mean_close IS NOT NULL
     AND f.pct_change IS NOT NULL;
 """
@@ -30,5 +30,5 @@ y = df['label']
 model = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
 model.fit(X, y)
 os.makedirs("/models", exist_ok=True)
-joblib.dump(model, "/models/rf_m1.pkl")
-print("saved:/models/rf_m1.pkl")
+joblib.dump(model, "/models/latest_model.pkl")
+print("saved:/models/latest_model.pkl")
