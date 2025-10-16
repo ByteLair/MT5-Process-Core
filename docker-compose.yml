@@ -5,24 +5,32 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: "postgresql://trader:trader123@db:5432/mt5_trading"
       DB_HOST: "db"
       DB_PORT: "5432"
-      DB_USER: "trader"
-      DB_PASS: "trader123"
-      POSTGRES_USER: ${POSTGRES_USER:-trader}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trader123}
-      POSTGRES_DB: ${POSTGRES_DB:-mt5_trading}
-    ports:
-      - "${DB_PORT:-5432}:5432"
+    expose:
+      - "5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./docker/postgres.conf.d/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trader} -d ${POSTGRES_DB:-mt5_trading} || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "2g"
+    # mem_limit for older compose versions (optional)
+    mem_limit: 2g
     networks:
       default:
         aliases: [db, mt5_db]
@@ -34,7 +42,8 @@ services:
     image: mt5-api
     container_name: mt5_api
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     environment:
       DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-trader}:${POSTGRES_PASSWORD:-trader123}@db:5432/${POSTGRES_DB:-mt5_trading}}"
       PORT: ${API_PORT_INTERNAL:-8001}
@@ -43,7 +52,6 @@ services:
       DB_PORT: "5432"
       DB_USER: "trader"
       DB_PASS: "trader123"
-      PRED_THRESHOLD: "0.60"
     depends_on:
       db:
         condition: service_healthy
@@ -56,10 +64,21 @@ services:
       --access-log
     
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request, sys;\n\ntry:\n    r=urllib.request.urlopen('http://localhost:8001/health', timeout=2)\n    if r.read().strip():\n        sys.exit(0)\n    else:\n        sys.exit(1)\nexcept Exception:\n    sys.exit(1)\n\" || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8001/health >/dev/null || exit 1"]
       interval: 10s
-      timeout: 3s
-      retries: 30
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "2g"
+    mem_limit: 2g
       
 
 
@@ -75,6 +94,18 @@ services:
       - db
     ports:
       - "${PGADMIN_PORT:-5050}:80"
+    # If you do not use pgAdmin remotely, remove the `ports` mapping or bind it to localhost only
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "512m"
+    mem_limit: 512m
 
 
   ml-trainer:
@@ -100,6 +131,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "2g"
+    mem_limit: 2g
 
 volumes:
   db_data:

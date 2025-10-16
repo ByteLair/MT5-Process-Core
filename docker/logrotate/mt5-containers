@@ -1,0 +1,22 @@
+/var/lib/docker/containers/*/*.log {
+    rotate 5
+    size 50M
+    copytruncate
+    missingok
+    notifempty
+    compress
+    delaycompress
+    dateext
+    maxage 14
+    create 0640 root adm
+}
+
+/var/log/mt5/*.log {
+    rotate 7
+    daily
+    compress
+    missingok
+    notifempty
+    create 0640 root adm
+    maxage 30
+}

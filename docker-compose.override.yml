@@ -4,6 +4,12 @@ services:
       - "${API_PORT:-8001}:8001"
     volumes:
       - models_mt5:/models
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   ml-scheduler:
     build:
@@ -16,6 +22,11 @@ services:
       - models_mt5:/models
     networks: [mt5_net]
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   ml-trainer:
     build:
@@ -28,6 +39,11 @@ services:
       - models_mt5:/models
     networks: [mt5_net]
     restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
 networks:
   mt5_net:
@@ -36,3 +52,4 @@ networks:
 volumes:
   models_mt5:
     name: models_mt5
+    external: true
