@@ -1,7 +1,8 @@
 # api/main.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime, timezone
+from .signals import router as signals_router
 import uuid
 
 app = FastAPI(title="MT5 Trade Bridge")
@@ -27,10 +28,8 @@ class Feedback(BaseModel):
     message: str | None = None
     ts: str
 
-# stub de decisão: troque por seu predictor + risk
 def decide(symbol: str, timeframe: str) -> Signal:
     _id = str(uuid.uuid4())
-    # Exemplo: decisão “flat” por padrão
     return Signal(
         signal_id=_id,
         ts=datetime.now(timezone.utc).isoformat(),
@@ -44,14 +43,14 @@ def decide(symbol: str, timeframe: str) -> Signal:
 
 @app.get("/signals/latest")
 def latest(symbol: str, period: str):
-    sig = decide(symbol, period)
-    return sig.dict()
+    return decide(symbol, period).model_dump()
 
 @app.post("/orders/feedback")
 def orders_feedback(body: Feedback):
-    # TODO: persistir em trade_logs/fills
     return {"ok": True}
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+app.include_router(signals_router)
