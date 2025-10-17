@@ -20,6 +20,8 @@ TIMEFRAME= os.getenv("ML_TIMEFRAME", "M1")
 OUT_DIR  = pathlib.Path(__file__).resolve().parent
 DATA_DIR = OUT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+CONTAINER_DATA_DIR = pathlib.Path("/app/data")
+CONTAINER_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -91,9 +93,13 @@ def main():
     final = feat[feature_cols + ["target_ret_1"]].copy()
     final.reset_index(inplace=True)  # traz ts de volta como coluna
 
+    # Salva dataset para debug/desenvolvimento
     out_csv = DATA_DIR / "training_dataset.csv"
     final.to_csv(out_csv, index=False)
-    print(f"[ML] Dataset salvo em: {out_csv}")
+    # Salva também no caminho esperado pelo healthcheck do container
+    out_health = CONTAINER_DATA_DIR / "dataset.csv"
+    final.to_csv(out_health, index=False)
+    print(f"[ML] Dataset salvo em: {out_csv} e {out_health}")
     print(f"[ML] Linhas: {len(final)}, Colunas: {final.shape[1]}")
 
 if __name__ == "__main__":

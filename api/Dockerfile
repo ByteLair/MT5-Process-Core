@@ -7,6 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     wget \
+    curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # código da aplicação
 COPY . /app
+# copy ingest explicitly (guard against dockerignore/context issues)
+COPY app/ingest.py /app/app/ingest.py
 
 EXPOSE 8001
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

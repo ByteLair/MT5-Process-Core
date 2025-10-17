@@ -1,0 +1,106 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 162,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      },
+      "targets": [
+        {
+          "expr": "ingest_candles_inserted_total",
+          "interval": "",
+          "legendFormat": "Total Candles Ingested",
+          "refId": "A"
+        }
+      ],
+      "title": "Candles Ingeridos (Total)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {"expr": "rate(ingest_candles_inserted_total[1m])", "interval": "", "legendFormat": "Ingest Rate (candles/min)", "refId": "A"}
+      ],
+      "title": "Taxa de Ingestão (candles/min)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {"expr": "sum by (container_label_com_docker_compose_service) (container_memory_usage_bytes)", "interval": "", "legendFormat": "{{container_label_com_docker_compose_service}}", "refId": "A"}
+      ],
+      "title": "Uso de Memória por Container (bytes)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 4,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {"expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total[1m]))", "interval": "", "legendFormat": "{{container_label_com_docker_compose_service}}", "refId": "A"}
+      ],
+      "title": "Uso de CPU por Container (cores)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "id": 5,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {"expr": "node_network_receive_bytes_total", "interval": "", "legendFormat": "RX {{device}}", "refId": "A"},
+        {"expr": "node_network_transmit_bytes_total", "interval": "", "legendFormat": "TX {{device}}", "refId": "B"}
+      ],
+      "title": "Tráfego de Rede (host)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["mt5", "infra", "prometheus", "grafana"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MT5 Trading DB - Infra & Ingestão",
+  "uid": "mt5-infra",
+  "version": 1
+}

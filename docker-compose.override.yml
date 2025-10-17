@@ -16,11 +16,14 @@ services:
       context: .
       dockerfile: ml/Dockerfile
     command: python -u ml/scheduler.py
-    depends_on: [db]
+    depends_on:
+      db:
+        condition: service_healthy
     env_file: [.env]
+    environment:
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
     volumes:
       - models_mt5:/models
-    networks: [mt5_net]
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -32,12 +35,13 @@ services:
     build:
       context: .
       dockerfile: ml/Dockerfile
-    command: python -u ml/train_worker.py
-    depends_on: [db]
+    # Use base compose command (prepare_dataset.py) to generate dataset and pass healthcheck
+    depends_on:
+      db:
+        condition: service_healthy
     env_file: [.env]
     volumes:
       - models_mt5:/models
-    networks: [mt5_net]
     restart: "no"
     logging:
       driver: "json-file"
@@ -45,9 +49,9 @@ services:
         max-size: "50m"
         max-file: "5"
 
-networks:
-  mt5_net:
-    name: mt5_net
+  pgadmin:
+    ports:
+      - "${PGADMIN_PORT:-5051}:80"
 
 volumes:
   models_mt5:

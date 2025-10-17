@@ -155,3 +155,20 @@ PY
 
 # Testar endpoint
 curl -fsS "http://localhost:8001/signals/latest?symbol=EURUSD&period=H1"
+````
+
+## Observabilidade: Prometheus e Grafana
+
+- Documentação detalhada: [docs/observabilidade.md](docs/observabilidade.md)
+- Suba os serviços:
+  ```bash
+  docker compose up -d prometheus grafana
+  ```
+- Acesse:
+  - Prometheus: http://localhost:9090
+  - Grafana: http://localhost:3000 (login: admin/admin)
+
+## Infraestrutura como Código (Terraform)
+
+- Estrutura inicial para provisionamento: `infra/terraform/`
+- Veja `infra/terraform/README.md` para instruções iniciais.

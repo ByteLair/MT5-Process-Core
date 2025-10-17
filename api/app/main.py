@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from .signals import router as signals_router
+from .ingest import router as ingest_router
+from .metrics import router as metrics_router
+from prometheus_client import make_asgi_app, REGISTRY
 import uuid
 
 app = FastAPI(title="MT5 Trade Bridge")
@@ -54,3 +57,9 @@ def health():
     return {"status": "ok"}
 
 app.include_router(signals_router)
+app.include_router(ingest_router)
+app.include_router(metrics_router)
+
+# Expor /prometheus para Prometheus scrapes
+metrics_app = make_asgi_app(registry=REGISTRY)
+app.mount("/prometheus", metrics_app)

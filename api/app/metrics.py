@@ -16,5 +16,5 @@ def metrics():
 	ORDER BY symbol, timeframe
 	""")
 	with engine.connect() as c:
-		rows = [dict(r) for r in c.execute(sql)]
+		rows = [dict(r._mapping) for r in c.execute(sql)]
 	return {"ok": True, "data": rows}

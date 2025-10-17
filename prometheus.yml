@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: 'mt5-api'
+    static_configs:
+      - targets: ['api:8000']
+        labels:
+          group: 'api'
+  - job_name: 'self-prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']

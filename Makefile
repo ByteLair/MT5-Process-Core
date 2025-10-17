@@ -1,4 +1,4 @@
-.PHONY: venv dev run seed lint train schedule api-up api-logs db-sql-signals seed-signal
+.PHONY: venv dev run seed lint train schedule api-up api-logs db-sql-signals seed-signal up down restart ps logs rebuild
 
 venv:
 	python3 -m venv .venv && . .venv/bin/activate && pip install -U pip && pip install -r api/requirements.txt
@@ -26,6 +26,26 @@ api-up:
 
 api-logs:
 	docker compose logs -f api
+
+# Docker stack helpers
+up:
+	docker volume create models_mt5 >/dev/null 2>&1 || true
+	docker compose up -d --build
+
+down:
+	docker compose down
+
+restart:
+	docker compose down && docker compose up -d --build
+
+ps:
+	docker compose ps
+
+logs:
+	docker compose logs -f --tail=200
+
+rebuild:
+	docker compose build --no-cache && docker compose up -d
 
 db-sql-signals:
 	docker compose exec -T db psql -U trader -d mt5_trading -v ON_ERROR_STOP=1 -f db/init/20-signals.sql
