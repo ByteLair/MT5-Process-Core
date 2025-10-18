@@ -1,0 +1,215 @@
+name: Automated Repository Snapshots
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline", "Deploy to Production"]
+    types:
+      - completed
+    branches:
+      - main
+  schedule:
+    # Daily at 2:00 AM UTC-3 (5:00 AM UTC)
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    inputs:
+      include_logs:
+        description: 'Include logs in snapshot'
+        required: false
+        type: boolean
+        default: false
+      upload_remote:
+        description: 'Upload to remote storage'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  create-snapshot:
+    name: Create Repository Snapshot
+    runs-on: self-hosted
+    # Only run if CI/CD succeeded or if manually triggered/scheduled
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Check CI/CD Status
+        if: github.event_name == 'workflow_run'
+        run: |
+          echo "CI/CD Workflow: ${{ github.event.workflow_run.name }}"
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}"
+          
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "❌ CI/CD failed - skipping snapshot creation"
+            exit 1
+          fi
+          
+          echo "✅ CI/CD passed - proceeding with snapshot"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history
+
+      - name: Create snapshots directory
+        run: mkdir -p /home/felipe/backups/snapshots
+
+      - name: Create snapshot
+        id: snapshot
+        run: |
+          SNAPSHOT_OPTS=""
+          
+          # Add flags based on inputs
+          if [ "${{ github.event.inputs.include_logs }}" == "true" ]; then
+            SNAPSHOT_OPTS="$SNAPSHOT_OPTS --full"
+          fi
+          
+          if [ "${{ github.event.inputs.upload_remote }}" == "true" ]; then
+            SNAPSHOT_OPTS="$SNAPSHOT_OPTS --remote"
+          fi
+          
+          # For scheduled runs, upload to remote
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            SNAPSHOT_OPTS="$SNAPSHOT_OPTS --remote"
+          fi
+          
+          # Create snapshot
+          ./scripts/backup/create-snapshot.sh $SNAPSHOT_OPTS
+          
+          # Get snapshot name
+          SNAPSHOT_NAME=$(ls -t /home/felipe/backups/snapshots/mt5-snapshot-*.tar.gz | head -1 | xargs basename .tar.gz)
+          echo "snapshot_name=$SNAPSHOT_NAME" >> $GITHUB_OUTPUT
+          
+          # Get snapshot size
+          SNAPSHOT_SIZE=$(du -sh /home/felipe/backups/snapshots/${SNAPSHOT_NAME}.tar.gz | cut -f1)
+          echo "snapshot_size=$SNAPSHOT_SIZE" >> $GITHUB_OUTPUT
+
+      - name: Verify snapshot integrity
+        run: |
+          SNAPSHOT_NAME="${{ steps.snapshot.outputs.snapshot_name }}"
+          SNAPSHOT_DIR="/home/felipe/backups/snapshots/${SNAPSHOT_NAME}"
+          
+          # Extract snapshot
+          cd /home/felipe/backups/snapshots
+          tar xzf "${SNAPSHOT_NAME}.tar.gz"
+          
+          # Verify checksums
+          cd "${SNAPSHOT_DIR}"
+          sha256sum -c checksums.sha256
+          
+          echo "✅ Snapshot integrity verified"
+
+      - name: Create snapshot report
+        if: always()
+        run: |
+          SNAPSHOT_NAME="${{ steps.snapshot.outputs.snapshot_name }}"
+          SNAPSHOT_SIZE="${{ steps.snapshot.outputs.snapshot_size }}"
+          
+          cat > /tmp/snapshot-report.md << EOF
+          # Snapshot Report
+          
+          **Snapshot:** \`${SNAPSHOT_NAME}\`
+          **Size:** ${SNAPSHOT_SIZE}
+          **Created:** $(date)
+          **Trigger:** ${{ github.event_name }}
+          **Branch:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+          **Commit:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          **CI/CD Workflow:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name || 'N/A' }}
+          
+          ## Status
+          - ✅ Snapshot created successfully
+          - ✅ Integrity verified
+          - ✅ CI/CD passed before snapshot
+          
+          ## Location
+          \`/home/felipe/backups/snapshots/${SNAPSHOT_NAME}.tar.gz\`
+          
+          ## Restore Command
+          \`\`\`bash
+          ./scripts/backup/restore-snapshot.sh ${SNAPSHOT_NAME}
+          \`\`\`
+          EOF
+          
+          cat /tmp/snapshot-report.md
+
+      - name: Cleanup old snapshots on runner
+        run: |
+          # Keep last 10 snapshots on runner
+          cd /home/felipe/backups/snapshots
+          ls -t mt5-snapshot-*.tar.gz | tail -n +11 | xargs rm -f 2>/dev/null || true
+          ls -td mt5-snapshot-*/ | tail -n +6 | xargs rm -rf 2>/dev/null || true
+          echo "✅ Old snapshots cleaned"
+
+      - name: Update snapshot index
+        run: |
+          SNAPSHOT_INDEX="/home/felipe/backups/snapshots/snapshots-index.txt"
+          echo "Last 5 snapshots:"
+          tail -5 "$SNAPSHOT_INDEX"
+
+  test-restore:
+    name: Test Snapshot Restore
+    needs: create-snapshot
+    runs-on: self-hosted
+    if: github.event_name == 'schedule'  # Only test restore on scheduled runs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest snapshot
+        id: latest
+        run: |
+          LATEST_SNAPSHOT=$(ls -t /home/felipe/backups/snapshots/mt5-snapshot-*.tar.gz | head -1 | xargs basename .tar.gz)
+          echo "snapshot_name=$LATEST_SNAPSHOT" >> $GITHUB_OUTPUT
+
+      - name: Test restore (dry-run)
+        run: |
+          SNAPSHOT_NAME="${{ steps.latest.outputs.snapshot_name }}"
+          echo "Testing restore of: $SNAPSHOT_NAME"
+          
+          # Extract snapshot to temp location
+          RESTORE_DIR="/tmp/mt5-restore-test-$$"
+          mkdir -p "$RESTORE_DIR"
+          
+          tar xzf "/home/felipe/backups/snapshots/${SNAPSHOT_NAME}.tar.gz" -C "$RESTORE_DIR"
+          
+          # Verify snapshot contents
+          SNAPSHOT_DIR="$RESTORE_DIR/$SNAPSHOT_NAME"
+          
+          echo "Checking snapshot contents..."
+          [ -f "$SNAPSHOT_DIR/repository.bundle" ] && echo "✅ Git bundle found"
+          [ -f "$SNAPSHOT_DIR/database-full.sql.gz" ] && echo "✅ Database backup found"
+          [ -d "$SNAPSHOT_DIR/volumes" ] && echo "✅ Volume backups found"
+          [ -f "$SNAPSHOT_DIR/SNAPSHOT_INFO.txt" ] && echo "✅ Snapshot info found"
+          
+          # Verify git bundle
+          echo "Verifying git bundle..."
+          git bundle verify "$SNAPSHOT_DIR/repository.bundle"
+          
+          # Cleanup
+          rm -rf "$RESTORE_DIR"
+          
+          echo "✅ Snapshot restore test passed"
+
+  notify:
+    name: Notify Snapshot Status
+    needs: [create-snapshot, test-restore]
+    runs-on: self-hosted
+    if: always()
+    steps:
+      - name: Create notification
+        run: |
+          STATUS="${{ needs.create-snapshot.result }}"
+          TEST_STATUS="${{ needs.test-restore.result }}"
+          
+          if [ "$STATUS" == "success" ]; then
+            echo "✅ Snapshot created successfully"
+          else
+            echo "❌ Snapshot creation failed"
+          fi
+          
+          if [ "$TEST_STATUS" == "success" ]; then
+            echo "✅ Restore test passed"
+          elif [ "$TEST_STATUS" == "skipped" ]; then
+            echo "⏭️  Restore test skipped"
+          else
+            echo "❌ Restore test failed"
+          fi

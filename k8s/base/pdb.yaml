@@ -1,0 +1,55 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-pdb
+  namespace: mt5-trading
+  labels:
+    app: mt5-api
+    component: availability
+spec:
+  minAvailable: 1  # Always keep at least 1 pod running
+  selector:
+    matchLabels:
+      app: mt5-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pdb
+  namespace: mt5-trading
+  labels:
+    app: postgres
+    component: availability
+spec:
+  maxUnavailable: 0  # Never allow postgres to be unavailable
+  selector:
+    matchLabels:
+      app: postgres
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: prometheus-pdb
+  namespace: mt5-trading
+  labels:
+    app: prometheus
+    component: availability
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: prometheus
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: grafana-pdb
+  namespace: mt5-trading
+  labels:
+    app: grafana
+    component: availability
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: grafana
