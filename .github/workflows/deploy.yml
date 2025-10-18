@@ -1,0 +1,17 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Roda no seu servidor
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy
+        run: |
+          cd /home/felipe/mt5-trading-db
+          git pull
+          docker compose up -d api
