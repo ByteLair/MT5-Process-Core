@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mt5-trading-staging
+
+bases:
+  - ../../base
+
+namePrefix: staging-
+
+commonLabels:
+  environment: staging
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: mt5-api
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: mt5-api
+
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: mt5-api-hpa
+      spec:
+        minReplicas: 2
+        maxReplicas: 5
+    target:
+      kind: HorizontalPodAutoscaler
+      name: mt5-api-hpa
+
+configMapGenerator:
+  - name: mt5-trading-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=INFO
+      - WORKERS=3
+
+secretGenerator:
+  - name: mt5-trading-secrets
+    behavior: merge
+    literals:
+      - POSTGRES_PASSWORD=staging_secure_password
+      - API_KEY=staging_api_key_secure
+      - GF_SECURITY_ADMIN_PASSWORD=staging_admin_secure

@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mt5-trading-config
+  namespace: mt5-trading
+data:
+  # Database Configuration
+  POSTGRES_HOST: "postgres-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "mt5_trading"
+  
+  # API Configuration
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  LOG_LEVEL: "INFO"
+  WORKERS: "4"
+  
+  # TimescaleDB Configuration
+  TIMESCALEDB_TELEMETRY: "off"
+  
+  # ML Configuration
+  ML_TRAINING_SCHEDULE: "0 2 * * *"  # 2 AM daily
+  ML_MODEL_PATH: "/models"
+  
+  # Prometheus Configuration
+  PROMETHEUS_RETENTION: "15d"
+  
+  # Grafana Configuration
+  GF_SERVER_ROOT_URL: "http://grafana.mt5-trading.local"
+  GF_SECURITY_ADMIN_USER: "admin"
+  GF_INSTALL_PLUGINS: ""
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: mt5-trading
+data:
+  01-init.sql: |
+    -- Initial database setup
+    CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+    
+    -- Create main table
+    CREATE TABLE IF NOT EXISTS market_data (
+      ts TIMESTAMPTZ NOT NULL,
+      symbol VARCHAR(20) NOT NULL,
+      timeframe VARCHAR(10) NOT NULL,
+      open DOUBLE PRECISION NOT NULL,
+      high DOUBLE PRECISION NOT NULL,
+      low DOUBLE PRECISION NOT NULL,
+      close DOUBLE PRECISION NOT NULL,
+      volume BIGINT NOT NULL,
+      PRIMARY KEY (ts, symbol, timeframe)
+    );
+    
+    -- Convert to hypertable
+    SELECT create_hypertable('market_data', 'ts', if_not_exists => TRUE);
+    
+    -- Create indexes
+    CREATE INDEX IF NOT EXISTS idx_market_data_symbol ON market_data (symbol, ts DESC);
+    CREATE INDEX IF NOT EXISTS idx_market_data_timeframe ON market_data (timeframe, ts DESC);
+    CREATE INDEX IF NOT EXISTS idx_market_data_symbol_timeframe ON market_data (symbol, timeframe, ts DESC);
+    
+    -- Continuous aggregate for 1-hour data
+    CREATE MATERIALIZED VIEW IF NOT EXISTS market_data_1h
+    WITH (timescaledb.continuous) AS
+    SELECT
+      time_bucket('1 hour', ts) AS bucket,
+      symbol,
+      timeframe,
+      FIRST(open, ts) AS open,
+      MAX(high) AS high,
+      MIN(low) AS low,
+      LAST(close, ts) AS close,
+      SUM(volume) AS volume,
+      COUNT(*) AS candle_count
+    FROM market_data
+    GROUP BY bucket, symbol, timeframe
+    WITH NO DATA;
+    
+    -- Refresh policy
+    SELECT add_continuous_aggregate_policy('market_data_1h',
+      start_offset => INTERVAL '3 hours',
+      end_offset => INTERVAL '1 hour',
+      schedule_interval => INTERVAL '1 hour',
+      if_not_exists => TRUE
+    );

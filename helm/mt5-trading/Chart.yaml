@@ -1,0 +1,17 @@
+apiVersion: v2
+name: mt5-trading
+description: Complete MT5 Trading Platform with ML, Monitoring and TimescaleDB
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - trading
+  - mt5
+  - machine-learning
+  - timescaledb
+  - prometheus
+  - grafana
+home: https://github.com/Lysk-dot/mt5-trading-db
+maintainers:
+  - name: Felipe
+    email: felipe@example.com
