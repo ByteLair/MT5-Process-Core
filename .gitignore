@@ -29,6 +29,7 @@ api/.env
 # venvs
 .venv/
 ml/.venv/
+venv/
 **/__pycache__/
 *.pyc
 

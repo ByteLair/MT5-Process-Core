@@ -1,0 +1,32 @@
+{
+  "model": "Informer",
+  "task": "binary_classification",
+  "target": "trade_positivo (target_ret_1 > 0)",
+  "config": {
+    "seq_len": 64,
+    "d_model": 128,
+    "n_heads": 4,
+    "e_layers": 3,
+    "d_ff": 256,
+    "dropout": 0.2,
+    "batch_size": 64,
+    "epochs": 15,
+    "lr": 0.001,
+    "oversample": true,
+    "augment": true
+  },
+  "metrics": {
+    "threshold_0.5": {
+      "precision": 0.49501329787234044,
+      "recall": 1.0,
+      "auc_roc": 0.4867569549971682,
+      "positive_predictions_pct": 100.0
+    },
+    "threshold_optimized": {
+      "threshold": 0.5199999999999998,
+      "precision": 0.4899088541666667,
+      "recall": 0.5053727333781061,
+      "positive_predictions_pct": 51.06382978723404
+    }
+  }
+}

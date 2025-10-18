@@ -48,6 +48,11 @@ def main():
     model.fit(X_train, y_train)
 
     preds = model.predict(X_test)
+
+    # Padroniza nome do modelo salvo para rf_m1.pkl
+    MODEL_PKL = MODELS_DIR / "rf_m1.pkl"
+    joblib.dump(model, MODEL_PKL)
+    print(f"[ML] Modelo salvo em {MODEL_PKL}")
     r2  = r2_score(y_test, preds)
     mae = mean_absolute_error(y_test, preds)
 

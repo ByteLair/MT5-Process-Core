@@ -1,0 +1,20 @@
+[
+  "ret_1",
+  "ret_5",
+  "ret_10",
+  "ma_5",
+  "ma_10",
+  "ma_20",
+  "ma_50",
+  "std_5",
+  "std_10",
+  "std_20",
+  "std_50",
+  "rsi_14",
+  "vol_ema_20",
+  "open",
+  "high",
+  "low",
+  "close",
+  "volume"
+]

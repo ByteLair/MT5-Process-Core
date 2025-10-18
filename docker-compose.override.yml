@@ -22,7 +22,10 @@ services:
     env_file: [.env]
     environment:
       DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      ML_SYMBOL: "EURUSD"
+      ML_TIMEFRAME: "H1"
     volumes:
+      - ./ml:/app/ml:rw
       - models_mt5:/models
     restart: unless-stopped
     logging:

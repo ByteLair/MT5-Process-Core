@@ -1,0 +1,37 @@
+{
+  "model": "Informer",
+  "task": "binary_classification",
+  "target": "trade_positivo (target_ret_1 > 0)",
+  "config": {
+    "seq_len": 32,
+    "d_model": 64,
+    "n_heads": 4,
+    "e_layers": 2,
+    "d_ff": 128,
+    "dropout": 0.2,
+    "batch_size": 64,
+    "epochs": 10,
+    "lr": 0.0005
+  },
+  "dataset": {
+    "total_samples": 24832,
+    "train": 14880,
+    "val": 4960,
+    "test": 4960,
+    "positive_ratio": 0.49379831552505493
+  },
+  "metrics": {
+    "threshold_0.5": {
+      "precision": 0.5093023255813953,
+      "recall": 0.2628,
+      "auc_roc": 0.5082000813008131,
+      "positive_predictions_pct": 26.008064516129032
+    },
+    "threshold_optimized": {
+      "threshold": 0.45999999999999985,
+      "precision": 0.5119298245614035,
+      "recall": 0.5836,
+      "positive_predictions_pct": 57.45967741935484
+    }
+  }
+}

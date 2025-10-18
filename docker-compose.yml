@@ -133,6 +133,9 @@ services:
           cpus: "2"
           memory: "2g"
     mem_limit: 2g
+    volumes:
+      - ./scripts:/app/scripts:rw
+      - ./dados_historicos.csv:/app/scripts/dados_historicos.csv:ro
       
 
 
