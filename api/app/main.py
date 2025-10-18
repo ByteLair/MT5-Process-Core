@@ -7,8 +7,22 @@ from .ingest import router as ingest_router
 from .metrics import router as metrics_router
 from prometheus_client import make_asgi_app, REGISTRY
 import uuid
+import os
+import sys
+
+# Adicionar diretório pai ao path para imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = FastAPI(title="MT5 Trade Bridge")
+
+# Configurar tracing com Jaeger
+try:
+    from tracing import setup_tracing, get_tracer
+    setup_tracing(app, service_name="mt5-trading-api", service_version="1.0.0")
+except ImportError:
+    print("⚠️  OpenTelemetry não instalado - tracing desabilitado")
+except Exception as e:
+    print(f"⚠️  Erro ao configurar tracing: {e}")
 
 class Signal(BaseModel):
     signal_id: str

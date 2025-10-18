@@ -228,6 +228,87 @@ services:
           memory: "512m"
     mem_limit: 512m
 
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: mt5_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "512m"
+    mem_limit: 512m
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: mt5_promtail
+    restart: unless-stopped
+    volumes:
+      - ./loki/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./logs:/app/logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256m"
+    mem_limit: 256m
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: mt5_jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+    ports:
+      - "5775:5775/udp"   # Zipkin compatible endpoint
+      - "6831:6831/udp"   # Jaeger Thrift Compact
+      - "6832:6832/udp"   # Jaeger Thrift Binary
+      - "5778:5778"       # Config endpoint
+      - "16686:16686"     # UI
+      - "14268:14268"     # HTTP collector
+      - "14250:14250"     # gRPC collector
+      - "9411:9411"       # Zipkin compatible endpoint
+      - "4317:4317"       # OTLP gRPC
+      - "4318:4318"       # OTLP HTTP
+    volumes:
+      - jaeger_data:/badger
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "512m"
+    mem_limit: 512m
+
   grafana:
     image: grafana/grafana-oss:11.0.0
     container_name: mt5_grafana
@@ -235,9 +316,11 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
     depends_on:
       - prometheus
+      - loki
+      - jaeger
       - db
     ports:
       - "3000:3000"
@@ -262,3 +345,5 @@ volumes:
     external: true
   prometheus_data:
   grafana_data:
+  loki_data:
+  jaeger_data:
