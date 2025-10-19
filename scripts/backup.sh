@@ -26,6 +26,12 @@
 
 set -euo pipefail
 
+# Verificar se está rodando como root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "[ERROR] Este script deve ser executado como root (sudo)." >&2
+    exit 1
+fi
+
 # ============================================================================
 # CONFIGURAÇÃO E VARIÁVEIS DE AMBIENTE
 # ============================================================================
@@ -46,6 +52,10 @@ BACKUP_API_URL=${BACKUP_API_URL:-""}
 BACKUP_API_TOKEN=${BACKUP_API_TOKEN:-""}
 MAX_RETRIES=${MAX_RETRIES:-3}
 RETRY_DELAY=${RETRY_DELAY:-5}
+
+# Execução do dump (host|container|auto)
+DUMP_MODE=${DUMP_MODE:-auto}
+DB_CONTAINER_NAME=${DB_CONTAINER_NAME:-mt5_db}
 
 # Criar diretórios necessários
 mkdir -p "$BACKUP_DIR" "$LOG_DIR"
@@ -117,10 +127,24 @@ check_dependencies() {
             missing_deps+=("$cmd")
         fi
     done
+    # Se pretendemos usar container ou auto com container rodando, validar docker
+    if [ "$DUMP_MODE" = "container" ] || [ "$DUMP_MODE" = "auto" ]; then
+        if command -v docker &> /dev/null; then
+            :
+        else
+            # Se modo container for obrigatório, falha. Se auto, continua (vai tentar host)
+            if [ "$DUMP_MODE" = "container" ]; then
+                missing_deps+=("docker")
+            fi
+        fi
+    fi
     
     if [ ${#missing_deps[@]} -gt 0 ]; then
         log_error "Dependências ausentes: ${missing_deps[*]}"
         log_error "Instale: sudo apt-get install postgresql-client curl coreutils"
+        if printf '%s\n' "${missing_deps[@]}" | grep -q '^docker$'; then
+            log_error "Docker é necessário para DUMP_MODE=container. Instale docker.io ou mude DUMP_MODE=host."
+        fi
         exit 1
     fi
 }
@@ -128,6 +152,11 @@ check_dependencies() {
 # ============================================================================
 # BACKUP DO BANCO DE DADOS
 # ============================================================================
+
+container_running() {
+    command -v docker &> /dev/null || return 1
+    docker ps --format '{{.Names}}' | grep -qx "$DB_CONTAINER_NAME"
+}
 
 perform_database_backup() {
     log_info "=========================================="
@@ -137,33 +166,60 @@ perform_database_backup() {
     log_info "Host: ${HOST}:${PORT}"
     log_info "Arquivo: ${BACKUP_FILE}"
     
-    # Exportar senha do PostgreSQL
-    export PGPASSWORD="${POSTGRES_PASSWORD:-trader123}"
-    
-    # Executar pg_dump com compressão
     local start_time=$(date +%s)
-    
-    if pg_dump -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" \
-        -Fc -Z9 \
-        --verbose \
-        -f "$BACKUP_FILE" 2>&1 | tee -a "$LOG_FILE"; then
-        
+
+    # Escolher estratégia de dump
+    local use_container=false
+    if [ "$DUMP_MODE" = "container" ]; then
+        use_container=true
+    elif [ "$DUMP_MODE" = "auto" ] && container_running; then
+        use_container=true
+    fi
+
+    if [ "$use_container" = true ]; then
+        log_info "Modo de dump: container (docker exec em ${DB_CONTAINER_NAME})"
+        # Executar pg_dump dentro do container e redirecionar para o arquivo no host
+        if docker exec -e PGPASSWORD="${POSTGRES_PASSWORD:-trader123}" "$DB_CONTAINER_NAME" \
+            pg_dump -h 127.0.0.1 -p 5432 -U "$USER" -d "$DB" -Fc -Z9 \
+            > "$BACKUP_FILE" 2>>"$LOG_FILE"; then
+            local end_time=$(date +%s)
+            local duration=$((end_time - start_time))
+            local file_size=$(stat -f%z "$BACKUP_FILE" 2>/dev/null || stat -c%s "$BACKUP_FILE")
+            local formatted_size=$(format_size "$file_size")
+            log_success "Backup (container) concluído com sucesso!"
+            log_info "Tempo: ${duration}s"
+            log_info "Tamanho: ${formatted_size} (${file_size} bytes)"
+            return 0
+        else
+            log_error "Falha no pg_dump via container"
+            # Se estava em auto, tentar fallback para host
+            if [ "$DUMP_MODE" = "auto" ]; then
+                log_warn "Tentando fallback para modo host..."
+            else
+                return 1
+            fi
+        fi
+    fi
+
+    # Modo host (padrão)
+    log_info "Modo de dump: host (conexão direta em ${HOST}:${PORT})"
+    export PGPASSWORD="${POSTGRES_PASSWORD:-trader123}"
+    if pg_dump -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -Fc -Z9 \
+        --verbose -f "$BACKUP_FILE" 2>&1 | tee -a "$LOG_FILE"; then
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         local file_size=$(stat -f%z "$BACKUP_FILE" 2>/dev/null || stat -c%s "$BACKUP_FILE")
         local formatted_size=$(format_size "$file_size")
-        
-        log_success "Backup concluído com sucesso!"
+        log_success "Backup (host) concluído com sucesso!"
         log_info "Tempo: ${duration}s"
         log_info "Tamanho: ${formatted_size} (${file_size} bytes)"
-        
+        unset PGPASSWORD
         return 0
     else
-        log_error "Falha ao executar pg_dump"
+        log_error "Falha ao executar pg_dump (host)"
+        unset PGPASSWORD
         return 1
     fi
-    
-    unset PGPASSWORD
 }
 
 # ============================================================================
@@ -337,6 +393,24 @@ generate_report() {
 # FUNÇÃO PRINCIPAL
 # ============================================================================
 
+check_remote_health() {
+    if [ -z "$BACKUP_API_URL" ]; then
+        log_warn "BACKUP_API_URL não configurada, pulando health check remoto."
+        return 0
+    fi
+    local health_url="$BACKUP_API_URL/health"
+    log_info "Verificando saúde do endpoint remoto: $health_url"
+    local health_resp
+    health_resp=$(curl -sS --max-time 5 "$health_url" || echo FAIL)
+    if echo "$health_resp" | grep -q '"status":"ok"'; then
+        log_success "Endpoint remoto saudável: $health_resp"
+        return 0
+    else
+        log_error "Endpoint remoto não respondeu corretamente: $health_resp"
+        return 1
+    fi
+}
+
 main() {
     local script_start=$(date +%s)
     local exit_code=0
@@ -348,6 +422,12 @@ main() {
     
     # Verificar dependências
     check_dependencies
+
+    # Health check do endpoint remoto
+    if ! check_remote_health; then
+        log_error "Abortando backup: endpoint remoto indisponível."
+        exit 2
+    fi
     
     # Executar backup
     if ! perform_database_backup; then

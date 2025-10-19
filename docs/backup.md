@@ -39,7 +39,63 @@ sudo systemctl start mt5-backup.service
 
 ### No Servidor de Backup (Receptor)
 
-Siga as instruções fornecidas separadamente para configurar a API de recepção na porta 9101.
+Você pode executar a API de recepção (FastAPI + Uvicorn) no Linux como serviço de usuário systemd, escutando na porta 9101.
+
+#### Instalação (API de Backup no Linux)
+
+```bash
+# Pré-requisitos: venv com dependências instaladas (já incluso no repo)
+# Se necessário, instale dependências da API:
+pip install -r api/requirements.txt
+
+# Criar diretório de logs
+mkdir -p ~/mt5-trading-db/logs/api
+
+# Instalar o unit do serviço (modo usuário)
+mkdir -p ~/.config/systemd/user
+cp systemd/mt5-backup-api.service ~/.config/systemd/user/
+
+# Recarregar, habilitar e iniciar
+systemctl --user daemon-reload
+systemctl --user enable --now mt5-backup-api.service
+
+# Iniciar automaticamente após reboot (user lingering)
+loginctl enable-linger "$USER"
+
+# Abrir firewall (se UFW estiver ativo)
+sudo ufw allow 9101/tcp
+```
+
+#### Verificação
+
+```bash
+# Status do serviço
+systemctl --user status mt5-backup-api.service --no-pager
+
+# Health local
+curl http://127.0.0.1:9101/health
+
+# Health remoto (de outra máquina da rede)
+curl http://SEU_IP_LINUX:9101/health
+```
+
+#### Logs e Diagnóstico
+
+```bash
+# Logs do serviço
+journalctl --user -u mt5-backup-api.service -f
+
+# Logs de aplicação
+tail -f ~/mt5-trading-db/logs/api/api.log
+
+# Ver porta e processo
+ss -ltnp | grep 9101
+```
+
+Notas:
+- O app usa por padrão `LOG_DIR=./logs/api/` (ajustável via env). Evita permissões em `/app`.
+- O serviço executa uvicorn a partir do venv local: `~/.venv/bin/uvicorn`.
+- Em produção, recomende HTTPS atrás de um reverse proxy (nginx/caddy) e autenticação por token para endpoints de upload.
 
 ---
 
@@ -90,6 +146,31 @@ sudo systemctl restart mt5-backup.timer
 ---
 
 ## 📝 Uso
+
+### Health Check do Endpoint Remoto
+
+Antes de executar o backup, o script verifica automaticamente se o endpoint remoto (API de backup) está saudável.
+Se o endpoint não responder com status OK, o backup é abortado e um erro é registrado nos logs.
+
+**Como funciona:**
+
+1. O script faz uma requisição HTTP para `$BACKUP_API_URL/health`.
+2. Se a resposta for `{"status":"ok"}`, o backup prossegue normalmente.
+3. Se não houver resposta ou o status for diferente, o backup não é executado.
+
+**Exemplo de comando manual:**
+```bash
+curl -sS --max-time 5 $BACKUP_API_URL/health
+```
+
+**Logs:**
+```bash
+sudo journalctl -u mt5-backup.service -n 100 | grep health
+```
+
+**Importante:**
+- Certifique-se que o servidor de destino está ativo e ouvindo na porta correta.
+- O health check é obrigatório para evitar perda de backup ou uploads para destino errado.
 
 ### Executar Backup Manualmente
 
@@ -296,21 +377,55 @@ sudo rm /var/backups/mt5/*.dump.old
 
 ## 📊 Monitoramento
 
-### Métricas Importantes
+### Integração com Grafana/Prometheus
 
-1. **Taxa de Sucesso**: % de backups bem-sucedidos
-2. **Tempo de Execução**: Duração do backup
-3. **Tamanho do Backup**: Crescimento ao longo do tempo
-4. **Uso de Disco**: Espaço disponível
-5. **Upload Remoto**: Taxa de sucesso de upload
+O sistema exporta métricas de backup em formato Prometheus para integração direta com Grafana:
 
-### Alertas Recomendados
+- Script: `scripts/backup-metrics-exporter.sh`
+- Arquivo de métricas: `/var/backups/mt5/backup_metrics.prom`
 
-Configure alertas para:
-- ❌ Falha de backup por 2 dias consecutivos
-- ⚠️ Backup demorando > 30 minutos
-- ⚠️ Espaço em disco < 20%
-- ❌ Upload remoto falhando por 3 dias
+Exemplo de métricas:
+
+```
+# HELP mt5_backup_status 1=success, 0=failure
+mt5_backup_status 1
+# HELP mt5_backup_db_size_bytes Size of last DB dump in bytes
+mt5_backup_db_size_bytes 27998
+# HELP mt5_backup_repo_size_bytes Size of last repo backup in bytes
+mt5_backup_repo_size_bytes 91740440
+# HELP mt5_backup_duration_seconds Duration of last backup in seconds
+mt5_backup_duration_seconds 1
+# HELP mt5_backup_last_timestamp ISO8601 timestamp of last backup
+mt5_backup_last_timestamp{ts="2025-10-19T17:19:17+00:00"} 1
+```
+
+Basta configurar o Prometheus para coletar esse arquivo e criar dashboards no Grafana.
+
+### Integração com Log Centralizado (ELK/Graylog)
+
+Os logs detalhados dos backups são salvos em `/var/backups/mt5/logs/`. Para integração com ELK (Elasticsearch, Logstash, Kibana) ou Graylog:
+
+- Use Filebeat, rsyslog ou outro agente para enviar os arquivos de log para o servidor de log centralizado.
+- Exemplo de configuração Filebeat:
+  ```yaml
+  filebeat.inputs:
+    - type: log
+      paths:
+        - /var/backups/mt5/logs/*.log
+  output.elasticsearch:
+    hosts: ["http://SEU_ELK:9200"]
+  ```
+- Para Graylog, configure o agente para enviar via GELF ou syslog.
+
+### Fluxo Semanal Completo
+
+O fluxo semanal executa, em sequência:
+1. Backup do banco de dados (`scripts/backup.sh`)
+2. Backup completo do repositório (`scripts/backup-full-repo.sh`)
+3. Monitoramento do backup (`scripts/monitor-backup.sh`)
+4. Exportação de métricas Prometheus (`scripts/backup-metrics-exporter.sh`)
+
+Tudo é automatizado via systemd (`mt5-backup.service` e `mt5-backup.timer`).
 
 ---
 
