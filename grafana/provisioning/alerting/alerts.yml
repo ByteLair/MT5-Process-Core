@@ -14,7 +14,7 @@ groups:
             relativeTimeRange:
               from: 300
               to: 0
-            datasourceUid: PBFA97CFB590B2093
+            datasourceUid: prometheus
             model:
               expr: up{job="api"}
               instant: true
@@ -39,7 +39,7 @@ groups:
             relativeTimeRange:
               from: 300
               to: 0
-            datasourceUid: PBFA97CFB590B2093
+            datasourceUid: prometheus
             model:
               expr: histogram_quantile(0.95, rate(ingest_latency_seconds_bucket[5m])) > 1
               instant: false
@@ -64,7 +64,7 @@ groups:
             relativeTimeRange:
               from: 300
               to: 0
-            datasourceUid: PBFA97CFB590B2093
+            datasourceUid: prometheus
             model:
               expr: rate(ingest_requests_total{status!="200"}[5m]) > 0.05
               instant: false
@@ -89,7 +89,7 @@ groups:
             relativeTimeRange:
               from: 300
               to: 0
-            datasourceUid: PBFA97CFB590B2093
+            datasourceUid: prometheus
             model:
               expr: rate(ingest_candles_inserted_total[5m]) == 0
               instant: false
@@ -114,7 +114,7 @@ groups:
             relativeTimeRange:
               from: 300
               to: 0
-            datasourceUid: PCC52D03280B7034C
+            datasourceUid: PostgreSQL
             model:
               rawSql: "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END as healthy FROM pg_stat_activity WHERE datname = 'mt5_trading'"
               refId: A
@@ -136,7 +136,7 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: PBFA97CFB590B2093
+            datasourceUid: prometheus
             model:
               expr: rate(ingest_duplicates_total[5m]) / rate(ingest_candles_inserted_total[5m]) > 0.5
               instant: false

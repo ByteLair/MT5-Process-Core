@@ -1,4 +1,4 @@
-.PHONY: venv dev run seed lint train schedule api-up api-logs db-sql-signals seed-signal up down restart ps logs rebuild
+.PHONY: venv dev run seed lint format typecheck train schedule api-up api-logs db-sql-signals seed-signal up down restart ps logs rebuild
 
 venv:
 	python3 -m venv .venv && . .venv/bin/activate && pip install -U pip && pip install -r api/requirements.txt
@@ -13,7 +13,13 @@ seed:
 	psql "$${DATABASE_URL}" -f db/init/01-init.sql && psql "$${DATABASE_URL}" -f db/init/02-ml.sql
 
 lint:
-	. .venv/bin/activate && python -m pip install ruff black && ruff check api && black --check api
+	. .venv/bin/activate && python -m pip install ruff black isort && ruff check api ml scripts && isort --check-only --profile black api ml scripts && black --check api ml scripts
+
+format:
+	. .venv/bin/activate && python -m pip install ruff black isort && ruff check --fix api ml scripts && isort --profile black api ml scripts && black api ml scripts
+
+typecheck:
+	. .venv/bin/activate && python -m pip install mypy && mypy --config-file mypy.ini api ml
 
 train:
 	. .venv/bin/activate && python ml/worker/train.py

@@ -1,9 +1,14 @@
 from fastapi import APIRouter
 from sqlalchemy import create_engine, text
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from db import engine
 
 router = APIRouter()
-engine = create_engine(os.environ.get("DATABASE_URL"), pool_pre_ping=True, future=True)
 
 @router.get("/metrics")
 def metrics():

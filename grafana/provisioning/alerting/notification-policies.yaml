@@ -1,0 +1,9 @@
+apiVersion: 1
+policies:
+  - orgId: 1
+    receiver: Email-Admin
+    group_by: ['alertname']
+    routes:
+      - receiver: Email-Admin
+        object_matchers:
+          - ["alertname", "=", "API Down"]

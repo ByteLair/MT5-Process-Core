@@ -4,25 +4,38 @@ Health Check API - Simple web interface for health check logs
 Provides REST API and simple HTML dashboard
 """
 
+
+# Flask is used for the web API and dashboard
 from flask import Flask, jsonify, render_template_string, request
+# SQLite3 is used for local health check storage
 import sqlite3
-from datetime import datetime, timedelta
 import os
 
+
+# Initialize Flask app
 app = Flask(__name__)
 
-# Configuration
+
+# Path to health check database
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'logs', 'health-checks', 'health_checks.db')
 
+
 def get_db():
-    """Get database connection"""
+    """
+    Get a connection to the health check database.
+    Returns:
+        sqlite3.Connection: Connection object with row access by name.
+    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 @app.route('/')
 def dashboard():
-    """Main dashboard HTML"""
+    """
+    Render the main dashboard HTML page.
+    Shows health check stats, recent checks, and active alerts.
+    """
     html = """
     <!DOCTYPE html>
     <html>
@@ -286,13 +299,17 @@ def dashboard():
     """
     return render_template_string(html, db_path=DB_PATH)
 
+
 @app.route('/api/stats')
 def api_stats():
-    """Get statistics for last 24 hours"""
+    """
+    API endpoint: Get health check statistics for the last 24 hours.
+    Returns:
+        JSON with total, healthy, unhealthy checks and active alerts.
+    """
     conn = get_db()
     cur = conn.cursor()
-    
-    # Get stats from last 24 hours
+    # Query stats for dashboard
     stats = {
         'total_checks': cur.execute(
             "SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-24 hours')"
@@ -307,53 +324,64 @@ def api_stats():
             "SELECT COUNT(*) FROM alerts WHERE resolved=0"
         ).fetchone()[0]
     }
-    
     conn.close()
     return jsonify(stats)
 
+
 @app.route('/api/recent-checks')
 def api_recent_checks():
-    """Get recent health checks"""
+    """
+    API endpoint: Get recent health checks.
+    Query Params:
+        limit (int): Number of recent checks to return (default 50)
+    Returns:
+        JSON list of health check records.
+    """
     limit = request.args.get('limit', 50, type=int)
-    
     conn = get_db()
     cur = conn.cursor()
-    
     checks = cur.execute(
         """SELECT * FROM health_checks 
            ORDER BY timestamp DESC 
            LIMIT ?""",
         (limit,)
     ).fetchall()
-    
     conn.close()
-    
     return jsonify([dict(check) for check in checks])
+
 
 @app.route('/api/alerts')
 def api_alerts():
-    """Get active alerts"""
+    """
+    API endpoint: Get active alerts.
+    Returns:
+        JSON list of unresolved alert records.
+    """
     conn = get_db()
     cur = conn.cursor()
-    
     alerts = cur.execute(
         """SELECT * FROM alerts 
            WHERE resolved=0 
            ORDER BY timestamp DESC"""
     ).fetchall()
-    
     conn.close()
-    
     return jsonify([dict(alert) for alert in alerts])
+
 
 @app.route('/api/component/<component>')
 def api_component_history(component):
-    """Get history for specific component"""
+    """
+    API endpoint: Get health check history for a specific component.
+    Args:
+        component (str): Component name from URL path
+    Query Params:
+        hours (int): How many hours back to query (default 24)
+    Returns:
+        JSON list of health check records for the component.
+    """
     hours = request.args.get('hours', 24, type=int)
-    
     conn = get_db()
     cur = conn.cursor()
-    
     history = cur.execute(
         """SELECT * FROM health_checks 
            WHERE component_name=? 
@@ -361,12 +389,12 @@ def api_component_history(component):
            ORDER BY timestamp DESC""".format(hours),
         (component,)
     ).fetchall()
-    
     conn.close()
-    
     return jsonify([dict(h) for h in history])
 
+
 if __name__ == '__main__':
-    # Ensure database exists
+    # Ensure database directory exists before running the app
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    # Start Flask app for health check dashboard
     app.run(host='0.0.0.0', port=5001, debug=False)

@@ -1,10 +1,9 @@
 import os, joblib, pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import create_engine
-from api.config import get_db_url
+from .db import engine
 
 router = APIRouter(prefix="/predict", tags=["predict"])
-engine = create_engine(get_db_url(), pool_pre_ping=True, future=True)
 
 FEATURES = ["close","volume","spread","rsi","macd","macd_signal","macd_hist","atr","ma60","ret_1"]
 

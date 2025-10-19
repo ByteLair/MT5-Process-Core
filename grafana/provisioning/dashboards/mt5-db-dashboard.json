@@ -1,0 +1,71 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""}, "textMode": "auto"},
+      "targets": [{"format": "table", "rawSql": "SELECT COUNT(*) as total FROM market_data;", "refId": "A"}],
+      "title": "Total Records in DB",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""}, "textMode": "auto"},
+      "targets": [{"format": "table", "rawSql": "SELECT COUNT(DISTINCT symbol) as symbols FROM market_data;", "refId": "A"}],
+      "title": "Active Symbols",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 3,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "targets": [{"format": "time_series", "rawSql": "SELECT ts AS time, COUNT(*) as value FROM market_data WHERE ts >= NOW() - INTERVAL '1 hour' GROUP BY ts ORDER BY ts;", "refId": "A"}],
+      "title": "Records per Minute (Last Hour)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 4,
+      "options": {"displayLabels": ["percent"], "legend": {"displayMode": "table", "placement": "right", "showLegend": true, "values": ["value"]}, "pieType": "pie", "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "targets": [{"format": "table", "rawSql": "SELECT symbol, COUNT(*) as count FROM market_data GROUP BY symbol ORDER BY count DESC LIMIT 10;", "refId": "A"}],
+      "title": "Data Distribution by Symbol (Top 10)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+      "id": 5,
+      "options": {"legend": {"calcs": ["mean", "lastNotNull", "max", "min"], "displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "targets": [{"format": "time_series", "rawSql": "SELECT ts AS time, close, symbol FROM market_data WHERE symbol IN ('EURUSD', 'GBPUSD', 'USDJPY') AND timeframe = 'M1' AND ts >= NOW() - INTERVAL '1 hour' ORDER BY ts;", "refId": "A"}],
+      "title": "Price Chart - Major Pairs (Last Hour)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+      "id": 6,
+      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true},
+      "targets": [{"format": "table", "rawSql": "SELECT symbol, timeframe, ts, open, high, low, close, volume FROM market_data ORDER BY ts DESC LIMIT 50;", "refId": "A"}],
+      "title": "Latest Market Data (Last 50 Records)",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["db", "market-data", "trading"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "MT5 Database Dashboard",
+  "uid": "mt5-db-dashboard",
+  "version": 1
+}

@@ -1,0 +1,9 @@
+[Unit]
+Description=Verifica status do GitHub Actions Runner periodicamente
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/check_github_runner.sh
+
+[Install]
+WantedBy=multi-user.target

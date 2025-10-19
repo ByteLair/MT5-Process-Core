@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import os, sys, pandas as pd
+import os
+import sys
+import pandas as pd
 from sqlalchemy import create_engine
 
 if len(sys.argv) < 2:
@@ -29,7 +31,8 @@ if missing:
 df["symbol"] = symbol
 df["timeframe"] = timeframe
 
-if "spread" not in df.columns: df["spread"] = 0.0
+if "spread" not in df.columns:
+    df["spread"] = 0.0
 # Remover colunas extras que não existem na tabela
 for col in ["date", "time"]:
     if col in df.columns:

@@ -3,12 +3,17 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, text
 import os
+import sys
 import time
 from datetime import datetime
 from prometheus_client import Counter, Histogram, Gauge
 
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from db import engine as ENGINE
+
 API_KEY = os.getenv("API_KEY", "supersecretkey")
-ENGINE  = create_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True, future=True)
 
 router = APIRouter(tags=["ingest"])
 

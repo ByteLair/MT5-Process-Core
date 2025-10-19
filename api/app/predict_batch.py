@@ -1,4 +1,5 @@
 import os
+import sys
 import joblib
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
@@ -6,11 +7,15 @@ from sqlalchemy import create_engine, text
 from typing import List
 from .features_sql import LATEST_WINDOW_SQL
 
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from db import engine
+
 router = APIRouter()
 
 DB_URL = os.environ.get("DATABASE_URL")
 MODEL_PATH = os.environ.get("MODEL_PATH", "/models/rf_m1.pkl")
-engine = create_engine(DB_URL, pool_pre_ping=True, future=True)
 
 _model_cache = None
 

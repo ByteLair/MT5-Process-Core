@@ -18,7 +18,8 @@ def tick():
                SELECT * FROM public.features_m1
                WHERE symbol=:s ORDER BY ts DESC LIMIT 30
             """, conn, params={"s":sym})
-            if df.empty: continue
+            if df.empty:
+                continue
             p = float(m.predict_proba(df[FEATURES].fillna(0))[:,1][0])
             ts = df["ts"].iloc[0]
             label = int(p>=0.5)
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     sched.start()
     import time
     try:
-        while True: time.sleep(3600)
+        while True:
+            time.sleep(3600)
     except KeyboardInterrupt:
         sched.shutdown()

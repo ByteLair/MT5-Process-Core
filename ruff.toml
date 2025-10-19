@@ -1,0 +1,25 @@
+line-length = 88
+target-version = "py310"
+
+[lint]
+select = [
+  "E",  # pycodestyle
+  "F",  # pyflakes
+  "I",  # isort (import sorting)
+  "W",  # warnings
+  "UP", # pyupgrade
+  "C90",# mccabe (complexity)
+  "N",  # pep8-naming
+]
+ignore = [
+  "E501",  # line length handled by formatter
+]
+
+[lint.isort]
+combine-as-imports = true
+force-single-line = false
+known-first-party = ["api", "ml", "scripts"]
+lines-after-imports = 2
+
+[lint.mccabe]
+max-complexity = 12

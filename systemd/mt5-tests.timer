@@ -1,0 +1,9 @@
+[Unit]
+Description=Executa testes automatizados do projeto diariamente
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

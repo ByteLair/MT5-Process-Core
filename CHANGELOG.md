@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [2.1.0] - 2025-10-18
+
+### 📚 Documentation Overhaul - Complete Technical Documentation
+
+This release focuses on **comprehensive documentation** for the entire system, making it accessible to both new developers and operators.
+
+### Added
+
+#### Complete Documentation Suite
+- ✨ **Technical Documentation** (`docs/DOCUMENTATION.md`) - 500+ lines
+	- Complete system architecture
+	- Installation and configuration guide
+	- API reference with all endpoints
+	- ML pipeline detailed explanation
+	- Monitoring and observability setup
+	- Backup and disaster recovery procedures
+	- Automation and maintenance guide
+	- Security best practices
+	- Comprehensive troubleshooting guide
+
+- ✨ **Visual Diagrams** (`docs/DIAGRAMS.md`)
+	- 10 Mermaid diagrams covering architecture, data flows, monitoring, automation, backup, health checks, CI/CD, and database schema
+
+- ✨ **Onboarding Guide** (`docs/ONBOARDING.md`)
+	- 5-day structured tutorial for new developers
+	- Day 1-5: Setup, exploration, first contribution, ML understanding, operations
+
+- ✨ **Practical Examples** (`docs/EXAMPLES.md`)
+	- 50+ code snippets for common tasks (adding symbols, models, endpoints, dashboards, metrics, alerts)
+
+- ✨ **Architecture Decision Records** (`docs/adr/`)
+	- ADR-001: TimescaleDB, ADR-002: Docker Compose, ADR-005: Random Forest
+
+- ✨ **Performance Guidelines** (`docs/PERFORMANCE.md`)
+	- Benchmarks, limits, optimizations, monitoring, troubleshooting
+
+- ✨ **Operational Runbook** (`docs/RUNBOOK.md`)
+	- Daily operations, deploy/rollback, backup/restore, incident response, disaster recovery
+
+- ✨ **Glossary** (`docs/GLOSSARY.md`)
+	- 80+ terms: trading, indicators, ML, infrastructure, database, observability
+
+- ✨ **FAQ** (`docs/FAQ.md`)
+	- 50+ Q&A covering installation, development, troubleshooting, performance
+
+### Documentation Statistics
+- **New Files**: 9
+- **Lines**: 4,000+
+- **Diagrams**: 10
+- **Examples**: 50+
+- **Terms**: 80+
+- **FAQ**: 50+
+
 ---
 
 ## [2.0.0] - 2025-10-18

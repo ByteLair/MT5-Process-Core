@@ -1,0 +1,10 @@
+[Unit]
+Description=Executa todos os testes automatizados do projeto
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/felipe/mt5-trading-db
+ExecStart=/usr/bin/env pytest --maxfail=1 --disable-warnings
+
+[Install]
+WantedBy=multi-user.target

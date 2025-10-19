@@ -1,0 +1,11 @@
+[Unit]
+Description=Atualização automática do stack MT5
+After=network.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/felipe/mt5-trading-db
+ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/update_stack.sh
+
+[Install]
+WantedBy=multi-user.target

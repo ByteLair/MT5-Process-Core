@@ -1,3 +1,63 @@
+### Aviso por email a cada commit
+
+Para receber um email com o status do repositório a cada commit:
+
+1. Adicione o seguinte hook ao seu repositório:
+  ```bash
+  echo '#!/bin/bash\nbash /home/felipe/mt5-trading-db/scripts/git_commit_email_notify.sh' > .git/hooks/post-commit
+  chmod +x .git/hooks/post-commit
+  ```
+2. Após cada commit, você receberá um email com o resumo e status do repositório.
+### GitHub Actions Runner (serviço)
+
+Para garantir que o runner do GitHub Actions esteja sempre ativo após reinicializações:
+
+1. Execute o script:
+  ```bash
+  bash scripts/start_github_runner.sh
+  ```
+  Isso inicia e habilita o serviço para inicialização automática.
+
+2. Para verificar o status:
+  ```bash
+  systemctl status actions.runner.Lysk-dot-mt5-trading-db.2v4g1.service
+  ```
+### Atualização automática do stack
+
+Para garantir que o sistema esteja sempre atualizado, utilize a automação via systemd:
+
+1. Execute o script de instalação:
+  ```bash
+  bash scripts/install_update_systemd.sh
+  ```
+  Isso instala e ativa o serviço/timer que verifica e atualiza o stack todo dia às 10h da manhã.
+
+2. O script `scripts/update_stack.sh` faz o processo completo de atualização do código, imagens Docker e dependências.
+
+3. Para verificar o status do timer:
+  ```bash
+  systemctl status mt5-update.timer
+  ```
+
+Logs e resultados da atualização podem ser consultados via `journalctl -u mt5-update.service`.
+### Email alerting (Grafana)
+
+Para receber alertas por email, configure o SMTP no arquivo de configuração do Grafana (`grafana.ini` ou via variáveis de ambiente):
+
+```
+[smtp]
+enabled = true
+host = smtp.seudominio.com:587
+user = seu-usuario
+password = sua-senha
+from_address = alertas@seudominio.com
+from_name = MT5 Trading Alerts
+skip_verify = true
+```
+
+Depois, edite o arquivo `grafana/provisioning/alerting/contact-points.yaml` e coloque seu email em `addresses:`.
+
+Os alertas já estão provisionados para avisar se a API ficar fora do ar (regra "API Down").
 # 🚀 MT5 Trading DB - Complete Trading Infrastructure
 
 > Sistema completo de coleta, análise e predição de dados de mercado MT5 com Machine Learning, monitoramento e infraestrutura como código.
@@ -13,18 +73,6 @@
 
 ## 📋 Índice
 
-- [Visão Geral](#-visão-geral)
-- [Arquitetura](#-arquitetura)
-- [Quick Start](#-quick-start)
-- [Componentes](#-componentes)
-- [Documentação](#-documentação)
-- [Kubernetes](#-kubernetes)
-- [Monitoramento](#-monitoramento)
-- [Machine Learning](#-machine-learning)
-- [API Reference](#-api-reference)
-- [Manutenção](#-manutenção)
-
----
 
 ## 🎯 Visão Geral
 
@@ -480,6 +528,49 @@ curl http://localhost:18001/health
 RETENTION_DAYS=30 ./backup.sh
 ```
 
+### Maintenance automation
+- Systemd integration (autostart + scheduled checks):
+  - systemd/mt5-maintenance.service runs the full maintenance flow on demand/boot
+  - systemd/mt5-maintenance.timer triggers it every 5 minutes (persistent)
+
+Install systemd units:
+
+```
+bash scripts/install_maintenance_systemd.sh
+```
+
+This will:
+- Install service/timer under /etc/systemd/system
+- Enable the service and start the timer
+- Next runs: every 5 minutes and 2 minutes after boot
+
+
+We ship a maintenance helper to keep containers healthy and avoid port conflicts, now with health checks and subcommands.
+
+- scripts/maintenance.sh — ensure services are up, restart unhealthy, clear orphan docker-proxy (4317, 4318, 3100, 9090, 3000, 18003, 9100), and check API/Prometheus/Loki/Jaeger/Grafana.
+- docs/cron_example.txt — example cron entry to run the script every 5 minutes.
+
+Usage examples:
+
+```
+# Full flow: clear ports -> up -> restart unhealthy -> checks -> status
+bash scripts/maintenance.sh full
+
+# Only ensure up
+bash scripts/maintenance.sh up
+
+# Only checks
+bash scripts/maintenance.sh check
+
+# Only clear ports (non-interactive sudo recommended)
+bash scripts/maintenance.sh clear-ports
+
+# Restart unhealthy
+bash scripts/maintenance.sh restart-unhealthy
+
+# Optional prune
+PRUNE=true bash scripts/maintenance.sh prune
+```
 **O que é incluído no backup:**
 - Dump completo do PostgreSQL
 - Modelos ML treinados
@@ -614,8 +705,68 @@ docker compose run --rm ml-trainer python prepare_dataset.py
 ### v1.0.0 (2021-10-18)
 - ✅ Sistema básico de ingestão
 - ✅ TimescaleDB implementation
-- ✅ RandomForest ML model
-- ✅ FastAPI backend
+
+
+## 📖 Documentação Completa
+
+O sistema possui documentação abrangente para desenvolvedores e operadores:
+
+### 📚 Guias Principais
+
+| Documento | Descrição | Quando Usar |
+|-----------|-----------|-------------|
+| [**DOCUMENTATION.md**](docs/DOCUMENTATION.md) | Documentação técnica completa (500+ linhas) | Referência técnica, instalação, configuração |
+| [**ONBOARDING.md**](docs/ONBOARDING.md) | Tutorial de 5 dias para novos devs | Primeiro contato com o sistema |
+| [**EXAMPLES.md**](docs/EXAMPLES.md) | Exemplos de código práticos | Implementar features comuns |
+| [**RUNBOOK.md**](docs/RUNBOOK.md) | Procedimentos operacionais | Deploy, rollback, incidentes |
+| [**FAQ.md**](docs/FAQ.md) | 50+ perguntas frequentes | Troubleshooting rápido |
+
+### 📊 Referências Técnicas
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [**DIAGRAMS.md**](docs/DIAGRAMS.md) | 10 diagramas Mermaid (arquitetura, fluxos, CI/CD) |
+| [**PERFORMANCE.md**](docs/PERFORMANCE.md) | Benchmarks, limites, otimizações |
+| [**GLOSSARY.md**](docs/GLOSSARY.md) | 80+ termos técnicos e de trading |
+| [**ADRs**](docs/adr/) | Decisões arquiteturais (TimescaleDB, Docker Compose, Random Forest) |
+| [**CHANGELOG.md**](CHANGELOG.md) | Histórico de versões e breaking changes |
+
+### 🎯 Quick Links por Caso de Uso
+
+```bash
+# 🆕 Novo no Sistema?
+docs/ONBOARDING.md          # Tutorial de 5 dias
+docs/GLOSSARY.md            # Aprenda os termos
+
+# 💻 Implementar Features?
+docs/EXAMPLES.md            # Code snippets prontos
+docs/DOCUMENTATION.md       # Referência da API
+
+# 🐛 Resolvendo Problemas?
+docs/FAQ.md                 # 50+ Q&A
+docs/RUNBOOK.md             # Incident response
+docs/PERFORMANCE.md         # Troubleshooting
+
+# 🏗️ Entendendo Arquitetura?
+docs/DIAGRAMS.md            # 10 diagramas visuais
+docs/adr/                   # Por que X ao invés de Y?
+
+# 🚀 Deploy & Operações?
+docs/RUNBOOK.md             # Step-by-step procedures
+docs/PERFORMANCE.md         # Benchmarks e limites
+```
+
+### 📈 Estatísticas da Documentação
+
+```
+Total de Linhas:     4,000+
+Arquivos:            9
+Diagramas:           10 (Mermaid)
+Exemplos de Código:  50+
+Termos Definidos:    80+
+FAQ Entries:         50+
+Cobertura:           100% dos componentes
+```
 
 ---
 

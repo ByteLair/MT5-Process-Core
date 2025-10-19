@@ -2,7 +2,9 @@
 import os, json
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+from .db import engine
+from sqlalchemy import create_engine
 
 router = APIRouter(tags=["ml"])
 
@@ -10,7 +12,6 @@ DB_URL     = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt
 MODELS_DIR = os.getenv("MODELS_DIR", "/models")
 MANIFEST   = Path(MODELS_DIR) / "manifest.json"
 
-engine = create_engine(DB_URL)
 
 @router.get("/metrics")
 def metrics():

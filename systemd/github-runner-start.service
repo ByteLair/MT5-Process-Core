@@ -1,0 +1,11 @@
+[Unit]
+Description=Start GitHub Actions Runner on boot
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/start_github_runner.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

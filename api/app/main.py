@@ -6,23 +6,67 @@ from .signals import router as signals_router
 from .ingest import router as ingest_router
 from .metrics import router as metrics_router
 from prometheus_client import make_asgi_app, REGISTRY
+import asyncio
 import uuid
-import os
+import os, logging
 import sys
 
 # Adicionar diretório pai ao path para imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
+# Configuração de logging estruturado
+LOG_DIR = os.environ.get("LOG_DIR", "./logs/api/")
+os.makedirs(LOG_DIR, exist_ok=True)
+logging.basicConfig(
+    filename=os.path.join(LOG_DIR, "api.log"),
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+
 app = FastAPI(title="MT5 Trade Bridge")
 
 # Configurar tracing com Jaeger
 try:
-    from tracing import setup_tracing, get_tracer
+    from tracing import setup_tracing
     setup_tracing(app, service_name="mt5-trading-api", service_version="1.0.0")
 except ImportError:
     print("⚠️  OpenTelemetry não instalado - tracing desabilitado")
 except Exception as e:
     print(f"⚠️  Erro ao configurar tracing: {e}")
+
+# Connection pool monitoring
+try:
+    from db import engine
+    from pool_monitoring import (
+        setup_sqlalchemy_pool_metrics,
+        update_sqlalchemy_pool_metrics,
+        collect_pgbouncer_metrics,
+    )
+
+    setup_sqlalchemy_pool_metrics(engine, pool_name="default")
+
+    async def _pool_metrics_loop():
+        while True:
+            try:
+                update_sqlalchemy_pool_metrics(engine, pool_name="default")
+                # Collect PgBouncer stats using env vars
+                import os
+                collect_pgbouncer_metrics(
+                    pgbouncer_host=os.getenv("PGBOUNCER_HOST", "pgbouncer"),
+                    pgbouncer_port=int(os.getenv("PGBOUNCER_PORT", "5432")),
+                    pgbouncer_user=os.getenv("POSTGRES_USER", "trader"),
+                    pgbouncer_password=os.getenv("POSTGRES_PASSWORD", ""),
+                )
+            except Exception as e:
+                print(f"⚠️  Falha ao atualizar métricas do pool: {e}")
+            await asyncio.sleep(15)
+
+    @app.on_event("startup")
+    async def _start_pool_metrics_loop():
+        asyncio.create_task(_pool_metrics_loop())
+except Exception as e:
+    print(f"⚠️  Monitoramento do pool não configurado: {e}")
 
 class Signal(BaseModel):
     signal_id: str
@@ -47,6 +91,7 @@ class Feedback(BaseModel):
 
 def decide(symbol: str, timeframe: str) -> Signal:
     _id = str(uuid.uuid4())
+    logging.info(f"Decide chamado: symbol={symbol}, timeframe={timeframe}, id={_id}")
     return Signal(
         signal_id=_id,
         ts=datetime.now(timezone.utc).isoformat(),
@@ -58,16 +103,22 @@ def decide(symbol: str, timeframe: str) -> Signal:
         model_version="lgbm-0.1"
     )
 
+
 @app.get("/signals/latest")
 def latest(symbol: str, period: str):
+    logging.info(f"/signals/latest chamado: symbol={symbol}, period={period}")
     return decide(symbol, period).model_dump()
+
 
 @app.post("/orders/feedback")
 def orders_feedback(body: Feedback):
+    logging.info(f"/orders/feedback chamado: {body.model_dump()}")
     return {"ok": True}
+
 
 @app.get("/health")
 def health():
+    logging.info("/health chamado")
     return {"status": "ok"}
 
 app.include_router(signals_router)

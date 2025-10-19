@@ -3,9 +3,13 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 API_KEY = os.getenv("API_KEY", "supersecretkey")
-ENGINE  = create_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True, future=True)
+from db import engine as ENGINE
 
 router = APIRouter(prefix="/signals", tags=["signals"])
 

@@ -1,0 +1,7 @@
+;; PgBouncer User List
+;; Format: "username" "password_hash"
+;;
+;; Auto-generated on Sat Oct 18 07:37:14 AM UTC 2025
+;; DO NOT EDIT MANUALLY - Run ./generate_userlist.sh to regenerate
+
+"trader" "md54e8e284407a8e714c4d7c4722e72ac3f"

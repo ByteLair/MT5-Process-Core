@@ -1,15 +1,19 @@
 import os
+import sys
 import joblib
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sklearn.ensemble import RandomForestClassifier
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 DB_URL = os.environ.get("DATABASE_URL")
 MODEL_DIR = os.environ.get("MODEL_DIR", "/models")
 MODEL_PATH = os.path.join(MODEL_DIR, os.environ.get("MODEL_FILE", "rf_m1.pkl"))
 
 os.makedirs(MODEL_DIR, exist_ok=True)
-engine = create_engine(DB_URL, pool_pre_ping=True, future=True)
+from db import engine
 
 SQL = """
 SELECT * FROM public.trainset_m1

@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources:
   - name: Prometheus
+    uid: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
@@ -11,6 +12,7 @@ datasources:
       timeInterval: "5s"
       
   - name: PostgreSQL
+    uid: PostgreSQL
     type: postgres
     access: proxy
     url: db:5432
@@ -28,6 +30,7 @@ datasources:
       timescaledb: true
 
   - name: Loki
+    uid: loki
     type: loki
     access: proxy
     url: http://loki:3100

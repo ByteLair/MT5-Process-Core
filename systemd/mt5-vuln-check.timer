@@ -1,0 +1,9 @@
+[Unit]
+Description=Agendamento diário da verificação de vulnerabilidades
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

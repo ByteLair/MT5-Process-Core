@@ -1,0 +1,23 @@
+[Unit]
+Description=MT5 Trading DB Backup Timer
+Documentation=file:///home/felipe/mt5-trading-db/docs/backup.md
+Requires=mt5-backup.service
+
+[Timer]
+# Executar backup diariamente às 03:00 AM
+OnCalendar=daily
+# Executar às 03:00 AM especificamente
+OnCalendar=*-*-* 03:00:00
+
+# Se o sistema estiver desligado no horário agendado, 
+# executar assim que o sistema ligar (até 1 hora de atraso)
+Persistent=true
+
+# Offset aleatório de até 15 minutos para evitar picos
+RandomizedDelaySec=15min
+
+# Precisão de 1 minuto
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
