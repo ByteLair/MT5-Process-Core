@@ -1,46 +1,227 @@
-  - repo: local
-    hooks:
-      - id: add-header
-        name: Add copyright/license header
-        entry: python3 scripts/add_header.py
-        language: system
-        types: [python]
-        files: \.py$
+# =============================================================
+# Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
+# All rights reserved. | Todos os direitos reservados.
+# Private License: This code is the exclusive property of Felipe Petracco Carmo.
+# Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
+# Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+# Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+# =============================================================
+
+# Pre-commit hooks configuration for MT5 Trading DB
+# See https://pre-commit.com for more information
+
+default_language_version:
+  python: python3.12
+
 repos:
+  # ========================================
+  # Python Code Quality & Formatting
+  # ========================================
+
+  # Ruff - Fast Python linter (replaces flake8, pylint, etc)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.8
     hooks:
       - id: ruff
-        args: ["--fix"]
+        name: Lint with Ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
       - id: ruff-format
+        name: Format with Ruff
 
+  # Black - Python code formatter
   - repo: https://github.com/psf/black
     rev: 24.8.0
     hooks:
       - id: black
+        name: Format code with Black
+        args: ["--line-length=100"]
 
+  # isort - Import sorting
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ["--profile", "black"]
+        name: Sort imports with isort
+        args: ["--profile", "black", "--line-length", "100"]
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
-    hooks:
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-merge-conflict
-      - id: mixed-line-ending
-        args: ["--fix=lf"]
-
+  # mypy - Static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
       - id: mypy
-        additional_dependencies: [
-          "pydantic>=1.10,<3",
-          "types-requests",
-          "sqlalchemy-stubs",
-        ]
-        files: "^(api|ml)/"
+        name: Type check with mypy
+        additional_dependencies:
+          - pydantic>=1.10,<3
+          - types-requests
+          - types-PyYAML
+          - sqlalchemy[mypy]
+        args: ["--config-file=mypy.ini", "--ignore-missing-imports"]
+        files: "^(api|ml|scripts)/.*\\.py$"
+
+  # ========================================
+  # General File Checks
+  # ========================================
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: check-yaml
+        name: Check YAML syntax
+        args: ['--unsafe']  # Allow custom tags in docker-compose
+      - id: check-json
+        name: Check JSON syntax
+      - id: check-toml
+        name: Check TOML syntax
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: check-case-conflict
+        name: Check for case conflicts
+      - id: check-docstring-first
+        name: Check docstring is first
+      - id: debug-statements
+        name: Check for debug statements
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+        args: ["--fix=lf"]
+      - id: detect-private-key
+        name: Detect private keys
+      - id: check-executables-have-shebangs
+        name: Check executables have shebangs
+      - id: check-shebang-scripts-are-executable
+        name: Check shebang scripts are executable
+
+  # ========================================
+  # Security Checks
+  # ========================================
+
+  # Bandit - Security linter
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.8
+    hooks:
+      - id: bandit
+        name: Security check with Bandit
+        args: ['-c', '.bandit.yaml', '-r', '.']
+        pass_filenames: false
+
+  # Detect secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        name: Detect secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^\.env$
+
+  # Python dependencies vulnerability check
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.3
+    hooks:
+      - id: python-safety-dependencies-check
+        name: Check Python dependencies for vulnerabilities
+        files: requirements.*\.txt$
+
+  # ========================================
+  # Docker & Shell Scripts
+  # ========================================
+
+  # Hadolint - Dockerfile linter
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        name: Lint Dockerfiles
+        args: ['--ignore', 'DL3008', '--ignore', 'DL3009', '--ignore', 'DL3015']
+
+  # Shellcheck - Shell script linter
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: Lint shell scripts
+        args: ['--severity=warning']
+
+  # ========================================
+  # Documentation
+  # ========================================
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown files
+        args: ['--fix', '--config', '.markdownlint.yaml']
+
+  # Python docstring coverage
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.5.0
+    hooks:
+      - id: interrogate
+        name: Check docstring coverage
+        args: ['-vv', '--fail-under=40', '--ignore-init-method', '--ignore-magic']
+        files: ^(api|ml)/.*\.py$
+        pass_filenames: false
+
+  # ========================================
+  # SQL
+  # ========================================
+
+  # SQL formatting
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.3
+    hooks:
+      - id: sqlfluff-lint
+        name: Lint SQL files
+        args: ['--dialect', 'postgres', '--exclude-rules', 'L016,L031']
+        files: \.sql$
+      - id: sqlfluff-fix
+        name: Fix SQL files
+        args: ['--dialect', 'postgres', '--exclude-rules', 'L016,L031']
+        files: \.sql$
+
+  # ========================================
+  # Custom Local Hooks
+  # ========================================
+
+  - repo: local
+    hooks:
+      # Copyright header check
+      - id: add-header
+        name: Add copyright/license header
+        entry: python3 scripts/add_header.py
+        language: system
+        files: ^(.*\.py|.*\.sh|Dockerfile|.*\.yml|.*\.yaml|.*\.md|.*\.sql|.*\.ipynb|.*\.ini|.*\.toml|.*\.conf)$
+        exclude: ^(\.env|.*\.bak|.*\.lock)$
+
+# ========================================
+# Exclude Patterns
+# ========================================
+exclude: |
+  (?x)^(
+      \.git/|
+      \.venv/|
+      venv/|
+      __pycache__/|
+      \.pytest_cache/|
+      \.mypy_cache/|
+      \.ruff_cache/|
+      build/|
+      dist/|
+      .*\.egg-info/|
+      node_modules/|
+      volumes/|
+      logs/|
+      data/|
+      models/.*\.pkl$|
+      models/.*\.pt$|
+      .*\.bak$|
+      .*\.log$|
+      .*\.lock$
+  )$

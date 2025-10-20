@@ -1,0 +1,37 @@
+# =============================================================
+# Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
+All rights reserved. | Todos os direitos reservados.
+Private License: This code is the exclusive property of Felipe Petracco Carmo.
+Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
+Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+# =============================================================
+
+# Markdownlint configuration for MT5 Trading DB
+
+# MD013: Line length
+MD013: false
+
+# MD033: Inline HTML
+MD033: false
+
+# MD041: First line in file should be a top level heading
+MD041: false
+
+# MD024: Multiple headings with the same content
+MD024:
+  siblings_only: true
+
+# MD025: Multiple top level headings in the same document
+MD025: false
+
+# MD026: Trailing punctuation in heading
+MD026:
+  punctuation: ".,;:!"
+
+# MD029: Ordered list item prefix
+MD029:
+  style: "ordered"
+
+# MD040: Fenced code blocks should have a language specified
+MD040: false
