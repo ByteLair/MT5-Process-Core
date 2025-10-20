@@ -9,6 +9,134 @@ paths:
       responses:
         '200':
           description: OK
+  /ingest:
+    post:
+      summary: Ingest single candle or batch (wrapped)
+      description: Accepts either a single Candle object or an object with items: Candle[]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Candle'
+                - type: object
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Candle'
+      parameters:
+        - in: header
+          name: X-API-Key
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  inserted: { type: integer }
+                  received: { type: integer }
+                  duplicates: { type: integer }
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol: { type: string }
+                        timeframe: { type: string }
+                        ts_original: { type: string, format: date-time }
+                        ts_bucket: { type: string, format: date-time }
+                        status: { type: string, enum: [inserted, duplicate] }
+        '401': { description: Unauthorized }
+        '500': { description: Server error }
+  /ingest_batch:
+    post:
+      summary: Ingest batch (pure array)
+      description: Accepts a pure JSON array of Candle objects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Candle'
+      parameters:
+        - in: header
+          name: X-API-Key
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  inserted: { type: integer }
+                  received: { type: integer }
+                  duplicates: { type: integer }
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol: { type: string }
+                        timeframe: { type: string }
+                        ts_original: { type: string, format: date-time }
+                        ts_bucket: { type: string, format: date-time }
+                        status: { type: string, enum: [inserted, duplicate] }
+        '401': { description: Unauthorized }
+        '500': { description: Server error }
+  /ingest/tick:
+    post:
+      summary: Ingest ticks batch (raw)
+      description: Accepts {"ticks": [...]} and stores the raw payload for later processing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticks:
+                  type: array
+                  items:
+                    type: object
+      parameters:
+        - in: header
+          name: X-API-Key
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  received: { type: integer }
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol: { type: string }
+                        ts_original: { type: string }
+                        ts_bucket: { type: string, nullable: true }
+                        status: { type: string, enum: [received] }
+        '401': { description: Unauthorized }
+        '500': { description: Server error }
   /predict:
     get:
       summary: Predict latest probability for a symbol
@@ -36,3 +164,29 @@ paths:
         '404': { description: Not found }
         '401': { description: Unauthorized }
         '429': { description: Rate limited }
+
+components:
+  schemas:
+    Candle:
+      type: object
+      required: [ts, symbol, timeframe, open, high, low, close]
+      properties:
+        ts: { type: string, format: date-time, description: UTC ISO8601 preferred }
+        symbol: { type: string }
+        timeframe: { type: string, enum: [M1, M5, M15, M30, H1, H4, D1] }
+        open: { type: number }
+        high: { type: number }
+        low: { type: number }
+        close: { type: number }
+        volume: { type: number, nullable: true }
+        bid: { type: number, nullable: true }
+        ask: { type: number, nullable: true }
+        spread: { type: number, nullable: true }
+        rsi: { type: number, nullable: true }
+        macd: { type: number, nullable: true }
+        macd_signal: { type: number, nullable: true }
+        macd_hist: { type: number, nullable: true }
+        atr: { type: number, nullable: true }
+        bb_upper: { type: number, nullable: true }
+        bb_middle: { type: number, nullable: true }
+        bb_lower: { type: number, nullable: true }

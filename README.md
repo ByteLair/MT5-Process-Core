@@ -200,6 +200,8 @@ terraform apply
 
 **📖 [Índice Completo da Documentação](docs/README.md)**
 
+• Guia de Backup e Restore: docs/backup.md
+
 ### Guias Principais
 
 | Categoria | Documentos |
@@ -399,7 +401,81 @@ curl -s http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,rate(in
 
 ---
 
-## 🤖 Machine Learning
+## � Backup API (Linux) — Serviço systemd
+
+Mantemos uma API FastAPI (uvicorn) local para receber/envio de backups e health-checks. Ela roda como serviço de usuário systemd, inicia no boot e escuta em 0.0.0.0:9101.
+
+### Arquivo do serviço
+
+Local do unit no repositório:
+- `systemd/mt5-backup-api.service`
+
+Instalado em tempo de execução em:
+- `~/.config/systemd/user/mt5-backup-api.service`
+
+Conteúdo (resumo):
+- WorkingDirectory: `/home/felipe/mt5-trading-db`
+- ExecStart: `~/.venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port 9101`
+- Logs: `~/mt5-trading-db/logs/api/`
+- Restart: `always`
+
+### Instalação/ativação
+
+```bash
+# Copie o unit para o diretório do usuário
+mkdir -p ~/.config/systemd/user
+cp systemd/mt5-backup-api.service ~/.config/systemd/user/
+
+# Recarregue, habilite e inicie
+systemctl --user daemon-reload
+systemctl --user enable --now mt5-backup-api.service
+
+# Garantir start automático após reboot (user lingering)
+loginctl enable-linger "$USER"
+
+# Abrir a porta 9101 no firewall (se UFW estiver ativo)
+sudo ufw allow 9101/tcp
+```
+
+### Verificação rápida
+
+```bash
+# Status do serviço
+systemctl --user status mt5-backup-api.service --no-pager
+
+# Health local
+curl http://127.0.0.1:9101/health
+```
+
+### Logs
+
+```bash
+# Logs do serviço (journal)
+journalctl --user -u mt5-backup-api.service -f
+
+# Logs do app (arquivo)
+tail -f ~/mt5-trading-db/logs/api/api.log
+```
+
+### Ports e acesso
+
+- API escutando: `0.0.0.0:9101`
+- Libere no firewall: `sudo ufw allow 9101/tcp`
+- Teste remoto (de outra máquina):
+
+```bash
+curl http://SEU_IP_LINUX:9101/health
+```
+
+### Troubleshooting
+
+- Erro de permissão criando logs em `/app`: já configuramos para `./logs/api`. Confirme a var `LOG_DIR` no ambiente, se precisar sobrescrever.
+- Porta não responde externamente: verifique UFW ou outros firewalls, e se a app está ouvindo em 0.0.0.0.
+- Serviço não sobe no boot: confirme `loginctl enable-linger $USER` e `systemctl --user is-enabled mt5-backup-api.service`.
+- Ver PID e socket: `ss -ltnp | grep 9101`
+
+
+## �🤖 Machine Learning
 
 ### Modelos Disponíveis
 

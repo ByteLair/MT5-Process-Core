@@ -129,14 +129,14 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: "postgresql+psycopg://trader:trader123@pgbouncer:5432/mt5_trading"
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
       PORT: ${API_PORT_INTERNAL:-8001}
       UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
       DB_HOST: "db"
       DB_PORT: "5432"
       DB_USER: "trader"
       DB_PASS: "trader123"
-      USE_PGBOUNCER: "true"
+      USE_PGBOUNCER: "false"
       APP_NAME: "mt5-trading-api"
     depends_on:
       db:
@@ -168,6 +168,77 @@ services:
     volumes:
       - ./scripts:/app/scripts:rw
       # - ./dados_historicos.csv:/app/scripts/dados_historicos.csv:ro  # Already included in scripts mount
+
+  tick-aggregator:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: mt5-api
+    container_name: mt5_tick_aggregator
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      TICK_AGG_INTERVAL: ${TICK_AGG_INTERVAL:-5}
+      DB_HOST: "db"
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "run_tick_aggregator.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f run_tick_aggregator || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512m"
+    mem_limit: 512m
+
+  indicators-worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: mt5-api
+    container_name: mt5_indicators_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      INDICATORS_INTERVAL: ${INDICATORS_INTERVAL:-60}
+      SYMBOLS: ${SYMBOLS:-EURUSD,GBPUSD,USDJPY}
+      DB_HOST: "db"
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "run_indicators_worker.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f run_indicators_worker || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1g"
+    mem_limit: 1g
       
 
 
@@ -182,7 +253,7 @@ services:
     depends_on:
       - db
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - "${PGADMIN_PORT:-15050}:80"
     # If you do not use pgAdmin remotely, remove the `ports` mapping or bind it to localhost only
     logging:
       driver: "json-file"
@@ -265,7 +336,7 @@ services:
     container_name: mt5_loki
     restart: unless-stopped
     ports:
-      - "3100:3100"
+      - "13100:3100"
     volumes:
       - ./loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
@@ -318,16 +389,16 @@ services:
       - BADGER_DIRECTORY_VALUE=/badger/data
       - BADGER_DIRECTORY_KEY=/badger/key
     ports:
-      - "5775:5775/udp"   # Zipkin compatible endpoint
-      - "6831:6831/udp"   # Jaeger Thrift Compact
-      - "6832:6832/udp"   # Jaeger Thrift Binary
-      - "5778:5778"       # Config endpoint
-      - "16686:16686"     # UI
-      - "14268:14268"     # HTTP collector
-      - "14250:14250"     # gRPC collector
-      - "9411:9411"       # Zipkin compatible endpoint
-      - "4317:4317"       # OTLP gRPC
-      - "4318:4318"       # OTLP HTTP
+      - "25775:5775/udp"   # Zipkin compatible endpoint
+      - "26831:6831/udp"   # Jaeger Thrift Compact
+      - "26832:6832/udp"   # Jaeger Thrift Binary
+      - "25778:5778"       # Config endpoint
+      - "26686:16686"      # UI
+      - "24268:14268"      # HTTP collector
+      - "24250:14250"      # gRPC collector
+      - "29411:9411"       # Zipkin compatible endpoint
+      - "24317:4317"       # OTLP gRPC
+      - "24318:4318"       # OTLP HTTP
     volumes:
       - jaeger_data:/badger
     logging:
@@ -356,7 +427,7 @@ services:
       - jaeger
       - db
     ports:
-      - "3000:3000"
+      - "13000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
