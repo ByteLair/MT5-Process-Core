@@ -1,9 +1,10 @@
 # api/app/signals.py
-from fastapi import APIRouter, Header, HTTPException, Query
-from pydantic import BaseModel
-from sqlalchemy import create_engine, text
 import os
 import sys
+
+from fastapi import APIRouter, Header, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import text
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,9 +14,11 @@ from db import engine as ENGINE
 
 router = APIRouter(prefix="/signals", tags=["signals"])
 
+
 def auth(x_api_key: str | None):
     if not x_api_key or x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="unauthorized")
+
 
 @router.get("/next")
 def next_signal(
@@ -29,7 +32,8 @@ def next_signal(
     if not symbols_list:
         return {"signals": []}
 
-    sql = text("""
+    sql = text(
+        """
         WITH cand AS (
           SELECT id, ts, account_id, symbol, timeframe, side, confidence,
                  sl_pips, tp_pips, ttl_sec, meta
@@ -51,7 +55,8 @@ def next_signal(
         )
         SELECT c.*
         FROM cand c;
-    """)
+    """
+    )
     params = {"account_id": account_id, "symbols": symbols_list, "timeframe": timeframe}
     with ENGINE.connect() as conn:
         row = conn.execute(sql, params).mappings().first()
@@ -70,9 +75,10 @@ def next_signal(
     }
     return {"signals": [payload]}
 
+
 class AckIn(BaseModel):
     id: str
-    status: str      # FILLED | REJECTED
+    status: str  # FILLED | REJECTED
     symbol: str
     side: str
     mt5_ticket: int | None = None
@@ -80,18 +86,29 @@ class AckIn(BaseModel):
     ts_exec: str | None = None
     account_id: str | None = None
 
+
 @router.post("/ack")
 def ack_signal(ack: AckIn, x_api_key: str | None = Header(None)):
     auth(x_api_key)
     with ENGINE.begin() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text(
+                """
           INSERT INTO public.signals_ack
             (id, account_id, symbol, side, mt5_ticket, price, status, ts_exec)
           VALUES (:id, :account_id, :symbol, :side, :mt5_ticket, :price, :status, :ts_exec)
-        """), ack.model_dump())
-        conn.execute(text("""
+        """
+            ),
+            ack.model_dump(),
+        )
+        conn.execute(
+            text(
+                """
           UPDATE public.signals_queue
              SET status='ACKED'
            WHERE id=:id AND status IN ('PENDING','SENT')
-        """), {"id": ack.id})
+        """
+            ),
+            {"id": ack.id},
+        )
     return {"ok": True}

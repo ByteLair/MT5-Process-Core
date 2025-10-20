@@ -1,7 +1,7 @@
 # Status dos Containers - MT5 Trading System
 
-**Data:** 2025-10-20  
-**Hora:** 02:38 UTC  
+**Data:** 2025-10-20
+**Hora:** 02:38 UTC
 **Status:** ✅ OPERACIONAL
 
 ## 🚀 Containers em Execução (7 ativos)
@@ -21,50 +21,57 @@
 ## 📊 Estatísticas do Sistema
 
 ### Banco de Dados
+
 - **Candles armazenados:** 2
 - **Símbolos únicos:** 1 (EURUSD)
 - **Último timestamp:** 2025-10-20 02:21:00 UTC
 
 ### Workers Ativos
+
 ```
 ✓ tick-aggregator     → Processando a cada 5 segundos
-✓ indicators-worker   → Calculando indicadores a cada 60 segundos  
+✓ indicators-worker   → Calculando indicadores a cada 60 segundos
 ✓ ml-scheduler        → Agendamento de tarefas ML
 ```
 
 ### Logs Recentes
 
 **Tick Aggregator:**
+
 ```
-2025-10-20 02:37:57 - INFO - Aggregated ticks: 
+2025-10-20 02:37:57 - INFO - Aggregated ticks:
   {'inserted': 0, 'updated': 0, 'from': '...', 'to': '...'}
 ```
 
 **Indicators Worker:**
+
 ```
-2025-10-20 02:21:45 - INFO - Indicators Worker started 
+2025-10-20 02:21:45 - INFO - Indicators Worker started
   for symbols: ['EURUSD', 'GBPUSD', 'USDJPY'], interval=60s
 ```
 
 ## 🔌 Endpoints Disponíveis
 
 ### API REST
-- **Swagger UI:** http://localhost:18002/docs
-- **ReDoc:** http://localhost:18002/redoc
-- **Health Check:** http://localhost:18002/health
+
+- **Swagger UI:** <http://localhost:18002/docs>
+- **ReDoc:** <http://localhost:18002/redoc>
+- **Health Check:** <http://localhost:18002/health>
 
 ### Ingestão de Dados
+
 ```bash
 # Autenticação
 X-API-Key: <valor_do_env>
 
 # Endpoints
 POST /ingest              # Candle único ou batch com envelope
-POST /ingest_batch        # Array direto de candles  
+POST /ingest_batch        # Array direto de candles
 POST /ingest/tick         # Ticks de alta frequência
 ```
 
 ### Banco de Dados
+
 ```bash
 # Via PgBouncer (pooling)
 postgresql://trader:trader123@localhost:6432/mt5_trading
@@ -74,6 +81,7 @@ postgresql://trader:trader123@localhost:5432/mt5_trading
 ```
 
 ### Métricas
+
 ```bash
 # Node Exporter
 http://localhost:9100/metrics
@@ -82,12 +90,14 @@ http://localhost:9100/metrics
 ## ⚙️ Configuração dos Workers
 
 ### Tick Aggregator
+
 - **Intervalo:** 5 segundos (`TICK_AGG_INTERVAL`)
 - **Função:** Agrega ticks de `market_data_raw` em candles M1
 - **Método:** SQL com `time_bucket()` do TimescaleDB
 - **OHLC:** Calculado a partir de `(bid + ask) / 2`
 
-### Indicators Worker  
+### Indicators Worker
+
 - **Intervalo:** 60 segundos (`INDICATORS_INTERVAL`)
 - **Símbolos:** EURUSD, GBPUSD, USDJPY (`SYMBOLS`)
 - **Lookback:** 200 minutos
@@ -138,6 +148,7 @@ docker exec mt5_db psql -U trader -d mt5_trading \
 ## 📝 Comandos Úteis
 
 ### Gerenciamento de Containers
+
 ```bash
 # Subir todos
 docker-compose up -d
@@ -156,11 +167,12 @@ docker-compose down
 ```
 
 ### Monitoramento
+
 ```bash
 # Ver logs do tick aggregator
 docker logs 15c1ad2b98f5_mt5_tick_aggregator --tail 50 -f
 
-# Ver logs do indicators worker  
+# Ver logs do indicators worker
 docker logs a77f1aa236da_mt5_indicators_worker --tail 50 -f
 
 # Ver logs da API
@@ -171,6 +183,7 @@ docker stats mt5_api mt5_tick_aggregator mt5_indicators_worker
 ```
 
 ### Banco de Dados
+
 ```bash
 # Conectar ao banco
 docker exec -it mt5_db psql -U trader -d mt5_trading
@@ -185,22 +198,27 @@ SELECT COUNT(*) FROM market_data_raw;
 ## ⚠️ Notas Importantes
 
 ### Serviços Não Iniciados
+
 Os seguintes serviços **não foram iniciados** devido a conflitos de porta com outro projeto:
+
 - ❌ Grafana (porta 3000)
-- ❌ Prometheus (porta 9090)  
+- ❌ Prometheus (porta 9090)
 - ❌ Loki (porta 3100)
 - ❌ Jaeger (portas 4317, 16686)
 - ❌ PgAdmin (porta 5050)
 - ❌ Promtail
 
 Para usar esses serviços, é necessário:
+
 1. Parar os containers conflitantes do outro projeto, OU
 2. Alterar as portas no `docker-compose.yml`
 
 ### Healthcheck dos Workers
+
 Os workers (`tick-aggregator` e `indicators-worker`) aparecem como "unhealthy" no status do Docker porque o comando `pgrep` usado no healthcheck não está disponível na imagem Python slim.
 
 **Solução:** Verificar logs para confirmar funcionamento:
+
 ```bash
 docker logs <container_name> --tail 10
 ```
@@ -210,6 +228,7 @@ Se os logs mostram processamento regular, o worker está funcionando corretament
 ## 🔧 Troubleshooting
 
 ### Worker não está processando
+
 ```bash
 # Verificar logs de erro
 docker logs <worker_container> | grep -i error
@@ -222,6 +241,7 @@ docker-compose restart tick-aggregator indicators-worker
 ```
 
 ### API retorna erro de conexão
+
 ```bash
 # Verificar se pgbouncer está healthy
 docker ps | grep pgbouncer
@@ -234,6 +254,7 @@ docker exec mt5_api python -c "from db import engine; print(engine)"
 ```
 
 ### Container travado
+
 ```bash
 # Obter PID do processo
 PID=$(docker inspect <container> | grep '"Pid"' | grep -oP '\d+' | tail -1)
@@ -255,6 +276,6 @@ docker-compose up -d <service>
 
 ---
 
-**Última atualização:** 2025-10-20 02:38 UTC  
-**Sistema:** Produção Local  
+**Última atualização:** 2025-10-20 02:38 UTC
+**Sistema:** Produção Local
 **Status Geral:** ✅ Operacional

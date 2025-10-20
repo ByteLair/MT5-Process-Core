@@ -44,31 +44,31 @@ graph TB
     User -->|HTTP Requests| API
     API -->|Queries| PgBouncer
     PgBouncer -->|Connection Pool| DB
-    
+
     MLScheduler -->|Triggers| MLWorker
     MLWorker -->|Reads Features| DB
     MLWorker -->|Saves Models| MLModels
     API -->|Loads Models| MLModels
     API -->|Generates Signals| DB
-    
+
     API -->|Metrics| Prometheus
     DB -->|Metrics| Prometheus
     Prometheus -->|Data Source| Grafana
-    
+
     API -->|Logs| Promtail
     MLWorker -->|Logs| Promtail
     Promtail -->|Push| Loki
     Loki -->|Data Source| Grafana
-    
+
     API -->|Traces| Jaeger
     Jaeger -->|Data Source| Grafana
-    
+
     Systemd -->|Runs| Scripts
     Scripts -->|Maintenance| API
     Scripts -->|Maintenance| DB
     Scripts -->|Backup| RemoteBackup
     GHRunner -->|CI/CD| API
-    
+
     style API fill:#4CAF50
     style DB fill:#2196F3
     style Prometheus fill:#E96228
@@ -115,13 +115,13 @@ sequenceDiagram
         ML-->>Cache: Model object
     end
     Cache-->>API: Model ready
-    
+
     API->>DB: SELECT features FROM features_m1
     DB-->>API: Feature data
-    
+
     API->>ML: model.predict_proba(features)
     ML-->>API: Probabilities
-    
+
     API->>API: Apply threshold
     API->>API: Generate signals
     API-->>User: JSON with signals
@@ -140,11 +140,11 @@ sequenceDiagram
     Scheduler->>Worker: Trigger training
     Worker->>DB: SELECT * FROM trainset_m1
     DB-->>Worker: Training data
-    
+
     Worker->>Worker: Prepare features (X, y)
     Worker->>Worker: Train RandomForest
     Worker->>Worker: Evaluate model
-    
+
     Worker->>FS: Save model (rf_m1.pkl)
     Worker->>FS: Save manifest.json
     Worker->>Metrics: INSERT model_metrics
@@ -188,17 +188,17 @@ graph LR
     DB -->|metrics| Prom
     Node -->|metrics| Prom
     Prom -->|store| PromDB
-    
+
     Logs -->|logs| Promtail
     Promtail -->|push| LokiDB
-    
+
     Traces -->|traces| Jaeger
     Jaeger -->|store| JaegerDB
-    
+
     PromDB -->|query| Grafana
     LokiDB -->|query| Grafana
     JaegerDB -->|query| Grafana
-    
+
     Grafana -->|evaluate| Alerts
     Alerts -->|notify| Email
 ```
@@ -285,12 +285,12 @@ graph LR
     DB -->|dump| Dump
     Files -->|compress| Tar
     Services -->|compress| Tar
-    
+
     Dump --> Script
     Tar --> Script
     Script --> SCP
     SCP --> Remote
-    
+
     Remote -->|on disaster| RestoreScript
     RestoreScript --> ExtractTar
     RestoreScript --> RestoreDB
@@ -334,17 +334,17 @@ graph TB
     HealthScript --> Database
     HealthScript --> Disk
     HealthScript --> Runner
-    
+
     Containers --> SQLite
     APIs --> SQLite
     Database --> SQLite
     Disk --> SQLite
     Runner --> SQLite
-    
+
     SQLite --> Stats
     SQLite --> Alerts
     SQLite --> Report
-    
+
     Alerts --> Email
     Report --> Email
     Stats --> Logs
@@ -379,16 +379,16 @@ graph LR
 
     Push --> Checkout
     PR --> Checkout
-    
+
     Checkout --> Setup
     Setup --> Lint
     Lint --> Test
     Test --> Build
     Build --> Deploy
-    
+
     Deploy --> SelfHosted
     SelfHosted --> Status
-    
+
     Push --> Email
     Test --> Status
 ```
@@ -400,7 +400,7 @@ erDiagram
     MARKET_DATA ||--o{ FEATURES_M1 : generates
     FEATURES_M1 ||--o{ MODEL_SIGNALS : predicts
     MODEL_METRICS ||--o{ MODELS : tracks
-    
+
     MARKET_DATA {
         timestamp ts PK
         string symbol
@@ -412,7 +412,7 @@ erDiagram
         int volume
         float spread
     }
-    
+
     FEATURES_M1 {
         timestamp ts PK
         string symbol
@@ -429,7 +429,7 @@ erDiagram
         float ret_1
         float fwd_ret_5
     }
-    
+
     MODEL_SIGNALS {
         timestamp ts PK
         string symbol
@@ -440,7 +440,7 @@ erDiagram
         int label
         timestamp created_at
     }
-    
+
     MODEL_METRICS {
         int id PK
         timestamp created_at

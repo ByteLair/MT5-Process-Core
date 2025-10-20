@@ -9,7 +9,7 @@ jobs:
     runs-on: self-hosted  # Roda no seu servidor
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Deploy
         run: |
           cd /home/felipe/mt5-trading-db

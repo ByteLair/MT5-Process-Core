@@ -56,7 +56,7 @@ Create `my-values.yaml`:
 api:
   replicaCount: 3
   apiKey: "your-secure-api-key"
-  
+
   resources:
     requests:
       memory: "512Mi"
@@ -64,7 +64,7 @@ api:
     limits:
       memory: "2Gi"
       cpu: "2000m"
-  
+
   autoscaling:
     enabled: true
     minReplicas: 3
@@ -77,7 +77,7 @@ postgres:
     username: trader
     password: "your-secure-postgres-password"
     database: mt5_trading
-  
+
   persistence:
     enabled: true
     size: 50Gi
@@ -87,7 +87,7 @@ grafana:
   auth:
     adminUser: admin
     adminPassword: "your-secure-grafana-password"
-  
+
   persistence:
     enabled: true
     size: 5Gi
@@ -355,7 +355,7 @@ api:
     minReplicas: 5
     maxReplicas: 30
     targetCPUUtilizationPercentage: 50
-  
+
   resources:
     requests:
       memory: "1Gi"
@@ -472,6 +472,7 @@ helm get manifest mt5-trading -n mt5-trading
 ### Common Issues
 
 **Helm install fails**
+
 ```bash
 # Check syntax
 helm lint .
@@ -481,6 +482,7 @@ helm install mt5-trading . -n mt5-trading --dry-run --debug
 ```
 
 **Release exists**
+
 ```bash
 # Delete and reinstall
 helm uninstall mt5-trading -n mt5-trading
@@ -511,16 +513,16 @@ rbac:                # RBAC settings
 
 ## 🎓 Best Practices
 
-✅ Always use custom values file  
-✅ Never commit secrets to git  
-✅ Use `--dry-run` before production  
-✅ Pin chart versions  
-✅ Set resource limits  
-✅ Enable persistence in production  
-✅ Use external secrets management  
-✅ Test in staging first  
-✅ Document custom values  
-✅ Regular backups  
+✅ Always use custom values file
+✅ Never commit secrets to git
+✅ Use `--dry-run` before production
+✅ Pin chart versions
+✅ Set resource limits
+✅ Enable persistence in production
+✅ Use external secrets management
+✅ Test in staging first
+✅ Document custom values
+✅ Regular backups
 
 ---
 
@@ -551,7 +553,7 @@ MIT License - See [LICENSE](../../LICENSE)
 
 ---
 
-**Chart Version**: 2.0.0  
-**App Version**: 2.0.0  
-**Maintained by**: Felipe  
+**Chart Version**: 2.0.0
+**App Version**: 2.0.0
+**Maintained by**: Felipe
 **Last Updated**: 18/10/2025

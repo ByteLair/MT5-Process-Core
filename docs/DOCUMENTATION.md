@@ -20,7 +20,9 @@
 ## Visão Geral
 
 ### Propósito
+
 Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
+
 - Coleta e armazenamento de dados de mercado
 - Machine Learning para geração de sinais
 - API REST para integração
@@ -28,6 +30,7 @@ Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
 - Automação de operações e manutenção
 
 ### Stack Tecnológico
+
 - **Backend**: Python (FastAPI), PostgreSQL (TimescaleDB), PgBouncer
 - **ML**: Scikit-learn, LightGBM, PyTorch
 - **Observabilidade**: Prometheus, Grafana, Loki, Promtail, Jaeger
@@ -149,26 +152,32 @@ Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
 ### 4. Observabilidade
 
 #### Prometheus
+
 **Porta**: 9090
 **Config**: `prometheus/prometheus.yml`
 **Métricas**:
+
 - Métricas da API (FastAPI)
 - Node Exporter (sistema)
 - PgBouncer (conexões)
 - Métricas customizadas
 
 #### Grafana
+
 **Porta**: 3000
 **Dashboards**:
+
 - `mt5-trading-main.json`: Dashboard principal
 - `mt5-infra-logs.json`: Infraestrutura e logs
 - `mt5-db-dashboard.json`: Banco de dados
 - `mt5-ml-dashboard.json`: Machine Learning
 
 #### Loki + Promtail
+
 **Porta**: 3100
 **Config**: `loki/loki-config.yml`, `loki/promtail-config.yml`
 **Logs coletados**:
+
 - Containers Docker
 - API logs
 - ML logs
@@ -176,6 +185,7 @@ Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
 - Sistema (syslog)
 
 #### Jaeger
+
 **Porta**: 16686
 **Tracing**: Rastreamento distribuído de requisições
 
@@ -199,6 +209,7 @@ Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
 **Localização**: `scripts/`
 
 #### Operacionais
+
 - `maintenance.sh`: Manutenção completa do sistema
 - `health-check.sh`: Verificação de saúde com SQLite
 - `backup.sh`: Backup local
@@ -206,11 +217,13 @@ Sistema completo de trading automatizado com MT5 (MetaTrader 5) que integra:
 - `remote_backup.sh`: Backup para servidor remoto
 
 #### Instalação
+
 - `install_maintenance_systemd.sh`: Instala serviços de manutenção
 - `install_update_systemd.sh`: Instala serviços de atualização
 - `start_github_runner.sh`: Inicia GitHub Actions Runner
 
 #### Monitoramento
+
 - `check_github_runner.sh`: Verifica status do runner
 - `check_vulnerabilities.sh`: Scan de vulnerabilidades
 - `daily_report.sh`: Relatório diário unificado
@@ -281,27 +294,31 @@ sudo systemctl enable --now mt5-remote-backup.timer
 
 ### Acesso aos Serviços
 
-- **API**: http://localhost:8001
-- **API Docs**: http://localhost:8001/docs
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **Jaeger**: http://localhost:16686
-- **PgAdmin**: http://localhost:5050
+- **API**: <http://localhost:8001>
+- **API Docs**: <http://localhost:8001/docs>
+- **Grafana**: <http://localhost:3000> (admin/admin)
+- **Prometheus**: <http://localhost:9090>
+- **Jaeger**: <http://localhost:16686>
+- **PgAdmin**: <http://localhost:5050>
 
 ---
 
 ## API Reference
 
 ### Authentication
+
 *Atualmente sem autenticação. Para produção, implemente OAuth2/JWT.*
 
 ### Endpoints
 
 #### Health Check
+
 ```http
 GET /health
 ```
+
 **Response**:
+
 ```json
 {
   "status": "ok"
@@ -309,13 +326,17 @@ GET /health
 ```
 
 #### Get Current Signals
+
 ```http
 GET /signals?timeframe=M1
 ```
+
 **Parameters**:
+
 - `timeframe` (string): M1, M5, M15, M30, H1, H4, D1
 
 **Response**:
+
 ```json
 [
   {
@@ -329,10 +350,13 @@ GET /signals?timeframe=M1
 ```
 
 #### Save Signals
+
 ```http
 POST /signals/save?timeframe=M1
 ```
+
 **Response**:
+
 ```json
 {
   "saved": 10,
@@ -341,22 +365,29 @@ POST /signals/save?timeframe=M1
 ```
 
 #### Get Signal History
+
 ```http
 GET /signals/history?symbol=EURUSD&timeframe=M1&limit=100
 ```
+
 **Response**: Array de sinais históricos
 
 #### Get Latest Saved Signals
+
 ```http
 GET /signals/latest?timeframe=M1
 ```
+
 **Response**: Último sinal salvo para cada símbolo
 
 #### Get Model Metrics
+
 ```http
 GET /metrics
 ```
+
 **Response**:
+
 ```json
 {
   "current": {
@@ -408,11 +439,13 @@ GET /metrics
 ### Retreinamento
 
 Execute manualmente:
+
 ```bash
 docker compose exec ml python ml/worker/train.py
 ```
 
 Ou via scheduler (se configurado):
+
 ```bash
 docker compose exec ml python ml/scheduler.py
 ```
@@ -424,6 +457,7 @@ docker compose exec ml python ml/scheduler.py
 ### Dashboards Grafana
 
 #### MT5 Trading Main
+
 - Total de candles inseridos
 - Status da API
 - Registros no banco
@@ -432,6 +466,7 @@ docker compose exec ml python ml/scheduler.py
 - Gráficos de preço
 
 #### Infra & Logs
+
 - Logs centralizados (Loki)
 - Erros críticos
 - Uso de CPU/Memória/Disco
@@ -440,12 +475,14 @@ docker compose exec ml python ml/scheduler.py
 - Tráfego de rede
 
 #### Database
+
 - Total de registros
 - Símbolos ativos
 - Distribuição de dados
 - Performance de queries
 
 #### ML/AI
+
 - Logs do worker
 - Jobs de treinamento
 - Taxa de sucesso/falha
@@ -453,21 +490,25 @@ docker compose exec ml python ml/scheduler.py
 ### Alertas
 
 #### Configurados
+
 - API Down (Prometheus `up{job="mt5-api"}==0`)
-- Email: kuramopr@gmail.com
+- Email: <kuramopr@gmail.com>
 
 #### Adicionar Novos Alertas
+
 Edite `grafana/provisioning/alerting/api-down-rule.yaml`
 
 ### Logs
 
 #### Locais
+
 - API: `logs/api/api.log`
 - ML: `logs/ml/train.log`
 - Health checks: `logs/health-checks/*.log`
 - Sistema: `/var/log/syslog`
 
 #### Centralização
+
 Todos os logs são enviados para Loki via Promtail e visualizados no Grafana.
 
 ---
@@ -479,6 +520,7 @@ Todos os logs são enviados para Loki via Promtail e visualizados no Grafana.
 ```bash
 bash scripts/backup.sh
 ```
+
 Salva em `backups/backup_YYYY-MM-DD.tar.gz`
 
 ### Backup Remoto
@@ -486,9 +528,11 @@ Salva em `backups/backup_YYYY-MM-DD.tar.gz`
 ```bash
 bash scripts/remote_backup.sh
 ```
+
 Envia para `100.113.13.126:/home/felipe/mt5-backup/YYYY-MM-DD/`
 
 **Conteúdo**:
+
 - Dump do banco de dados
 - Modelos ML
 - Configurações (Grafana, Prometheus, Loki)
@@ -532,6 +576,7 @@ bash scripts/health-check.sh
 ```
 
 Verifica:
+
 - Containers Docker
 - Endpoints da API
 - Banco de dados
@@ -541,6 +586,7 @@ Verifica:
 **Logs**: SQLite em `logs/health-checks/health_checks.db`
 
 **Relatório**:
+
 ```bash
 bash scripts/health-check.sh --report
 ```
@@ -705,14 +751,15 @@ pytest scripts/tests/
 
 ## Contato
 
-- **Maintainer**: Felipe (kuramopr@gmail.com)
-- **Repository**: https://github.com/Lysk-dot/mt5-trading-db
+- **Maintainer**: Felipe (<kuramopr@gmail.com>)
+- **Repository**: <https://github.com/Lysk-dot/mt5-trading-db>
 
 ---
 
 ## Changelog
 
 ### 2025-10-18
+
 - Documentação completa criada
 - Sistema de backup remoto implementado
 - Testes automatizados expandidos

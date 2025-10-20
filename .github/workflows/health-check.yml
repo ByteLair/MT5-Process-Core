@@ -12,25 +12,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Run health check
         run: |
           cd /home/felipe/mt5-trading-db
           ./scripts/health-check.sh
-      
+
       - name: Check for critical alerts
         run: |
           cd /home/felipe/mt5-trading-db
           ALERT_COUNT=$(sqlite3 logs/health-checks/health_checks.db "SELECT COUNT(*) FROM alerts WHERE resolved=0;")
           echo "Active alerts: $ALERT_COUNT"
-          
+
           if [ "$ALERT_COUNT" -gt 0 ]; then
             echo "::warning::There are $ALERT_COUNT active alerts!"
             sqlite3 logs/health-checks/health_checks.db "SELECT component_name, alert_type, message FROM alerts WHERE resolved=0;" | while IFS='|' read comp type msg; do
               echo "::warning::Alert: $comp - $type - $msg"
             done
           fi
-  
+
   daily-report:
     runs-on: self-hosted
     # Run at 5:00 AM UTC-3 (8:00 AM UTC) daily
@@ -38,12 +38,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Generate daily report
         run: |
           cd /home/felipe/mt5-trading-db
           ./scripts/health-check.sh --report
-      
+
       - name: Archive report
         run: |
           cd /home/felipe/mt5-trading-db/logs/health-checks

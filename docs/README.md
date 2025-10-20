@@ -7,10 +7,15 @@ Documentação completa da plataforma MT5 Trading Database com Machine Learning,
 ## 📋 Índice Geral
 
 ### 🚀 [Quick Start](#quick-start)
+
 ### ☸️ [Kubernetes](#kubernetes)
+
 ### 🏗️ [Infraestrutura](#infraestrutura)
+
 ### 📖 [Guias](#guias)
+
 ### 📚 [Referência](#referência)
+
 ### 🔌 [API](#api)
 
 ---
@@ -54,9 +59,9 @@ Documentação completa para deployment em Kubernetes.
 
 ### 🎯 Por Onde Começar
 
-**Iniciante?** → [K8S_DEPLOYMENT.md](kubernetes/K8S_DEPLOYMENT.md)  
-**Precisa de comandos rápidos?** → [K8S_QUICK_REFERENCE.md](kubernetes/K8S_QUICK_REFERENCE.md)  
-**Quer entender o que foi feito?** → [K8S_IMPLEMENTATION_SUMMARY.md](kubernetes/K8S_IMPLEMENTATION_SUMMARY.md)  
+**Iniciante?** → [K8S_DEPLOYMENT.md](kubernetes/K8S_DEPLOYMENT.md)
+**Precisa de comandos rápidos?** → [K8S_QUICK_REFERENCE.md](kubernetes/K8S_QUICK_REFERENCE.md)
+**Quer entender o que foi feito?** → [K8S_IMPLEMENTATION_SUMMARY.md](kubernetes/K8S_IMPLEMENTATION_SUMMARY.md)
 
 ### 📦 Recursos
 
@@ -95,18 +100,21 @@ Documentação sobre infraestrutura como código (IaC).
 ### 🔧 Componentes
 
 #### Docker Compose
+
 - Multi-container orchestration
 - 9 serviços (db, api, ml, monitoring)
 - Volumes persistentes
 - Networks isolados
 
 #### Terraform
+
 - Infrastructure as Code
 - Docker provider
 - 5 containers gerenciados
 - Variables e outputs
 
 #### Grafana
+
 - 10 painéis configurados
 - Auto-provisioning
 - Datasources: Prometheus + PostgreSQL
@@ -140,6 +148,7 @@ Guias práticos e tutoriais passo-a-passo.
 ### 🎯 Conteúdo
 
 #### EA Integration Guide
+
 - Configuração do Expert Advisor
 - Código MQL5 completo
 - Endpoints da API
@@ -207,6 +216,7 @@ Categorias de queries disponíveis:
 ### 🏗️ Project Structure
 
 Visão completa da estrutura:
+
 - Arquivos e diretórios
 - Componentes
 - Estatísticas
@@ -222,6 +232,7 @@ Documentação da API REST.
 ### 📊 Endpoints Principais
 
 #### POST /ingest
+
 Ingerir candles do MT5 (single ou batch)
 
 ```bash
@@ -241,6 +252,7 @@ curl -X POST "http://localhost:18001/ingest" \
 ```
 
 #### GET /metrics
+
 Estatísticas por símbolo
 
 ```bash
@@ -248,6 +260,7 @@ curl http://localhost:18001/metrics
 ```
 
 #### GET /signals/next
+
 Obter próximo sinal de trading
 
 ```bash
@@ -256,6 +269,7 @@ curl "http://localhost:18001/signals/next?symbols=EURUSD,GBPUSD" \
 ```
 
 #### GET /predict
+
 Predição ML para símbolo
 
 ```bash
@@ -265,7 +279,7 @@ curl "http://localhost:18001/predict?symbol=EURUSD&timeframe=M1" \
 
 ### 📝 Documentação Interativa
 
-Acesse: http://localhost:18001/docs
+Acesse: <http://localhost:18001/docs>
 
 - Swagger UI completo
 - Testes interativos
@@ -277,12 +291,14 @@ Acesse: http://localhost:18001/docs
 ## 🔗 Links Rápidos
 
 ### Documentação Externa
+
 - [Kubernetes](../k8s/)
 - [Helm Chart](../helm/mt5-trading/)
 - [Terraform](../terraform/)
 - [Scripts](../scripts/)
 
 ### Arquivos Principais
+
 - [README.md](../README.md) - Documentação principal
 - [CHANGELOG.md](../CHANGELOG.md) - Histórico de versões
 - [README.legacy.md](../README.legacy.md) - Documentação anterior
@@ -292,28 +308,33 @@ Acesse: http://localhost:18001/docs
 ## 📖 Navegação por Cenário
 
 ### "Quero fazer deploy em Kubernetes"
+
 1. [K8S Deployment Guide](kubernetes/K8S_DEPLOYMENT.md)
 2. [K8S Quick Reference](kubernetes/K8S_QUICK_REFERENCE.md)
 3. Executar: `./scripts/k8s-deploy.sh dev`
 
 ### "Preciso integrar com MT5"
+
 1. [EA Integration Guide](guides/EA_INTEGRATION_GUIDE.md)
 2. Copiar código MQL5
 3. Configurar endpoints
 
 ### "Quero analisar os dados"
+
 1. [SQL Queries](reference/SQL_QUERIES.md)
 2. Conectar: `psql -h localhost -U trader -d mt5_trading`
 3. Executar queries
 
 ### "Preciso entender a infraestrutura"
+
 1. [Project Structure](reference/PROJECT_STRUCTURE.md)
 2. [Terraform Summary](infrastructure/TERRAFORM_DASHBOARD_SUMMARY.md)
 3. Ver [README.md](../README.md)
 
 ### "Quero monitorar o sistema"
-1. Grafana: http://localhost:3000
-2. Prometheus: http://localhost:9090
+
+1. Grafana: <http://localhost:3000>
+2. Prometheus: <http://localhost:9090>
 3. [Terraform Summary](infrastructure/TERRAFORM_DASHBOARD_SUMMARY.md)
 
 ---
@@ -321,21 +342,25 @@ Acesse: http://localhost:18001/docs
 ## 🎯 Índice por Nível
 
 ### 👶 Iniciante
+
 - [README.md](../README.md) - Comece aqui!
 - [EA Integration Guide](guides/EA_INTEGRATION_GUIDE.md)
 - [Quick Start](#quick-start)
 
 ### 👨‍💻 Intermediário
+
 - [K8S Deployment Guide](kubernetes/K8S_DEPLOYMENT.md)
 - [SQL Queries](reference/SQL_QUERIES.md)
 - [Terraform Summary](infrastructure/TERRAFORM_DASHBOARD_SUMMARY.md)
 
 ### 🚀 Avançado
+
 - [K8S Implementation Summary](kubernetes/K8S_IMPLEMENTATION_SUMMARY.md)
 - [Project Structure](reference/PROJECT_STRUCTURE.md)
 - [K8S Presentation](kubernetes/K8S_PRESENTATION.md)
 
 ### 🔧 DevOps
+
 - [K8S Quick Reference](kubernetes/K8S_QUICK_REFERENCE.md)
 - Scripts: `/scripts/k8s-*.sh`
 - Helm Chart: `/helm/mt5-trading/`
@@ -391,8 +416,8 @@ MIT License - Veja [LICENSE](../LICENSE)
 
 ---
 
-**Versão da Documentação**: 2.0.0  
-**Última Atualização**: 18 de Outubro de 2025  
+**Versão da Documentação**: 2.0.0
+**Última Atualização**: 18 de Outubro de 2025
 **Mantido por**: Felipe
 
 ---

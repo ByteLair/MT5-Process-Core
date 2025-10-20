@@ -22,6 +22,7 @@ The MT5 Trading system uses a two-tier connection pooling strategy:
 2. **SQLAlchemy QueuePool** - Application-level connection pool
 
 This architecture provides:
+
 - **Reduced Connection Overhead**: Reuse database connections instead of creating new ones
 - **Resource Efficiency**: Limit total connections to PostgreSQL
 - **Scalability**: Support many concurrent clients with fewer database connections
@@ -31,7 +32,7 @@ This architecture provides:
 ### Connection Flow
 
 ```
-API Clients (1000+) 
+API Clients (1000+)
     ↓
 SQLAlchemy Pool (5 + 10 overflow)
     ↓
@@ -47,12 +48,14 @@ PostgreSQL (200 max connections)
 **Pool Mode**: `transaction`
 
 In transaction pooling mode:
+
 - Connections are assigned to clients for the duration of a transaction
 - After `COMMIT`/`ROLLBACK`, connection returns to pool
 - Most efficient for OLTP workloads
 - Compatible with most applications
 
 **Key Settings**:
+
 - `max_client_conn: 1000` - Maximum concurrent clients
 - `default_pool_size: 25` - Core pool size per user/database
 - `min_pool_size: 10` - Always maintain minimum connections
@@ -64,12 +67,14 @@ In transaction pooling mode:
 **Pool Type**: `QueuePool` (default)
 
 QueuePool maintains a fixed pool of connections:
+
 - Creates connections up to `pool_size`
 - Can overflow up to `max_overflow` additional connections
 - Overflow connections are discarded after use
 - Thread-safe connection checkout/checkin
 
 **With PgBouncer** (recommended):
+
 ```python
 pool_size = 5          # Small, PgBouncer handles pooling
 max_overflow = 10      # Limited overflow
@@ -78,6 +83,7 @@ pool_recycle = 1800    # 30 minutes
 ```
 
 **Without PgBouncer** (direct PostgreSQL):
+
 ```python
 pool_size = 20         # Larger pool
 max_overflow = 30      # More overflow capacity
@@ -112,23 +118,27 @@ See `pgbouncer/pgbouncer.ini` for complete configuration.
 Key sections:
 
 #### Databases
+
 ```ini
 [databases]
 mt5_trading = host=db port=5432 dbname=mt5_trading
 ```
 
 #### Authentication
+
 ```ini
 auth_type = md5
 auth_file = /etc/pgbouncer/userlist.txt
 ```
 
 Generate userlist with MD5 hashes:
+
 ```bash
 ./scripts/generate_userlist.sh
 ```
 
 #### Pool Sizes
+
 ```ini
 # Maximum concurrent clients
 max_client_conn = 1000
@@ -147,6 +157,7 @@ max_db_connections = 50
 ```
 
 #### Timeouts
+
 ```ini
 # Close idle server connections after 10 minutes
 server_idle_timeout = 600
@@ -165,6 +176,7 @@ query_timeout = 0
 ```
 
 #### Performance Tuning
+
 ```ini
 # TCP settings for better connection handling
 so_reuseport = 1
@@ -197,11 +209,13 @@ psql -h localhost -p 6432 -U trader -d mt5_trading
 ### PgBouncer Admin Console
 
 Connect to admin console:
+
 ```bash
 psql -h localhost -p 6432 -U trader -d pgbouncer
 ```
 
 Useful commands:
+
 ```sql
 -- Show pool statistics
 SHOW POOLS;
@@ -302,6 +316,7 @@ with engine.connect() as conn:
 ```
 
 Avoid:
+
 ```python
 # DON'T: Connection never returned to pool
 conn = engine.connect()
@@ -354,7 +369,7 @@ effective_cache_size = '15GB'
 
 ```sql
 -- Current connections
-SELECT 
+SELECT
     count(*) as total,
     state,
     application_name
@@ -363,7 +378,7 @@ WHERE datname = 'mt5_trading'
 GROUP BY state, application_name;
 
 -- Connection usage over time
-SELECT 
+SELECT
     now() - backend_start as connection_age,
     usename,
     application_name,
@@ -374,7 +389,7 @@ WHERE datname = 'mt5_trading'
 ORDER BY backend_start;
 
 -- Max connections reached?
-SELECT 
+SELECT
     count(*) as current_connections,
     (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') as max_connections,
     round(count(*)::numeric / (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') * 100, 2) as usage_percent
@@ -390,6 +405,7 @@ The system exports comprehensive connection pool metrics:
 #### SQLAlchemy Metrics
 
 **Gauges** (current state):
+
 - `sqlalchemy_pool_size` - Current pool size
 - `sqlalchemy_pool_checked_in` - Available connections
 - `sqlalchemy_pool_checked_out` - Active connections
@@ -397,6 +413,7 @@ The system exports comprehensive connection pool metrics:
 - `sqlalchemy_pool_waiters` - Threads waiting for connection
 
 **Counters** (cumulative):
+
 - `sqlalchemy_pool_connects_total` - New connections created
 - `sqlalchemy_pool_disconnects_total` - Connections closed
 - `sqlalchemy_pool_checkouts_total` - Connection checkouts
@@ -404,15 +421,18 @@ The system exports comprehensive connection pool metrics:
 - `sqlalchemy_pool_invalidations_total` - Connection invalidations
 
 **Histograms**:
+
 - `sqlalchemy_pool_checkout_duration_seconds` - Time waiting for connection
 
 #### PgBouncer Metrics
 
 **Databases**:
+
 - `pgbouncer_databases_current_connections` - Active database connections
 - `pgbouncer_databases_pool_size` - Server connections in pool
 
 **Pools**:
+
 - `pgbouncer_pools_cl_active` - Active client connections
 - `pgbouncer_pools_cl_waiting` - Clients waiting for connection
 - `pgbouncer_pools_sv_active` - Active server connections
@@ -449,9 +469,10 @@ async def update_metrics():
 
 Access the Connection Pool dashboard:
 
-**URL**: http://192.168.15.20:3000/d/connection-pool-monitoring
+**URL**: <http://192.168.15.20:3000/d/connection-pool-monitoring>
 
 Dashboard includes:
+
 - Pool utilization gauge
 - Connection status (checked out, waiting, size)
 - Connection operations rate
@@ -460,6 +481,7 @@ Dashboard includes:
 - Invalidations and errors
 
 Key panels:
+
 1. **SQLAlchemy Pool Utilization** - Should stay below 75%
 2. **Connections Waiting** - Should be 0 (or very low)
 3. **Connection Checkout Duration** - P99 should be < 100ms
@@ -469,24 +491,28 @@ Key panels:
 ### PromQL Queries
 
 **Pool Utilization**:
+
 ```promql
-(sqlalchemy_pool_checked_out{pool_name="default"} / 
- (sqlalchemy_pool_size{pool_name="default"} + 
+(sqlalchemy_pool_checked_out{pool_name="default"} /
+ (sqlalchemy_pool_size{pool_name="default"} +
   sqlalchemy_pool_overflow{pool_name="default"})) * 100
 ```
 
 **Checkout Rate**:
+
 ```promql
 rate(sqlalchemy_pool_checkouts_total{pool_name="default"}[5m])
 ```
 
 **P95 Checkout Duration**:
+
 ```promql
-histogram_quantile(0.95, 
+histogram_quantile(0.95,
   rate(sqlalchemy_pool_checkout_duration_seconds_bucket{pool_name="default"}[5m]))
 ```
 
 **PgBouncer Clients Waiting**:
+
 ```promql
 pgbouncer_pools_cl_waiting{database="mt5_trading"}
 ```
@@ -587,6 +613,7 @@ Test different pool configurations:
 ### Interpreting Results
 
 Good performance indicators:
+
 - **Success Rate**: > 99%
 - **Mean Duration**: < 50ms for simple queries
 - **P95 Duration**: < 100ms
@@ -594,6 +621,7 @@ Good performance indicators:
 - **Failures**: < 1%
 
 Warning signs:
+
 - Success rate < 95%
 - P99 duration > 1 second
 - Many connection timeouts
@@ -608,23 +636,25 @@ Warning signs:
 **Symptom**: `QueuePool limit exceeded` or `Connection timeout`
 
 **Causes**:
+
 - Pool too small for load
 - Long-running queries holding connections
 - Connection leaks (not returning to pool)
 
 **Solutions**:
+
 ```bash
 # Increase pool size
 DB_POOL_SIZE=10
 DB_MAX_OVERFLOW=20
 
 # Check for connection leaks
-SELECT count(*), state FROM pg_stat_activity 
-WHERE datname = 'mt5_trading' 
+SELECT count(*), state FROM pg_stat_activity
+WHERE datname = 'mt5_trading'
 GROUP BY state;
 
 # Look for long-running queries
-SELECT 
+SELECT
     pid,
     now() - query_start as duration,
     state,
@@ -640,11 +670,13 @@ ORDER BY duration DESC;
 **Symptom**: `pgbouncer_pools_maxwait` > 30 seconds
 
 **Causes**:
+
 - PgBouncer pool too small
 - PostgreSQL slow or overloaded
 - Long transactions
 
 **Solutions**:
+
 ```ini
 # Increase PgBouncer pool sizes
 DEFAULT_POOL_SIZE=50
@@ -662,11 +694,13 @@ SHOW SERVERS;
 **Symptom**: High `sqlalchemy_pool_invalidations_total`
 
 **Causes**:
+
 - Database restarts
 - Network issues
 - Idle connection timeouts
 
 **Solutions**:
+
 ```python
 # Enable pre-ping to detect stale connections
 DB_POOL_PRE_PING=true
@@ -680,6 +714,7 @@ DB_POOL_RECYCLE=900  # 15 minutes
 **Symptom**: Applications can't connect via PgBouncer
 
 **Checks**:
+
 ```bash
 # Check PgBouncer is running
 docker-compose ps pgbouncer
@@ -698,6 +733,7 @@ docker exec -it mt5_pgbouncer cat /etc/pgbouncer/pgbouncer.ini
 ```
 
 **Common fixes**:
+
 ```bash
 # Regenerate userlist.txt
 ./scripts/generate_userlist.sh
@@ -730,18 +766,20 @@ log_pooler_errors = 1
 ### Application Code
 
 1. **Always use context managers**:
+
    ```python
    with engine.connect() as conn:
        result = conn.execute(query)
    ```
 
 2. **Keep connections short-lived**:
+
    ```python
    # Good: Quick query
    with engine.connect() as conn:
        result = conn.execute(text("SELECT ..."))
        return result.fetchall()
-   
+
    # Bad: Holding connection during processing
    with engine.connect() as conn:
        result = conn.execute(text("SELECT ..."))
@@ -751,15 +789,16 @@ log_pooler_errors = 1
    ```
 
 3. **Use connection pooling, not connection per request**:
+
    ```python
    # Good: Shared engine with pool
    engine = create_engine(...)  # Once at startup
-   
+
    @app.get("/data")
    def get_data():
        with engine.connect() as conn:
            return conn.execute(...)
-   
+
    # Bad: New engine per request
    @app.get("/data")
    def get_data():
@@ -768,6 +807,7 @@ log_pooler_errors = 1
    ```
 
 4. **Handle exceptions properly**:
+
    ```python
    try:
        with engine.connect() as conn:
@@ -809,6 +849,7 @@ log_pooler_errors = 1
    - PgBouncer maxwait > 30s
 
 2. **Regular health checks**:
+
    ```python
    # Every 5 minutes
    health = check_pool_health(engine)
@@ -825,31 +866,34 @@ log_pooler_errors = 1
 ### Deployment
 
 1. **Configuration changes**:
+
    ```bash
    # Update environment variables
    vim .env
-   
+
    # Restart services
    docker-compose restart pgbouncer api
-   
+
    # Verify
    docker-compose logs -f pgbouncer
    ```
 
 2. **PgBouncer reload** (zero downtime):
+
    ```bash
    # Reload configuration without dropping connections
    psql -h localhost -p 6432 -U trader -d pgbouncer -c "RELOAD;"
    ```
 
 3. **PostgreSQL changes**:
+
    ```bash
    # Edit configuration
    vim docker/postgres.conf.d/postgresql.conf
-   
+
    # Reload (no restart needed for most settings)
    docker exec mt5_db pg_ctl reload
-   
+
    # Or restart if needed
    docker-compose restart db
    ```
@@ -874,12 +918,14 @@ log_pooler_errors = 1
 ## Quick Reference
 
 ### Ports
+
 - PostgreSQL: 5432 (internal)
 - PgBouncer: 6432 (external)
 - Prometheus: 9090
 - Grafana: 3000
 
 ### Key Files
+
 - `docker-compose.yml` - Service configuration
 - `pgbouncer/pgbouncer.ini` - PgBouncer configuration
 - `pgbouncer/userlist.txt` - Authentication
@@ -888,6 +934,7 @@ log_pooler_errors = 1
 - `.env` - Environment variables
 
 ### Useful Commands
+
 ```bash
 # Generate userlist
 ./scripts/generate_userlist.sh
@@ -908,6 +955,7 @@ python -c "from api.pool_monitoring import check_pool_health; from api.config im
 ---
 
 For more information, see:
+
 - [PgBouncer Documentation](https://www.pgbouncer.org/usage.html)
 - [SQLAlchemy Connection Pooling](https://docs.sqlalchemy.org/en/20/core/pooling.html)
 - [PostgreSQL Connection Management](https://www.postgresql.org/docs/current/runtime-config-connection.html)

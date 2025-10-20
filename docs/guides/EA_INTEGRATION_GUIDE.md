@@ -1,6 +1,7 @@
 # 📡 MT5 EA Integration Guide - Data Ingestion API
 
 ## 🎯 Objetivo
+
 Este guia documenta como configurar o Expert Advisor (EA) no MetaTrader 5 (Windows) para enviar dados de mercado para o servidor de trading API (Linux).
 
 ---
@@ -8,6 +9,7 @@ Este guia documenta como configurar o Expert Advisor (EA) no MetaTrader 5 (Windo
 ## 🌐 Informações do Servidor
 
 ### Endereços de Conexão
+
 ```
 IP do Servidor:    192.168.15.20
 Porta da API:      18001
@@ -15,6 +17,7 @@ URL Base:          http://192.168.15.20:18001
 ```
 
 ### Variáveis de Ambiente (.env)
+
 ```properties
 # Configuração de Autenticação
 API_KEY=mt5_trading_secure_key_2025_prod
@@ -36,17 +39,21 @@ POSTGRES_DB=mt5_trading
 ## 📍 Endpoints Disponíveis
 
 ### 1. Health Check
+
 **Verifica se a API está online**
+
 ```
 GET http://192.168.15.20:18001/health
 ```
 
 **Resposta de Sucesso:**
+
 ```json
 {"status":"ok"}
 ```
 
 **Exemplo cURL (Windows PowerShell):**
+
 ```powershell
 curl http://192.168.15.20:18001/health
 ```
@@ -54,7 +61,9 @@ curl http://192.168.15.20:18001/health
 ---
 
 ### 2. Ingest - Envio de Candle Único
+
 **Endpoint principal para o EA enviar dados**
+
 ```
 POST http://192.168.15.20:18001/ingest
 Content-Type: application/json
@@ -62,6 +71,7 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ```
 
 **Body JSON:**
+
 ```json
 {
   "ts": "2025-10-18T14:00:00Z",
@@ -76,14 +86,17 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ```
 
 **Resposta de Sucesso:**
+
 ```json
 {"ok":true,"inserted":1}
 ```
 
 **Timeframes Válidos:**
+
 - `M1`, `M5`, `M15`, `M30`, `H1`, `H4`, `D1`
 
 **Exemplo cURL (Windows PowerShell):**
+
 ```powershell
 curl -X POST "http://192.168.15.20:18001/ingest" `
   -H "Content-Type: application/json" `
@@ -94,7 +107,9 @@ curl -X POST "http://192.168.15.20:18001/ingest" `
 ---
 
 ### 3. Ingest - Batch (Múltiplos Candles)
+
 **Para enviar vários candles de uma vez**
+
 ```
 POST http://192.168.15.20:18001/ingest
 Content-Type: application/json
@@ -102,6 +117,7 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ```
 
 **Body JSON:**
+
 ```json
 {
   "items": [
@@ -130,6 +146,7 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ```
 
 **Resposta de Sucesso:**
+
 ```json
 {"ok":true,"inserted":2}
 ```
@@ -137,12 +154,15 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ---
 
 ### 4. Metrics - Estatísticas
+
 **Verifica estatísticas dos dados recebidos**
+
 ```
 GET http://192.168.15.20:18001/metrics
 ```
 
 **Resposta (exemplo):**
+
 ```json
 {
   "ok": true,
@@ -162,6 +182,7 @@ GET http://192.168.15.20:18001/metrics
 ## 🔐 Autenticação
 
 ### Header Obrigatório
+
 Todas as requisições para `/ingest` **DEVEM** incluir o header de autenticação:
 
 ```
@@ -169,10 +190,13 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ```
 
 ### Códigos de Erro
+
 - **401 Unauthorized**: API Key ausente ou incorreto
+
   ```json
   {"detail":"unauthorized"}
   ```
+
 - **422 Validation Error**: Dados inválidos (ex: timeframe errado)
 - **429 Too Many Requests**: Rate limit excedido
 
@@ -181,6 +205,7 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ## 💻 Implementação no EA (MQL5)
 
 ### Configuração Básica
+
 ```mql5
 //+------------------------------------------------------------------+
 //| MT5 Trading Data Collector EA                                     |
@@ -194,7 +219,7 @@ input string TIMEFRAME_STR = "M1";  // M1, M5, M15, M30, H1, H4, D1
 //+------------------------------------------------------------------+
 //| Função para enviar candle ao servidor                             |
 //+------------------------------------------------------------------+
-bool SendCandleToAPI(datetime time, string symbol, double open, double high, 
+bool SendCandleToAPI(datetime time, string symbol, double open, double high,
                      double low, double close, long volume)
 {
    // Preparar headers HTTP
@@ -202,13 +227,13 @@ bool SendCandleToAPI(datetime time, string symbol, double open, double high,
    char result[];
    string headers;
    string json;
-   
+
    // Formatar timestamp ISO 8601
    string timestamp = TimeToString(time, TIME_DATE|TIME_MINUTES|TIME_SECONDS);
    StringReplace(timestamp, ".", "-");
    StringReplace(timestamp, " ", "T");
    timestamp += "Z";
-   
+
    // Construir JSON
    json = StringFormat(
       "{\"ts\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\",\"open\":%.5f,\"high\":%.5f,\"low\":%.5f,\"close\":%.5f,\"volume\":%d}",
@@ -221,15 +246,15 @@ bool SendCandleToAPI(datetime time, string symbol, double open, double high,
       close,
       (int)volume
    );
-   
+
    // Preparar headers
    headers = "Content-Type: application/json\r\n";
    headers += "X-API-Key: " + API_KEY + "\r\n";
-   
+
    // Converter JSON para array de bytes
    StringToCharArray(json, post, 0, WHOLE_ARRAY, CP_UTF8);
    ArrayResize(post, ArraySize(post) - 1); // Remover null terminator
-   
+
    // Enviar requisição HTTP POST
    ResetLastError();
    int timeout = 5000; // 5 segundos
@@ -242,7 +267,7 @@ bool SendCandleToAPI(datetime time, string symbol, double open, double high,
       result,
       headers
    );
-   
+
    // Verificar resultado
    if(res == 200)
    {
@@ -271,11 +296,11 @@ int OnInit()
    Print("Símbolo: ", _Symbol);
    Print("Timeframe: ", TIMEFRAME_STR);
    Print("========================================");
-   
+
    // Verificar se WebRequest está permitido para este host
    // Adicione 192.168.15.20 na lista de URLs permitidas do MT5:
    // Tools > Options > Expert Advisors > Allow WebRequest for listed URL
-   
+
    return(INIT_SUCCEEDED);
 }
 
@@ -287,7 +312,7 @@ void OnTick()
    // Detectar novo candle
    static datetime lastBarTime = 0;
    datetime currentBarTime = iTime(_Symbol, PERIOD_CURRENT, 0);
-   
+
    if(currentBarTime != lastBarTime && lastBarTime != 0)
    {
       // Novo candle detectado - enviar o candle anterior (fechado)
@@ -305,7 +330,7 @@ void OnTick()
          );
       }
    }
-   
+
    lastBarTime = currentBarTime;
 }
 ```
@@ -315,6 +340,7 @@ void OnTick()
 ## ⚙️ Configuração do MetaTrader 5 (Windows)
 
 ### 1. Permitir WebRequest
+
 1. Abra o MetaTrader 5
 2. Vá em **Tools** > **Options**
 3. Aba **Expert Advisors**
@@ -323,6 +349,7 @@ void OnTick()
 6. Clique em **OK**
 
 ### 2. Compilar e Anexar o EA
+
 1. Abra o **MetaEditor** (F4 no MT5)
 2. Crie um novo Expert Advisor ou cole o código acima
 3. Compile (F7)
@@ -330,6 +357,7 @@ void OnTick()
 5. Confirme que **Allow WebRequest** está marcado
 
 ### 3. Verificar Logs
+
 1. Abra a aba **Experts** no MT5
 2. Verifique mensagens como:
    - ✅ "Candle enviado com sucesso"
@@ -340,32 +368,40 @@ void OnTick()
 ## 🧪 Testes de Validação
 
 ### Teste 1: Health Check (Windows PowerShell)
+
 ```powershell
 curl http://192.168.15.20:18001/health
 ```
+
 **Esperado:** `{"status":"ok"}`
 
 ### Teste 2: Enviar Candle Manual
+
 ```powershell
 curl -X POST "http://192.168.15.20:18001/ingest" `
   -H "Content-Type: application/json" `
   -H "X-API-Key: mt5_trading_secure_key_2025_prod" `
   -d '{\"ts\":\"2025-10-18T14:00:00Z\",\"symbol\":\"EURUSD\",\"timeframe\":\"M1\",\"open\":1.0950,\"high\":1.0955,\"low\":1.0948,\"close\":1.0952,\"volume\":1250}'
 ```
+
 **Esperado:** `{"ok":true,"inserted":1}`
 
 ### Teste 3: Verificar Métricas
+
 ```powershell
 curl http://192.168.15.20:18001/metrics
 ```
+
 **Esperado:** Lista de símbolos com estatísticas
 
 ### Teste 4: Enviar sem API Key (deve falhar)
+
 ```powershell
 curl -X POST "http://192.168.15.20:18001/ingest" `
   -H "Content-Type: application/json" `
   -d '{\"ts\":\"2025-10-18T14:00:00Z\",\"symbol\":\"EURUSD\",\"timeframe\":\"M1\",\"open\":1.0950,\"high\":1.0955,\"low\":1.0948,\"close\":1.0952,\"volume\":1250}'
 ```
+
 **Esperado:** `{"detail":"unauthorized"}`
 
 ---
@@ -373,19 +409,25 @@ curl -X POST "http://192.168.15.20:18001/ingest" `
 ## 🔍 Troubleshooting
 
 ### Problema: "URL not allowed"
+
 **Solução:** Adicione `http://192.168.15.20:18001` nas URLs permitidas do MT5 (Tools > Options > Expert Advisors)
 
 ### Problema: "Error 4060" (Function not allowed)
+
 **Solução:** Marque "Allow WebRequest" nas configurações do EA ao anexá-lo ao gráfico
 
 ### Problema: HTTP 401 Unauthorized
+
 **Solução:** Verifique se o API_KEY no EA está correto: `mt5_trading_secure_key_2025_prod`
 
 ### Problema: HTTP 422 Validation Error
+
 **Solução:** Verifique se o timeframe está correto (M1, M5, M15, M30, H1, H4, D1)
 
 ### Problema: Timeout / Sem resposta
-**Solução:** 
+
+**Solução:**
+
 - Verifique conectividade de rede: `ping 192.168.15.20`
 - Verifique se o firewall do servidor permite conexões na porta 18001
 - Confirme que os containers Docker estão rodando
@@ -395,21 +437,25 @@ curl -X POST "http://192.168.15.20:18001/ingest" `
 ## 📊 Monitoramento no Servidor (Linux)
 
 ### Verificar Status dos Containers
+
 ```bash
 docker compose ps
 ```
 
 ### Verificar Logs da API
+
 ```bash
 docker compose logs -f api
 ```
 
 ### Verificar Últimos Dados Recebidos
+
 ```bash
 docker compose exec db psql -U trader -d mt5_trading -c "SELECT symbol, timeframe, MAX(ts) AS ultimo_envio FROM market_data GROUP BY symbol, timeframe ORDER BY ultimo_envio DESC LIMIT 10;"
 ```
 
 ### Verificar Métricas via cURL (do servidor)
+
 ```bash
 curl -sS http://localhost:18001/metrics | jq '.data[] | select(.symbol=="EURUSD")'
 ```
@@ -461,6 +507,6 @@ Resposta OK: {"status":"ok"}
 
 ---
 
-**Versão:** 1.0  
-**Data:** 2025-10-18  
+**Versão:** 1.0
+**Data:** 2025-10-18
 **Status:** ✅ Testado e Validado

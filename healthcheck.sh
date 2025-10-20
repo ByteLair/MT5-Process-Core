@@ -21,9 +21,9 @@ check_service() {
     local service_name=$1
     local url=$2
     local expected=$3
-    
+
     echo -n "🔍 Checking $service_name... "
-    
+
     if response=$(curl -s --max-time 5 "$url" 2>/dev/null); then
         if echo "$response" | grep -q "$expected"; then
             echo -e "${GREEN}✅ OK${NC}"
@@ -59,7 +59,7 @@ for container in "${containers[@]}"; do
     if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
         status=$(docker inspect --format='{{.State.Status}}' "$container" 2>/dev/null)
         health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "N/A")
-        
+
         if [ "$status" = "running" ]; then
             if [ "$health" = "healthy" ]; then
                 echo -e "${GREEN}✅ Running (Healthy)${NC}"
@@ -100,12 +100,12 @@ echo ""
 echo -e "${BLUE}🗄️  Database Health:${NC}"
 if docker exec mt5_db pg_isready -U trader -d mt5_trading > /dev/null 2>&1; then
     echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
-    
+
     # Get database stats
     db_size=$(docker exec mt5_db psql -U trader -d mt5_trading -t -c "SELECT pg_size_pretty(pg_database_size('mt5_trading'));" 2>/dev/null | xargs)
     total_records=$(docker exec mt5_db psql -U trader -d mt5_trading -t -c "SELECT COUNT(*) FROM market_data;" 2>/dev/null | xargs)
     active_symbols=$(docker exec mt5_db psql -U trader -d mt5_trading -t -c "SELECT COUNT(DISTINCT symbol) FROM market_data;" 2>/dev/null | xargs)
-    
+
     echo "   Database Size: $db_size"
     echo "   Total Records: $total_records"
     echo "   Active Symbols: $active_symbols"
@@ -119,11 +119,11 @@ echo -e "${BLUE}📉 Metrics Check:${NC}"
 if metrics=$(curl -s http://localhost:18001/prometheus/ 2>/dev/null); then
     total_inserted=$(echo "$metrics" | grep "^ingest_candles_inserted_total" | awk '{print $2}')
     echo "   Total Candles Inserted: ${total_inserted:-0}"
-    
+
     # Check if receiving data recently
     recent_data=$(docker exec mt5_db psql -U trader -d mt5_trading -t -c "SELECT COUNT(*) FROM market_data WHERE ts >= NOW() - INTERVAL '10 minutes';" 2>/dev/null | xargs)
     echo "   Data Last 10 Minutes: ${recent_data:-0}"
-    
+
     if [ "${recent_data:-0}" -gt 0 ]; then
         echo -e "   ${GREEN}✅ Receiving data${NC}"
     else

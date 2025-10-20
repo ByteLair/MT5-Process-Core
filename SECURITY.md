@@ -17,7 +17,7 @@ Se você descobrir uma vulnerabilidade de segurança, **NÃO abra uma issue púb
 
 ### Como Reportar
 
-1. **Email**: Envie detalhes para **kuramopr@gmail.com** com:
+1. **Email**: Envie detalhes para **<kuramopr@gmail.com>** com:
    - Descrição da vulnerabilidade
    - Passos para reproduzir
    - Impacto potencial
@@ -45,6 +45,7 @@ Nenhuma vulnerabilidade conhecida no momento.
 ### Deployment
 
 1. **Secrets Management**:
+
    ```bash
    # NUNCA commite arquivos .env
    # Use secrets manager em produção (AWS Secrets Manager, Vault, etc.)
@@ -69,6 +70,7 @@ Nenhuma vulnerabilidade conhecida no momento.
    - Use `.dockerignore` para evitar vazar secrets
 
 5. **Network**:
+
    ```yaml
    # docker-compose.yml
    # Não exponha serviços internos publicamente
@@ -78,6 +80,7 @@ Nenhuma vulnerabilidade conhecida no momento.
 ### Atualizações de Segurança
 
 O sistema possui automação para:
+
 - **Verificação de vulnerabilidades**: Diariamente às 04:00 via `scripts/check_vulnerabilities.sh`
 - **Dependabot**: Atualiza dependências automaticamente
 - **CodeQL**: Análise de segurança estática no CI
@@ -85,12 +88,13 @@ O sistema possui automação para:
 ### Monitoramento
 
 Alertas configurados para:
+
 - API down (indisponibilidade)
 - Latência alta (possível DoS)
 - Erro rate elevado (possível exploit)
 - Disk usage crítico (possível exfiltração de dados)
 
-Verifique Grafana: http://localhost:3000/alerting
+Verifique Grafana: <http://localhost:3000/alerting>
 
 ### Hardening Checklist
 
@@ -123,6 +127,7 @@ docker run --rm -v $(pwd):/repo zricethezav/gitleaks:latest detect --source /rep
 ### Manual Review
 
 Antes de fazer deploy:
+
 ```bash
 # Verificar secrets
 grep -r "password\|secret\|key" --exclude-dir=.git --exclude-dir=venv
@@ -145,7 +150,7 @@ Patches de segurança são lançados como **hotfixes** fora do ciclo normal de r
 
 ## Contact
 
-- **Security issues**: kuramopr@gmail.com
+- **Security issues**: <kuramopr@gmail.com>
 - **General questions**: GitHub Discussions
 - **Bug reports** (não-segurança): GitHub Issues
 

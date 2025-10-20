@@ -58,7 +58,7 @@ jobs:
     runs-on: self-hosted  # Roda no seu servidor
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Deploy
         run: |
           cd /home/felipe/mt5-trading-db
@@ -81,6 +81,7 @@ jobs:
 ## 7️⃣ Manutenção
 
 - Para atualizar o runner:
+
 ```bash
 cd ~/actions-runner
 sudo ./svc.sh stop
@@ -89,6 +90,7 @@ rm -rf *
 ```
 
 - Para remover:
+
 ```bash
 cd ~/actions-runner
 sudo ./svc.sh stop

@@ -4,7 +4,7 @@ Estrutura inicial para provisionamento futuro da stack (DB, API, Prometheus, Gra
 
 ## Como usar
 
-1. Instale o Terraform: https://www.terraform.io/downloads.html
+1. Instale o Terraform: <https://www.terraform.io/downloads.html>
 2. Crie seus arquivos de configuração (`main.tf`, `variables.tf`, etc) neste diretório.
 3. Siga a documentação do provedor desejado (AWS, GCP, Azure, etc).
 

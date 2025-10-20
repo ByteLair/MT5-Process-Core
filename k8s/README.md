@@ -35,16 +35,19 @@ k8s/
 ## 🚀 Quick Deploy
 
 ### Development
+
 ```bash
 kubectl apply -k overlays/dev
 ```
 
 ### Staging
+
 ```bash
 kubectl apply -k overlays/staging
 ```
 
 ### Production
+
 ```bash
 # 1. Update secrets first!
 kubectl create secret generic mt5-trading-secrets \
@@ -66,6 +69,7 @@ kubectl get all -n mt5-trading
 ## 📊 Resources
 
 ### Deployments (5)
+
 - **postgres** - TimescaleDB database
 - **mt5-api** - FastAPI backend (2-10 replicas with HPA)
 - **ml-trainer** - ML model training
@@ -73,24 +77,29 @@ kubectl get all -n mt5-trading
 - **grafana** - Monitoring dashboards
 
 ### Services (4)
+
 - **postgres-service** - ClusterIP:5432
 - **mt5-api-service** - LoadBalancer:80
 - **prometheus-service** - ClusterIP:9090
 - **grafana-service** - LoadBalancer:3000
 
 ### Storage (4 PVCs)
+
 - **postgres-pvc** - 20Gi (Database)
 - **ml-models-pvc** - 5Gi (ML Models, RWX)
 - **grafana-pvc** - 2Gi (Dashboards)
 - **prometheus-pvc** - 10Gi (Metrics)
 
 ### Autoscaling (1 HPA)
+
 - **mt5-api-hpa** - Scale API 2-10 replicas based on CPU/Memory
 
 ### Jobs (1 CronJob)
+
 - **ml-training-job** - Daily at 2 AM
 
 ### Networking (1 Ingress)
+
 - api.mt5-trading.local
 - grafana.mt5-trading.local
 - prometheus.mt5-trading.local
@@ -113,7 +122,9 @@ kubectl get all -n mt5-trading
 ## 🔧 Customization
 
 ### Update Replicas
+
 Edit `overlays/{env}/kustomization.yaml`:
+
 ```yaml
 patches:
   - patch: |-
@@ -129,7 +140,9 @@ patches:
 ```
 
 ### Update Resources
+
 Edit deployment files in `base/`:
+
 ```yaml
 resources:
   requests:
@@ -141,7 +154,9 @@ resources:
 ```
 
 ### Update ConfigMap
+
 Edit `base/configmap.yaml`:
+
 ```yaml
 data:
   LOG_LEVEL: "INFO"
@@ -153,6 +168,7 @@ data:
 ## 📚 Documentation
 
 Complete guides:
+
 - [K8S Deployment Guide](../docs/K8S_DEPLOYMENT.md)
 - [Quick Reference](../docs/K8S_QUICK_REFERENCE.md)
 - [Implementation Summary](../docs/K8S_IMPLEMENTATION_SUMMARY.md)
@@ -162,6 +178,7 @@ Complete guides:
 ## 🛠️ Scripts
 
 Use helper scripts from `scripts/`:
+
 ```bash
 # Deploy
 ../scripts/k8s-deploy.sh [dev|staging|production]
@@ -195,6 +212,7 @@ Use helper scripts from `scripts/`:
 ## 📈 Monitoring
 
 After deployment, access:
+
 ```bash
 # Grafana (port-forward)
 kubectl port-forward -n mt5-trading svc/grafana-service 3000:3000
@@ -214,6 +232,7 @@ kubectl port-forward -n mt5-trading svc/mt5-api-service 8000:80
 ## 🔍 Troubleshooting
 
 ### Pods not starting
+
 ```bash
 kubectl get pods -n mt5-trading
 kubectl describe pod <pod-name> -n mt5-trading
@@ -221,12 +240,14 @@ kubectl logs <pod-name> -n mt5-trading
 ```
 
 ### PVC Pending
+
 ```bash
 kubectl get pvc -n mt5-trading
 kubectl describe pvc <pvc-name> -n mt5-trading
 ```
 
 ### Service not accessible
+
 ```bash
 kubectl get svc -n mt5-trading
 kubectl get endpoints -n mt5-trading
@@ -238,18 +259,18 @@ See full troubleshooting guide in [K8S_DEPLOYMENT.md](../docs/K8S_DEPLOYMENT.md)
 
 ## 🎓 Best Practices
 
-✅ Use Kustomize overlays for environments  
-✅ Keep secrets out of git  
-✅ Set resource limits  
-✅ Use health checks  
-✅ Enable RBAC  
-✅ Use namespaces for isolation  
-✅ Tag images with versions  
-✅ Use StatefulSets for stateful apps  
-✅ Implement NetworkPolicies  
-✅ Monitor everything  
+✅ Use Kustomize overlays for environments
+✅ Keep secrets out of git
+✅ Set resource limits
+✅ Use health checks
+✅ Enable RBAC
+✅ Use namespaces for isolation
+✅ Tag images with versions
+✅ Use StatefulSets for stateful apps
+✅ Implement NetworkPolicies
+✅ Monitor everything
 
 ---
 
-**Version**: 2.0.0  
+**Version**: 2.0.0
 **Last Updated**: 18/10/2025

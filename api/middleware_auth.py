@@ -1,20 +1,24 @@
 # api/middleware_auth.py
-import os, time
-from typing import Callable
-from fastapi import Request, HTTPException
+import os
+import time
+from collections.abc import Callable
+
+from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # Simple in-memory rate limiter: key => [window_start_epoch, count]
 _RATE = {}
 WINDOW = int(os.getenv("RATE_WINDOW_SECONDS", "60"))
-LIMIT  = int(os.getenv("RATE_LIMIT", "300"))  # requests per window
+LIMIT = int(os.getenv("RATE_LIMIT", "300"))  # requests per window
 HEADER = os.getenv("API_KEY_HEADER", "X-API-Key")
 API_KEY = os.getenv("API_KEY", "")
+
 
 def _key_from_request(req: Request) -> str:
     ip = req.client.host if req.client else "unknown"
     key = req.headers.get(HEADER, "")
     return f"{ip}:{key}"
+
 
 class APIKeyAndRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable):

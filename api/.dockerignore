@@ -18,7 +18,7 @@ node_modules/
 *.secret*
 *.pem
 *.key
-id_* 
+id_*
 tests/
 notebooks/
 README*.md

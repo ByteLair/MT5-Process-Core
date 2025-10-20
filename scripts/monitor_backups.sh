@@ -46,34 +46,34 @@ check_backup_age() {
     local backup_type="$1"
     local backup_path="$2"
     local pattern="$3"
-    
+
     # Find most recent backup file
     local latest_backup=$(find "$backup_path" -name "$pattern" -type f -printf '%T@ %p\n' | sort -n | tail -1)
-    
+
     if [ -z "$latest_backup" ]; then
         log "ERROR: No $backup_type backup found in $backup_path"
         return 1
     fi
-    
+
     # Extract timestamp and filename
     local timestamp=$(echo "$latest_backup" | cut -d' ' -f1)
     local filename=$(echo "$latest_backup" | cut -d' ' -f2)
-    
+
     # Calculate age in hours
     local age_hours=$(( ($(date +%s) - ${timestamp%.*}) / 3600 ))
-    
+
     if [ "$age_hours" -gt "$MAX_BACKUP_AGE" ]; then
         log "WARNING: $backup_type backup is $age_hours hours old"
         return 1
     fi
-    
+
     # Check file size
     local size=$(stat -c%s "$filename")
     if [ "$size" -lt "$MIN_BACKUP_SIZE" ]; then
         log "WARNING: $backup_type backup is suspiciously small ($size bytes)"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -128,7 +128,7 @@ STATS_MESSAGE+="Recent Errors: $(grep -c "ERROR" "$LOG_FILE" 2>/dev/null || echo
 # Send alerts if needed
 if [ -n "$ALERT_MESSAGE" ]; then
     FULL_MESSAGE="${ALERT_MESSAGE}\n\n${STATS_MESSAGE}"
-    
+
     log "Sending alerts..."
     send_email_alert "MT5 Trading DB Backup Alert" "$FULL_MESSAGE"
     send_discord_alert "$FULL_MESSAGE"

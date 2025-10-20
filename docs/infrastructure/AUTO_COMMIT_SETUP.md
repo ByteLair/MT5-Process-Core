@@ -4,7 +4,7 @@ Sistema de commits automáticos diários com versionamento e mensagens inteligen
 
 ## 📅 Agendamento
 
-**Horário:** 4:00 AM (UTC-3) todos os dias  
+**Horário:** 4:00 AM (UTC-3) todos os dias
 **Execução:** Via GitHub Actions no runner self-hosted
 
 ## 🎯 O que faz
@@ -23,11 +23,13 @@ Sistema de commits automáticos diários com versionamento e mensagens inteligen
 O workflow `.github/workflows/auto-commit.yml` já está configurado!
 
 **Agendamento:**
+
 - Automático: Diariamente às 4:00 AM (UTC-3)
 - Manual: Via GitHub Actions interface
 
 **Ativar manualmente:**
-1. Vá para: https://github.com/Lysk-dot/mt5-trading-db/actions
+
+1. Vá para: <https://github.com/Lysk-dot/mt5-trading-db/actions>
 2. Selecione "Auto Commit Daily"
 3. Clique em "Run workflow"
 
@@ -88,6 +90,7 @@ on:
 ```
 
 **Exemplos de horários:**
+
 - `0 7 * * *` - 4:00 AM (UTC-3) diariamente
 - `0 10 * * *` - 7:00 AM (UTC-3) diariamente
 - `0 7 * * 1` - 4:00 AM (UTC-3) toda segunda-feira
@@ -130,16 +133,19 @@ git reset logs/
 ## 🛡️ Segurança
 
 **Atenção:** Commits automáticos podem incluir:
+
 - ❌ Arquivos sensíveis (.env, chaves)
 - ❌ Dados pessoais
 - ❌ Credenciais
 
 **Proteções implementadas:**
+
 - ✅ `.gitignore` respeita exclusões
 - ✅ `[skip ci]` evita loop infinito
 - ✅ Commits descritivos para auditoria
 
 **Recomendações:**
+
 - Revise `.gitignore` regularmente
 - Monitore commits automáticos no GitHub
 - Use `git secrets` para detectar credenciais
@@ -162,7 +168,7 @@ git log --grep="automated commit" --since="1 week ago"
 ### Logs do Workflow
 
 Ver execuções:
-https://github.com/Lysk-dot/mt5-trading-db/actions/workflows/auto-commit.yml
+<https://github.com/Lysk-dot/mt5-trading-db/actions/workflows/auto-commit.yml>
 
 ### Logs do Script Local (se usar crontab)
 
@@ -174,10 +180,11 @@ tail -f ~/mt5-trading-db/logs/auto-commit.log
 
 ### Desabilitar GitHub Actions
 
-1. Vá para: https://github.com/Lysk-dot/mt5-trading-db/settings/actions
+1. Vá para: <https://github.com/Lysk-dot/mt5-trading-db/settings/actions>
 2. Desabilite o workflow "Auto Commit Daily"
 
 Ou remova/renomeie o arquivo:
+
 ```bash
 mv .github/workflows/auto-commit.yml .github/workflows/auto-commit.yml.disabled
 ```
@@ -219,5 +226,5 @@ git log -1
 
 ---
 
-**Última atualização:** Outubro 2025  
+**Última atualização:** Outubro 2025
 **Status:** ✅ Ativo e funcionando

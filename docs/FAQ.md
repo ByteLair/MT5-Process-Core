@@ -21,6 +21,7 @@ Perguntas frequentes de desenvolvedores e operadores do sistema.
 ### Q: O que é o MT5 Trading System?
 
 Sistema de trading automatizado que:
+
 1. Ingere dados de mercado (OHLCV) via API REST
 2. Calcula features técnicas (RSI, MACD, ATR, etc.)
 3. Treina modelos ML para prever direção de mercado
@@ -44,11 +45,13 @@ Cada timeframe tem modelo ML separado.
 ### Q: Quantos símbolos o sistema suporta?
 
 Ilimitado (dentro da capacidade do banco de dados). Atualmente configurado para forex majors:
+
 - EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, EURGBP, EURJPY, GBPJPY
 
 ### Q: O sistema executa trades automaticamente?
 
 **Não.** O sistema apenas:
+
 - Armazena dados de mercado
 - Gera sinais (BUY/SELL)
 - Fornece predições de modelos ML
@@ -106,6 +109,7 @@ sudo apt install docker-compose-plugin
 Já configurado! Alertas vão para `kuramopr@gmail.com`.
 
 Para mudar, edite:
+
 ```yaml
 # grafana/provisioning/alerting/contact-points.yaml
 - name: Email-Admin
@@ -114,6 +118,7 @@ Para mudar, edite:
 ```
 
 Depois:
+
 ```bash
 docker compose restart grafana
 ```
@@ -125,6 +130,7 @@ docker compose restart grafana
 ### Q: Como adicionar um novo endpoint na API?
 
 1. Definir modelo Pydantic:
+
 ```python
 # api/app/models.py
 class MyRequest(BaseModel):
@@ -133,6 +139,7 @@ class MyRequest(BaseModel):
 ```
 
 2. Criar rota:
+
 ```python
 # api/app/main.py
 @app.post("/my-endpoint")
@@ -141,6 +148,7 @@ def my_endpoint(req: MyRequest):
 ```
 
 3. Adicionar teste:
+
 ```python
 # api/tests/test_api.py
 def test_my_endpoint():
@@ -224,7 +232,7 @@ Database: mt5_trading
 SELECT pg_size_pretty(pg_database_size('mt5_trading'));
 
 -- Por tabela
-SELECT 
+SELECT
     schemaname || '.' || tablename AS table,
     pg_size_pretty(pg_total_relation_size(schemaname || '.' || tablename)) AS size
 FROM pg_tables
@@ -265,6 +273,7 @@ Ver procedimento completo: `docs/RUNBOOK.md#restore-de-backup`
 ### Q: Por que usar TimescaleDB ao invés de PostgreSQL normal?
 
 TimescaleDB oferece:
+
 - **10-100x** melhor performance em queries time-series
 - **Compression**: 90%+ redução de storage
 - **Continuous Aggregates**: Features pré-calculadas automaticamente
@@ -276,7 +285,7 @@ Ver decisão arquitetural: `docs/adr/001-timescaledb.md`
 
 ```sql
 -- Verificar chunks comprimidos
-SELECT 
+SELECT
     hypertable_name,
     chunk_name,
     compression_status
@@ -285,7 +294,7 @@ WHERE hypertable_name = 'market_data'
 ORDER BY range_start DESC;
 
 -- Estatísticas de compression
-SELECT 
+SELECT
     pg_size_pretty(before_compression_total_bytes) AS uncompressed,
     pg_size_pretty(after_compression_total_bytes) AS compressed,
     pg_size_pretty(before_compression_total_bytes - after_compression_total_bytes) AS saved
@@ -328,6 +337,7 @@ cat ml/models/rf_m1_metrics.json
 ```
 
 Métricas esperadas:
+
 - Accuracy > 0.55
 - Precision > 0.60
 - Recall > 0.50
@@ -351,11 +361,13 @@ print(results)
 ### Q: O modelo está performando mal. O que fazer?
 
 **Possíveis causas:**
+
 1. **Data drift**: Mercado mudou
 2. **Overfitting**: Modelo decorou dados de treino
 3. **Features ruins**: Indicadores não são preditivos
 
 **Soluções:**
+
 ```bash
 # 1. Re-treinar com dados recentes
 docker compose exec ml python ml/worker/train.py
@@ -376,12 +388,14 @@ docker compose restart api
 ### Q: Como adicionar novas features de ML?
 
 1. Adicionar feature ao SQL:
+
 ```sql
 -- db/init/02-features.sql
 ALTER TABLE features_m1 ADD COLUMN new_feature DOUBLE PRECISION;
 ```
 
 2. Atualizar script de treinamento:
+
 ```python
 # ml/worker/train.py
 features = [
@@ -391,6 +405,7 @@ features = [
 ```
 
 3. Re-treinar:
+
 ```bash
 docker compose exec ml python ml/worker/train.py
 ```
@@ -405,9 +420,9 @@ Ver exemplo completo: `docs/EXAMPLES.md#adicionar-feature-de-ml`
 
 **8001**
 
-- API: http://localhost:8001
-- Docs (Swagger): http://localhost:8001/docs
-- Metrics (Prometheus): http://localhost:8001/prometheus
+- API: <http://localhost:8001>
+- Docs (Swagger): <http://localhost:8001/docs>
+- Metrics (Prometheus): <http://localhost:8001/prometheus>
 
 ### Q: Como ingerir dados de mercado?
 
@@ -442,6 +457,7 @@ curl http://localhost:8001/signals/latest?symbol=EURUSD&timeframe=M1
 ```
 
 Response:
+
 ```json
 {
   "symbol": "EURUSD",
@@ -457,6 +473,7 @@ Response:
 Ver: `docs/PERFORMANCE.md#troubleshooting` e `docs/RUNBOOK.md#incidente-api-lenta`
 
 Checklist rápido:
+
 ```bash
 # 1. Verificar CPU/RAM
 docker stats mt5_api
@@ -476,6 +493,7 @@ docker compose restart api
 **Atualmente não há autenticação.**
 
 Para adicionar (futuro):
+
 ```python
 # api/middleware_auth.py
 from fastapi import Security, HTTPException
@@ -494,13 +512,15 @@ async def verify_token(credentials = Security(security)):
 
 ### Q: Como acessar Grafana?
 
-**URL:** http://localhost:3000
+**URL:** <http://localhost:3000>
 
 **Credentials:**
+
 - User: `admin`
 - Password: Ver `.env` (variável `GRAFANA_PASSWORD`)
 
 **Dashboards principais:**
+
 - MT5 Trading Main
 - Infrastructure & Logs
 - Database Metrics
@@ -508,8 +528,9 @@ async def verify_token(credentials = Security(security)):
 
 ### Q: Como criar um novo dashboard no Grafana?
 
-1. Via UI: http://localhost:3000 → Dashboards → New
+1. Via UI: <http://localhost:3000> → Dashboards → New
 2. Via provisioning:
+
 ```bash
 # Copiar dashboard existente como template
 cp grafana/provisioning/dashboards/mt5-trading-main.json \
@@ -526,9 +547,10 @@ Ver exemplo: `docs/EXAMPLES.md#criar-dashboard-personalizado`
 
 ### Q: Como acessar Prometheus?
 
-**URL:** http://localhost:9090
+**URL:** <http://localhost:9090>
 
 **Queries úteis:**
+
 ```promql
 # Requests por segundo
 rate(api_requests_total[5m])
@@ -546,7 +568,8 @@ pg_stat_database_numbackends
 ### Q: Como ver logs centralizados (Loki)?
 
 Via Grafana:
-1. Acesse: http://localhost:3000
+
+1. Acesse: <http://localhost:3000>
 2. Explore → Loki data source
 3. Query:
 
@@ -562,6 +585,7 @@ Via Grafana:
 ```
 
 Ou via CLI:
+
 ```bash
 # LogCLI
 docker exec mt5_loki logcli query '{container="mt5_api"}' --limit=100
@@ -570,6 +594,7 @@ docker exec mt5_loki logcli query '{container="mt5_api"}' --limit=100
 ### Q: Como configurar um novo alerta?
 
 1. Criar regra:
+
 ```yaml
 # grafana/provisioning/alerting/my-alert.yaml
 apiVersion: 1
@@ -585,6 +610,7 @@ groups:
 ```
 
 2. Restart Grafana:
+
 ```bash
 docker compose restart grafana
 ```
@@ -652,6 +678,7 @@ journalctl -u actions.runner.*.service -f
 ```
 
 Sistema já tem auto-start configurado:
+
 - Boot: `github-runner-start.service`
 - Monitoramento: `github-runner-check.timer` (a cada 5 minutos)
 
@@ -764,12 +791,12 @@ CMD ["uvicorn", "app.main:app", "--workers", "2"]  # Ao invés de 4
 - **Runbook Operacional**: `docs/RUNBOOK.md`
 - **Architecture Decision Records**: `docs/adr/`
 - **OpenAPI Spec**: `openapi.yaml`
-- **API Docs (Swagger)**: http://localhost:8001/docs
+- **API Docs (Swagger)**: <http://localhost:8001/docs>
 
 ---
 
 ## Ainda tem dúvidas?
 
-- **Email**: kuramopr@gmail.com
-- **GitHub Issues**: https://github.com/Lysk-dot/mt5-trading-db/issues
+- **Email**: <kuramopr@gmail.com>
+- **GitHub Issues**: <https://github.com/Lysk-dot/mt5-trading-db/issues>
 - **Pull Requests**: Contribuições bem-vindas!

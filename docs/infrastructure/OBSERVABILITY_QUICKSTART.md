@@ -4,10 +4,10 @@
 
 | Serviço | URL | Descrição |
 |---------|-----|-----------|
-| **Grafana** | http://192.168.15.20:3000 | Dashboards e visualizações<br>👤 `admin` / `admin` |
-| **Jaeger UI** | http://192.168.15.20:16686 | Distributed tracing |
-| **Prometheus** | http://192.168.15.20:9090 | Métricas time-series |
-| **Loki API** | http://192.168.15.20:3100 | API de logs |
+| **Grafana** | <http://192.168.15.20:3000> | Dashboards e visualizações<br>👤 `admin` / `admin` |
+| **Jaeger UI** | <http://192.168.15.20:16686> | Distributed tracing |
+| **Prometheus** | <http://192.168.15.20:9090> | Métricas time-series |
+| **Loki API** | <http://192.168.15.20:3100> | API de logs |
 
 ## 📊 Dashboards Disponíveis no Grafana
 
@@ -74,7 +74,7 @@
 rate(http_requests_total[5m])
 
 # Latência p95
-histogram_quantile(0.95, 
+histogram_quantile(0.95,
   rate(http_request_duration_seconds_bucket[5m])
 )
 
@@ -105,7 +105,7 @@ docker-compose up -d loki promtail jaeger grafana
 
 ## 📝 Estrutura de Logs
 
-### Loki coleta logs de:
+### Loki coleta logs de
 
 - **Docker Containers**: Todos os containers via JSON logs
 - **API MT5**: Logs da aplicação em `/app/logs/*.log`
@@ -113,7 +113,7 @@ docker-compose up -d loki promtail jaeger grafana
 - **PostgreSQL**: Logs do banco em `/var/log/postgresql/*.log`
 - **Syslog**: Logs do sistema em `/var/log/syslog`
 
-### Jaeger rastreia:
+### Jaeger rastreia
 
 - **Requests HTTP**: Todos os endpoints da API
 - **Database Queries**: Queries SQL via SQLAlchemy
@@ -165,6 +165,7 @@ curl http://localhost:16686/api/services
 ## 📚 Documentação Completa
 
 Para documentação detalhada, consulte:
+
 - **OBSERVABILITY_STACK.md**: Guia completo com arquitetura, queries, best practices
 - **HEALTH_CHECK_SYSTEM.md**: Sistema de monitoramento e alertas
 
@@ -218,5 +219,5 @@ Para documentação detalhada, consulte:
 
 ---
 
-**Última atualização**: 2025-10-18  
+**Última atualização**: 2025-10-18
 **Status**: ✅ Todos os serviços funcionando

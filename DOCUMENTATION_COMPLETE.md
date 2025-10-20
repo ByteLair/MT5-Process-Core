@@ -1,8 +1,8 @@
 # 📚 Documentação Completa - Sistema MT5 Trading
 
-**Versão:** 2.0  
-**Data:** 2025-10-20  
-**Status:** ✅ Produção  
+**Versão:** 2.0
+**Data:** 2025-10-20
+**Status:** ✅ Produção
 
 ---
 
@@ -162,11 +162,12 @@ Sistema completo de ingestão, processamento e análise de dados financeiros do 
 
 ### 1. API (FastAPI)
 
-**Localização:** `api/app/main.py`, `api/app/ingest.py`  
-**Imagem Docker:** `mt5-api`  
-**Porta:** 18002, 18003  
+**Localização:** `api/app/main.py`, `api/app/ingest.py`
+**Imagem Docker:** `mt5-api`
+**Porta:** 18002, 18003
 
 **Responsabilidades:**
+
 - Receber dados do EA via HTTP REST
 - Validar payloads com Pydantic
 - Normalizar timestamps por timeframe bucket
@@ -176,6 +177,7 @@ Sistema completo de ingestão, processamento e análise de dados financeiros do 
 - Emitir traces OpenTelemetry
 
 **Endpoints Principais:**
+
 ```python
 POST /ingest          # Candle único ou {"items": [...]}
 POST /ingest_batch    # Array direto [...]
@@ -186,6 +188,7 @@ GET  /metrics         # Prometheus metrics
 ```
 
 **Dependências:**
+
 - FastAPI 0.115.0
 - SQLAlchemy 2.0.36
 - psycopg (binary)
@@ -195,11 +198,12 @@ GET  /metrics         # Prometheus metrics
 
 ### 2. Tick Aggregator Worker
 
-**Localização:** `api/app/tick_aggregator.py`, `api/run_tick_aggregator.py`  
-**Container:** `mt5_tick_aggregator`  
-**Intervalo:** 5 segundos (configurável via `TICK_AGG_INTERVAL`)  
+**Localização:** `api/app/tick_aggregator.py`, `api/run_tick_aggregator.py`
+**Container:** `mt5_tick_aggregator`
+**Intervalo:** 5 segundos (configurável via `TICK_AGG_INTERVAL`)
 
 **Responsabilidades:**
+
 - Ler ticks de `market_data_raw` (JSONB)
 - Agregar usando SQL com `time_bucket('1 minute')`
 - Calcular OHLC a partir de `(bid + ask) / 2`
@@ -208,8 +212,9 @@ GET  /metrics         # Prometheus metrics
 - Logar cada execução com contadores
 
 **Algoritmo de Agregação:**
+
 ```sql
-SELECT 
+SELECT
   symbol,
   'M1' as timeframe,
   time_bucket('1 minute', ts) as ts,
@@ -220,7 +225,7 @@ SELECT
   COUNT(*) as volume,
   AVG(ask - bid) as spread
 FROM (
-  SELECT 
+  SELECT
     r.symbol,
     (t->>'ts')::timestamptz as ts,
     (t->>'bid')::numeric as bid,
@@ -234,6 +239,7 @@ GROUP BY symbol, time_bucket('1 minute', ts)
 ```
 
 **Configuração:**
+
 ```yaml
 TICK_AGG_INTERVAL: 5  # segundos entre execuções
 DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
@@ -241,11 +247,12 @@ DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
 
 ### 3. Indicators Worker
 
-**Localização:** `api/app/indicators_worker.py`, `api/run_indicators_worker.py`  
-**Container:** `mt5_indicators_worker`  
-**Intervalo:** 60 segundos (configurável via `INDICATORS_INTERVAL`)  
+**Localização:** `api/app/indicators_worker.py`, `api/run_indicators_worker.py`
+**Container:** `mt5_indicators_worker`
+**Intervalo:** 60 segundos (configurável via `INDICATORS_INTERVAL`)
 
 **Responsabilidades:**
+
 - Calcular indicadores técnicos server-side
 - Garantir consistência entre treino e produção
 - Processar últimos 200 minutos por símbolo
@@ -277,6 +284,7 @@ DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
    - Lower = SMA - (2 × StdDev)
 
 **Código Exemplo:**
+
 ```python
 def compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -290,6 +298,7 @@ def compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
 ```
 
 **Configuração:**
+
 ```yaml
 INDICATORS_INTERVAL: 60  # segundos
 SYMBOLS: EURUSD,GBPUSD,USDJPY  # símbolos a processar
@@ -298,11 +307,12 @@ DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
 
 ### 4. Banco de Dados (TimescaleDB)
 
-**Imagem:** `timescale/timescaledb:2.14.2-pg16`  
-**Container:** `mt5_db`  
-**Porta Interna:** 5432  
+**Imagem:** `timescale/timescaledb:2.14.2-pg16`
+**Container:** `mt5_db`
+**Porta Interna:** 5432
 
 **Extensões Habilitadas:**
+
 - `timescaledb` - Séries temporais
 - `pg_stat_statements` - Estatísticas de queries
 - `btree_gist` - Índices avançados
@@ -310,6 +320,7 @@ DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
 **Tabelas Principais:**
 
 #### market_data (Hypertable)
+
 ```sql
 CREATE TABLE market_data (
     id BIGSERIAL,
@@ -335,7 +346,7 @@ CREATE TABLE market_data (
 );
 
 -- Converter em hypertable
-SELECT create_hypertable('market_data', 'ts', 
+SELECT create_hypertable('market_data', 'ts',
     chunk_time_interval => INTERVAL '1 day',
     if_not_exists => TRUE
 );
@@ -346,6 +357,7 @@ CREATE INDEX idx_market_data_ts ON market_data(ts DESC);
 ```
 
 #### market_data_raw (Ticks JSONB)
+
 ```sql
 CREATE TABLE market_data_raw (
     id BIGSERIAL PRIMARY KEY,
@@ -359,6 +371,7 @@ CREATE INDEX idx_market_data_raw_received ON market_data_raw(received_at DESC);
 ```
 
 #### aggregator_state
+
 ```sql
 CREATE TABLE aggregator_state (
     key TEXT PRIMARY KEY,
@@ -374,7 +387,7 @@ Definidos em `db/init/04-continuous-aggregates.sql`:
 -- M5 (refresh a cada 1 min)
 CREATE MATERIALIZED VIEW market_data_m5
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
     symbol,
     'M5' as timeframe,
     time_bucket('5 minutes', ts) as ts,
@@ -400,33 +413,39 @@ Similar para M15, M30, H1, H4, D1.
 ### 5. Observabilidade
 
 #### Prometheus (Métricas)
+
 - **Porta:** 19090
 - **Config:** `prometheus.yml`
 - **Scrape Interval:** 15s
 - **Targets:** API, Node Exporter
 
 #### Grafana (Dashboards)
+
 - **Porta:** 13000
 - **Credenciais:** admin/admin
 - **Datasources:** Prometheus, Loki, Jaeger, PostgreSQL
 - **Dashboards:** `grafana/dashboards/`
 
 #### Loki (Logs)
+
 - **Porta:** 13100
 - **Config:** `loki/loki-config.yml`
 - **Retention:** 168h (7 dias)
 
 #### Promtail (Coleta de Logs)
+
 - **Config:** `loki/promtail-config.yml`
 - **Sources:** `/var/log`, `./logs`
 
 #### Jaeger (Distributed Tracing)
+
 - **UI:** 26686
 - **OTLP gRPC:** 24317
 - **OTLP HTTP:** 24318
 - **Storage:** Badger (local)
 
 #### PgBouncer (Connection Pooling)
+
 - **Porta:** 6432
 - **Max Connections:** 50
 - **Pool Mode:** session
@@ -437,6 +456,7 @@ Similar para M15, M30, H1, H4, D1.
 ## 📡 API Endpoints
 
 ### Base URL
+
 ```
 http://localhost:18002
 ```
@@ -454,6 +474,7 @@ X-API-Key: <valor_do_arquivo_.env>
 Envia candle único ou batch com envelope.
 
 **Request:**
+
 ```json
 {
   "items": [
@@ -473,6 +494,7 @@ Envia candle único ou batch com envelope.
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -496,6 +518,7 @@ Envia candle único ou batch com envelope.
 Envia array direto de candles (mais simples para EA).
 
 **Request:**
+
 ```json
 [
   {
@@ -530,6 +553,7 @@ Envia array direto de candles (mais simples para EA).
 Envia ticks de alta frequência.
 
 **Request:**
+
 ```json
 {
   "ticks": [
@@ -550,6 +574,7 @@ Envia ticks de alta frequência.
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -576,6 +601,7 @@ Envia ticks de alta frequência.
 Health check da API.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -598,6 +624,7 @@ A API normaliza timestamps para o início do bucket do timeframe:
 | D1 | Meia-noite UTC | 15:00:00 → 00:00:00 |
 
 **Função Python:**
+
 ```python
 def _bucket_start(ts: datetime, timeframe: str) -> datetime:
     if timeframe == "M1":
@@ -655,7 +682,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
-    
+
   api:
     build: ./api
     image: mt5-api
@@ -664,13 +691,13 @@ services:
       - "18003:8001"
     environment:
       DATABASE_URL: postgresql+psycopg://trader:trader123@db:5432/mt5_trading
-    
+
   tick-aggregator:
     image: mt5-api
     command: ["python", "run_tick_aggregator.py"]
     environment:
       TICK_AGG_INTERVAL: ${TICK_AGG_INTERVAL:-5}
-    
+
   indicators-worker:
     image: mt5-api
     command: ["python", "run_indicators_worker.py"]
@@ -743,11 +770,13 @@ docker exec mt5_db psql -U trader -d mt5_trading \
 ### Testes Manuais
 
 #### 1. Health Check
+
 ```bash
 curl http://localhost:18002/health
 ```
 
 #### 2. Teste de Ingestão
+
 ```bash
 API_KEY=$(grep ^API_KEY= .env | cut -d= -f2 | tr -d '"')
 
@@ -768,6 +797,7 @@ curl -X POST http://localhost:18002/ingest_batch \
 ```
 
 #### 3. Verificar Workers
+
 ```bash
 # Tick Aggregator
 docker logs mt5_tick_aggregator --tail 20
@@ -777,6 +807,7 @@ docker logs mt5_indicators_worker --tail 20
 ```
 
 #### 4. Query no Banco
+
 ```bash
 docker exec mt5_db psql -U trader -d mt5_trading
 
@@ -789,6 +820,7 @@ SELECT * FROM aggregator_state;
 ### Testes de Performance
 
 #### Benchmark de Ingestão
+
 ```bash
 # Gerar 1000 candles
 for i in {1..1000}; do
@@ -889,6 +921,7 @@ terraform apply plan.out
 ```
 
 **Recursos Provisionados:**
+
 - VPC e Subnets
 - EKS Cluster
 - RDS TimescaleDB
@@ -905,6 +938,7 @@ terraform apply plan.out
 #### 1. Workers marcados como "unhealthy"
 
 **Sintoma:**
+
 ```
 mt5_tick_aggregator     Up 10 minutes (unhealthy)
 ```
@@ -912,6 +946,7 @@ mt5_tick_aggregator     Up 10 minutes (unhealthy)
 **Causa:** Healthcheck usa `pgrep` que não existe na imagem Python slim
 
 **Verificação:**
+
 ```bash
 docker logs mt5_tick_aggregator --tail 20
 # Deve mostrar: "INFO - Aggregated ticks: ..."
@@ -924,13 +959,15 @@ docker logs mt5_tick_aggregator --tail 20
 #### 2. Erro "wrong password type"
 
 **Sintoma:**
+
 ```
 psycopg.OperationalError: connection failed: FATAL: server login failed: wrong password type
 ```
 
 **Causa:** Workers tentando conectar via pgbouncer com psycopg
 
-**Solução:** 
+**Solução:**
+
 ```yaml
 # docker-compose.yml
 environment:
@@ -941,6 +978,7 @@ environment:
 #### 3. Containers com nomes estranhos
 
 **Sintoma:**
+
 ```
 15c1ad2b98f5_mt5_tick_aggregator
 ```
@@ -948,6 +986,7 @@ environment:
 **Causa:** Recriações múltiplas deixaram containers órfãos
 
 **Solução:**
+
 ```bash
 # Obter PID e matar
 PID=$(docker inspect <container> | grep '"Pid"' | grep -oP '\d+' | tail -1)
@@ -961,16 +1000,19 @@ docker-compose up -d <service>
 #### 4. Grafana em loop de restart
 
 **Sintoma:**
+
 ```
 mt5_grafana  Restarting (1) 29 seconds ago
 ```
 
 **Logs:**
+
 ```
 Error: ✗ alert rules: A folder with that name already exists
 ```
 
 **Solução:**
+
 ```bash
 # Desabilitar provisionamento problemático
 cd grafana/provisioning/alerting
@@ -986,6 +1028,7 @@ docker-compose up -d grafana
 #### 5. API não recebe dados
 
 **Verificações:**
+
 ```bash
 # 1. Health check
 curl http://localhost:18002/health
@@ -1004,14 +1047,15 @@ docker exec mt5_api nc -zv db 5432
 #### 6. Banco de dados lento
 
 **Diagnóstico:**
+
 ```sql
 -- Queries lentas
-SELECT * FROM pg_stat_statements 
-ORDER BY total_exec_time DESC 
+SELECT * FROM pg_stat_statements
+ORDER BY total_exec_time DESC
 LIMIT 10;
 
 -- Tamanho das tabelas
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
@@ -1026,6 +1070,7 @@ ORDER BY range_start DESC;
 ```
 
 **Otimizações:**
+
 ```sql
 -- Reindexar
 REINDEX TABLE market_data;
@@ -1034,13 +1079,14 @@ REINDEX TABLE market_data;
 VACUUM ANALYZE market_data;
 
 -- Comprimir chunks antigos
-SELECT compress_chunk(i) 
+SELECT compress_chunk(i)
 FROM show_chunks('market_data', older_than => INTERVAL '7 days') i;
 ```
 
 ### Logs e Debugging
 
 #### Acessar logs estruturados
+
 ```bash
 # API
 docker logs mt5_api -f --tail 100
@@ -1057,6 +1103,7 @@ docker-compose logs -f
 ```
 
 #### Conectar ao container
+
 ```bash
 # Bash no container
 docker exec -it mt5_api bash
@@ -1069,6 +1116,7 @@ docker exec -it mt5_db psql -U trader -d mt5_trading
 ```
 
 #### Verificar métricas
+
 ```bash
 # Prometheus metrics
 curl http://localhost:18002/metrics
@@ -1147,6 +1195,7 @@ mt5-trading-db/
 ### Padrões de Código
 
 #### Python
+
 ```python
 # Imports
 import os
@@ -1166,11 +1215,11 @@ def process_data(symbol: str, timeframe: str) -> dict[str, int]:
 def calculate_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     """
     Calcula o RSI (Relative Strength Index).
-    
+
     Args:
         series: Série de preços de fechamento
         period: Período para cálculo (padrão 14)
-    
+
     Returns:
         Série com valores de RSI
     """
@@ -1183,10 +1232,11 @@ logger.info("Processing started", extra={"symbol": "EURUSD"})
 ```
 
 #### SQL
+
 ```sql
 -- Sempre usar comentários
 -- Índices descritivos
-CREATE INDEX idx_market_data_symbol_ts 
+CREATE INDEX idx_market_data_symbol_ts
     ON market_data(symbol, ts DESC);
 
 -- CTEs para legibilidade
@@ -1194,7 +1244,7 @@ WITH recent_data AS (
     SELECT * FROM market_data
     WHERE ts > NOW() - INTERVAL '1 hour'
 )
-SELECT symbol, COUNT(*) 
+SELECT symbol, COUNT(*)
 FROM recent_data
 GROUP BY symbol;
 ```
@@ -1213,6 +1263,7 @@ pytest api/tests/test_ingest.py -v
 ```
 
 **Exemplo de Teste:**
+
 ```python
 # api/tests/test_ingest.py
 import pytest
@@ -1296,14 +1347,14 @@ jobs:
 
 ### Documentação Externa
 
-- **FastAPI:** https://fastapi.tiangolo.com/
-- **SQLAlchemy:** https://docs.sqlalchemy.org/
-- **TimescaleDB:** https://docs.timescale.com/
-- **Prometheus:** https://prometheus.io/docs/
-- **Grafana:** https://grafana.com/docs/
-- **OpenTelemetry:** https://opentelemetry.io/docs/
-- **Docker Compose:** https://docs.docker.com/compose/
-- **Kubernetes:** https://kubernetes.io/docs/
+- **FastAPI:** <https://fastapi.tiangolo.com/>
+- **SQLAlchemy:** <https://docs.sqlalchemy.org/>
+- **TimescaleDB:** <https://docs.timescale.com/>
+- **Prometheus:** <https://prometheus.io/docs/>
+- **Grafana:** <https://grafana.com/docs/>
+- **OpenTelemetry:** <https://opentelemetry.io/docs/>
+- **Docker Compose:** <https://docs.docker.com/compose/>
+- **Kubernetes:** <https://kubernetes.io/docs/>
 
 ### Arquivos de Documentação
 
@@ -1324,13 +1375,13 @@ jobs:
 
 ### Contatos
 
-- **Repositório:** https://github.com/Lysk-dot/mt5-trading-db
-- **Issues:** https://github.com/Lysk-dot/mt5-trading-db/issues
+- **Repositório:** <https://github.com/Lysk-dot/mt5-trading-db>
+- **Issues:** <https://github.com/Lysk-dot/mt5-trading-db/issues>
 - **Desenvolvedor:** Felipe (Lysk-dot)
 
 ---
 
-**Documentação gerada em:** 2025-10-20  
-**Versão do Sistema:** 2.0  
-**Status:** ✅ Produção  
+**Documentação gerada em:** 2025-10-20
+**Versão do Sistema:** 2.0
+**Status:** ✅ Produção
 **Última Atualização:** 2025-10-20 02:55 UTC

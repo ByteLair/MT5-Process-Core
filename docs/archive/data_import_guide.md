@@ -3,6 +3,7 @@
 ## Data: 2024-10-17
 
 ### Objetivo
+
 Alimentar o banco de dados TimescaleDB com dados históricos de candles para treinar o modelo de ML.
 
 ## Processo de Importação
@@ -10,6 +11,7 @@ Alimentar o banco de dados TimescaleDB com dados históricos de candles para tre
 ### 1. Preparação do Ambiente
 
 #### Pacotes Python Instalados no Container
+
 ```bash
 docker exec -it mt5_api pip install pandas sqlalchemy psycopg2-binary
 ```
@@ -28,6 +30,7 @@ api:
 ```
 
 Após atualizar, reiniciar o container:
+
 ```bash
 docker-compose restart api
 ```
@@ -73,7 +76,7 @@ if not pd.api.types.is_datetime64_any_dtype(df["ts"]):
 # Add symbol/timeframe
 df["symbol"] = symbol
 df["timeframe"] = timeframe
-if "spread" not in df.columns: 
+if "spread" not in df.columns:
     df["spread"] = 0.0
 
 # Remove extra columns
@@ -104,18 +107,22 @@ docker exec -it mt5_api bash -c "python3 /app/scripts/import_csv.py /app/scripts
 ## Erros Resolvidos Durante o Processo
 
 ### 1. Coluna `ts` Faltando
+
 **Erro**: `missing columns: {'ts'}`
 **Solução**: Gerar `ts` a partir de `Date` e `Time`.
 
 ### 2. Colunas Extras no DataFrame
+
 **Erro**: `Columns in DataFrame but not in table: {'date', 'time'}`
 **Solução**: Remover colunas extras antes da inserção.
 
 ### 3. Excesso de Parâmetros no SQLAlchemy
+
 **Erro**: `(psycopg.errors.ProgramLimitExceeded)`
 **Solução**: Reduzir batch size de 5000 para 500 e remover `method="multi"`.
 
 ### 4. Tipo de Coluna `ts` Incompatível
+
 **Erro**: `column "ts" is of type timestamp with time zone but expression is of type character varying`
 **Solução**: Converter `ts` para `datetime64[ns, UTC]` antes da inserção.
 

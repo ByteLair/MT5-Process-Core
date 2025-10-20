@@ -1,7 +1,10 @@
-import os, logging
+import logging
+import os
+
 import psycopg2
 
-DSN = os.getenv("DATABASE_URL","").replace("postgresql://","postgresql://")
+DSN = os.getenv("DATABASE_URL", "").replace("postgresql://", "postgresql://")
+
 
 def check_db_connection() -> bool:
     try:

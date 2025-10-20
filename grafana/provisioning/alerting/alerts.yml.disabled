@@ -30,7 +30,7 @@ groups:
         labels:
           severity: critical
           component: api
-          
+
       - uid: high_latency_alert
         title: High API Latency
         condition: A
@@ -55,7 +55,7 @@ groups:
         labels:
           severity: warning
           component: api
-          
+
       - uid: high_error_rate_alert
         title: High Error Rate
         condition: A
@@ -80,7 +80,7 @@ groups:
         labels:
           severity: warning
           component: api
-          
+
       - uid: no_data_received_alert
         title: No Data Received
         condition: A
@@ -105,7 +105,7 @@ groups:
         labels:
           severity: warning
           component: ingestion
-          
+
       - uid: database_connection_alert
         title: Database Connection Issues
         condition: A
@@ -127,7 +127,7 @@ groups:
         labels:
           severity: critical
           component: database
-          
+
       - uid: high_duplicate_rate_alert
         title: High Duplicate Rate
         condition: A

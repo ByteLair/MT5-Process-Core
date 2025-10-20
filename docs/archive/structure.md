@@ -7,6 +7,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
 ---
 
 ## Raiz do repositório
+
 - `.env` / `.env.example` / `.env.local`:
   - Configurações de ambiente usadas pelos containers (DB, API, portas, etc.).
   - O arquivo `.env` efetivo é carregado pelo docker-compose.
@@ -31,6 +32,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - Arquivos/recursos auxiliares (listas de símbolos e timeframes) usados em processos.
 
 ## Pasta `api/`
+
 - `Dockerfile`:
   - Imagem da API FastAPI (uvicorn). Instala dependências de `requirements.txt` e copia o código.
 - `requirements.txt` / `requirements.lock`:
@@ -57,6 +59,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - `test.http`: exemplos de chamadas HTTP para testar endpoints via REST client.
 
 ## Pasta `db/`
+
 - `init/`:
   - Scripts SQL executados automaticamente na inicialização do container do Postgres/Timescale:
     - `01-init.sql`: criação de banco, schemas, tabelas base.
@@ -66,11 +69,13 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
     - `20-signals.sql`: estruturas para fila de sinais e acks.
 
 ## Pasta `docker/`
+
 - `postgres.conf.d/`: configuração do Postgres (`postgresql.conf`) aplicada via bind mount no serviço `db`.
 - `logrotate/`: regras de logrotate específicas para containers/services (ex.: `mt5-containers`).
 - `daemon.json`: configuração do Docker daemon (se necessário para tuning local ou servidor).
 
 ## Pasta `docs/`
+
 - `db_maintenance.md`:
   - Procedimentos, cron e tuning do banco (compactação, retenção, VACUUM, etc.).
 - `logging.md`:
@@ -81,6 +86,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - Descrição detalhada da estrutura do repositório.
 
 ## Pasta `ml/`
+
 - `Dockerfile`:
   - Imagem base para processos de ML (treino, preparação de dataset, scheduler de inferência).
 - `requirements.txt` / `requirements-ml.txt` / `requirements.lock`:
@@ -97,9 +103,11 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - `worker/`: workers auxiliares (ex.: `train.py`).
 
 ## Pasta `models/`
+
 - Artefatos de modelo para a API e/ou ML (pasta montada como volume no container). Ex.: `latest_model.pkl`.
 
 ## Pasta `scripts/`
+
 - Scripts de operação e manutenção:
   - `backup.sh`, `pg_backup.sh`, `restore.sh`: backup e restore do banco.
   - `db_maintenance.sh`, `maintenance/restart-docker.sh`: tarefas de manutenção do banco e do Docker.
@@ -110,21 +118,25 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - `import_csv.py`: importador de CSV (ex.: `dados_historicos.csv`) para dentro do banco.
 
 ## Pasta `sql/`
+
 - `features_labels.sql`: SQLs de features/labels para ML.
 
 ## Pasta `systemd/`
+
 - Serviços/timers systemd para orquestrar a API e tarefas de saúde em ambientes Linux:
   - `mt5-api.service`, `mt5-compose.service`: serviços para iniciar a API/stack.
   - `mt5-healthcheck.service` e `mt5-healthcheck.timer`: healthchecks agendados.
   - `mt5-scheduler.service`: serviço para o scheduler.
 
 ## Pastas de dados e logs
+
 - `data/` e `volumes/`:
   - `data/raw/`, `volumes/timescaledb/`: dados locais e volumes persistentes (o Postgres monta sua pasta de dados via volume `db_data`).
 - `logs/` e `logrotate.d/`:
   - Configurações e diretórios para logs de execução, com regras de rotação (`logrotate.d/mt5`).
 
 ## Outros diretórios/arquivos
+
 - `env/`, `env.template`: templates e helpers de variáveis de ambiente.
 - `ssh/`: chaves/arquivo de SSH (se usado para deploys/backs privados).
 - `init-scripts/`: scripts de inicialização suplementares.
@@ -134,6 +146,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
 ---
 
 ## Fluxo dos serviços (visão geral)
+
 1. `db` (TimescaleDB): provê armazenamento para `market_data`, features, fila de sinais, etc.
 2. `api` (FastAPI): expõe endpoints REST:
    - `/ingest` recebe candles (single ou batch) com API Key.
@@ -143,6 +156,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
 5. `pgadmin`: UI do Postgres para inspeção/consulta.
 
 ## Convenções e Segurança
+
 - Autenticação
   - API Key via header `X-API-Key` para endpoints sensíveis (ex.: `/ingest`, `/signals/*`).
 - SQL
@@ -151,6 +165,7 @@ Este documento descreve, pasta a pasta, a finalidade de cada componente do repos
   - Operações críticas usam `ENGINE.begin()` para garantir atomicidade.
 
 ## Dicas de Operação
+
 - Subir stack completo:
   - `make up`
 - Verificar status de containers:

@@ -1,8 +1,7 @@
 from textwrap import dedent
 
-
 FEATURES_SQL = dedent(
-"""
+    """
 SELECT
 symbol, timeframe, ts,
 close, volume, spread, rsi,
@@ -22,7 +21,7 @@ LIMIT 2000
 
 
 LATEST_WINDOW_SQL = dedent(
-"""
+    """
 SELECT * FROM (
 SELECT ts, close, volume, spread, rsi,
 macd, macd_signal, macd_hist, atr,

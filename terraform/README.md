@@ -1,21 +1,25 @@
 # 🏗️ MT5 Trading Infrastructure - Terraform
 
 ## 📋 Overview
+
 This directory contains Terraform configuration to provision the complete MT5 Trading infrastructure using Docker containers.
 
 ## 🎯 What's Provisioned
 
-### Containers:
+### Containers
+
 - **PostgreSQL/TimescaleDB** - Time-series database for market data
 - **API (FastAPI)** - REST API for data ingestion and signals
 - **Prometheus** - Metrics collection and monitoring
 - **Grafana** - Dashboards and visualization
 - **ML Scheduler** - Machine learning model training scheduler
 
-### Networks:
+### Networks
+
 - `mt5_network` - Bridge network for container communication
 
-### Volumes:
+### Volumes
+
 - `mt5_postgres_data` - Persistent PostgreSQL data
 - `mt5_grafana_data` - Grafana configuration and dashboards
 - `mt5_prometheus_data` - Prometheus metrics storage
@@ -26,6 +30,7 @@ This directory contains Terraform configuration to provision the complete MT5 Tr
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 # Install Terraform (if not installed)
 wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
@@ -40,22 +45,26 @@ sudo usermod -aG docker $USER
 ```
 
 ### Initialize Terraform
+
 ```bash
 cd terraform
 terraform init
 ```
 
 ### Plan (Preview Changes)
+
 ```bash
 terraform plan
 ```
 
 ### Apply (Create Infrastructure)
+
 ```bash
 terraform apply
 ```
 
 ### Destroy (Remove All Resources)
+
 ```bash
 terraform destroy
 ```
@@ -65,6 +74,7 @@ terraform destroy
 ## ⚙️ Configuration
 
 ### Variables
+
 Edit `variables.tf` or create a `terraform.tfvars` file:
 
 ```hcl
@@ -78,7 +88,9 @@ grafana_admin_password = "your_grafana_password"
 ```
 
 ### Environment Variables
+
 Alternatively, use environment variables:
+
 ```bash
 export TF_VAR_postgres_password="your_secure_password"
 export TF_VAR_api_key="your_api_key_here"
@@ -100,11 +112,13 @@ After applying Terraform, access services at:
 | **Grafana** | `http://localhost:3000` | admin / admin (default) |
 
 ### View Outputs
+
 ```bash
 terraform output
 ```
 
 ### View Sensitive Outputs
+
 ```bash
 terraform output -json | jq
 ```
@@ -114,11 +128,13 @@ terraform output -json | jq
 ## 🔍 Verification
 
 ### Check Container Status
+
 ```bash
 docker ps --filter "name=mt5_"
 ```
 
 ### Check Logs
+
 ```bash
 docker logs mt5_api
 docker logs mt5_db
@@ -127,6 +143,7 @@ docker logs mt5_prometheus
 ```
 
 ### Test API
+
 ```bash
 # Health check
 curl http://localhost:18001/health
@@ -139,6 +156,7 @@ curl -X POST "http://localhost:18001/ingest" \
 ```
 
 ### Query Database
+
 ```bash
 docker exec -it mt5_db psql -U trader -d mt5_trading -c "SELECT COUNT(*) FROM market_data;"
 ```
@@ -148,11 +166,14 @@ docker exec -it mt5_db psql -U trader -d mt5_trading -c "SELECT COUNT(*) FROM ma
 ## 📈 Grafana Dashboard
 
 ### Automatic Provisioning
+
 The Grafana dashboard is automatically provisioned on startup:
+
 - **Dashboard Name**: MT5 Trading - Main Dashboard
 - **Location**: `grafana/provisioning/dashboards/mt5-trading-main.json`
 
-### Dashboard Features:
+### Dashboard Features
+
 1. **Total Candles Inserted** - Real-time counter
 2. **API Status** - UP/DOWN indicator
 3. **Total Records** - Database size
@@ -165,7 +186,9 @@ The Grafana dashboard is automatically provisioned on startup:
 10. **Latest Market Data** - Table with last 50 records
 
 ### Manual Dashboard Import
+
 If needed, import manually:
+
 1. Go to Grafana → Dashboards → Import
 2. Upload `grafana/provisioning/dashboards/mt5-trading-main.json`
 
@@ -174,6 +197,7 @@ If needed, import manually:
 ## 🔐 Security Best Practices
 
 ### 1. Change Default Passwords
+
 ```bash
 # Generate secure passwords
 openssl rand -base64 32
@@ -187,13 +211,16 @@ EOF
 ```
 
 ### 2. Use Secrets Management
+
 For production, use:
+
 - HashiCorp Vault
 - AWS Secrets Manager
 - Azure Key Vault
 - Environment variables from CI/CD
 
 ### 3. Network Security
+
 ```bash
 # Restrict access to specific IPs
 iptables -A INPUT -p tcp --dport 18001 -s YOUR_IP -j ACCEPT
@@ -205,7 +232,9 @@ iptables -A INPUT -p tcp --dport 18001 -j DROP
 ## 🛠️ Troubleshooting
 
 ### Issue: "Error creating container"
+
 **Solution:** Check if ports are already in use
+
 ```bash
 sudo lsof -i :18001
 sudo lsof -i :3000
@@ -213,21 +242,27 @@ sudo lsof -i :9090
 ```
 
 ### Issue: "Unable to connect to Docker daemon"
+
 **Solution:** Start Docker service
+
 ```bash
 sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
 ### Issue: Database initialization failed
+
 **Solution:** Remove volume and recreate
+
 ```bash
 terraform destroy -target=docker_volume.postgres_data
 terraform apply
 ```
 
 ### Issue: Grafana dashboard not loading
+
 **Solution:** Check provisioning directory permissions
+
 ```bash
 chmod -R 755 ../grafana/provisioning
 terraform apply -replace=docker_container.grafana
@@ -259,6 +294,7 @@ grafana/
 ## 🔄 Updates and Maintenance
 
 ### Update Container Images
+
 ```bash
 # Pull latest images
 docker pull timescale/timescaledb:2.14.2-pg16
@@ -272,6 +308,7 @@ terraform apply -replace=docker_container.grafana
 ```
 
 ### Rebuild Custom Images
+
 ```bash
 # Rebuild API image
 cd ../api
@@ -287,6 +324,7 @@ terraform apply -replace=docker_container.ml_scheduler
 ```
 
 ### Backup Data
+
 ```bash
 # Backup PostgreSQL
 docker exec mt5_db pg_dump -U trader mt5_trading > backup_$(date +%Y%m%d).sql
@@ -303,6 +341,7 @@ docker cp mt5_prometheus:/prometheus prometheus_backup_$(date +%Y%m%d)
 ## 🧪 Testing
 
 ### Test Complete Stack
+
 ```bash
 # Apply infrastructure
 terraform apply -auto-approve
@@ -356,6 +395,6 @@ curl -u admin:admin http://localhost:3000/api/datasources
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** 2025-10-18  
+**Version:** 1.0
+**Last Updated:** 2025-10-18
 **Status:** ✅ Production Ready

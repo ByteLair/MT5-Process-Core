@@ -1,8 +1,8 @@
 # ADR-005: Random Forest como Modelo ML Base
 
-**Status**: ✅ Aceito  
-**Data**: 2025-02-10  
-**Autor**: Equipe ML  
+**Status**: ✅ Aceito
+**Data**: 2025-02-10
+**Autor**: Equipe ML
 **Decisores**: Data Scientists, ML Engineers, Product Owner
 
 ## Contexto
@@ -10,6 +10,7 @@
 O sistema precisa de modelos de Machine Learning para prever direção de mercado (classificação binária: BUY/SELL) baseado em features técnicas de trading.
 
 Requisitos:
+
 - **Performance preditiva**: Alta precision e recall em dados de mercado
 - **Treinamento**: Tempo razoável com hardware limitado (CPU)
 - **Interpretabilidade**: Entender quais features são importantes
@@ -22,6 +23,7 @@ Requisitos:
 Adotar **Random Forest Classifier** como modelo base para previsão de direção de mercado.
 
 Random Forest oferece:
+
 - Ensemble de árvores de decisão (robustez)
 - Feature importance nativo
 - Resistência a overfitting
@@ -32,32 +34,35 @@ Random Forest oferece:
 ## Alternativas Consideradas
 
 ### Alternativa 1: Regressão Logística
-- **Prós**: 
+
+- **Prós**:
   - Muito rápido treinamento e inferência
   - Altamente interpretável (coeficientes lineares)
   - Baixo risco de overfitting
-- **Contras**: 
+- **Contras**:
   - Assume relação linear entre features e target
   - Performance inferior em relações não-lineares
   - Dificuldade para capturar interações complexas
 
 ### Alternativa 2: XGBoost / LightGBM
-- **Prós**: 
+
+- **Prós**:
   - State-of-the-art em tabular data
   - Performance superior em competições Kaggle
   - Otimizações para velocidade
-- **Contras**: 
+- **Contras**:
   - Mais complexo para tuning (muitos hiperparâmetros)
   - Maior risco de overfitting (precisa regularização cuidadosa)
   - Menos interpretável que Random Forest
   - Curva de aprendizado maior
 
 ### Alternativa 3: Redes Neurais (LSTM/Transformer)
-- **Prós**: 
+
+- **Prós**:
   - Captura dependências temporais longas
   - State-of-the-art em séries temporais complexas
   - Flexibilidade arquitetural
-- **Contras**: 
+- **Contras**:
   - Requer GPU para treinamento eficiente
   - Muito mais dados necessários
   - Difícil interpretabilidade ("black box")
@@ -65,10 +70,11 @@ Random Forest oferece:
   - Complexidade operacional (TensorFlow/PyTorch)
 
 ### Alternativa 4: SVM (Support Vector Machine)
-- **Prós**: 
+
+- **Prós**:
   - Efetivo em espaços de alta dimensionalidade
   - Robusto a overfitting com kernel adequado
-- **Contras**: 
+- **Contras**:
   - Muito lento para treinar com grandes datasets
   - Difícil interpretabilidade
   - Sensível à escala de features
@@ -131,10 +137,10 @@ model = RandomForestClassifier(
 features = [
     # Price features
     "close", "open", "high", "low",
-    
+
     # Volume
     "volume", "spread",
-    
+
     # Technical indicators
     "rsi",              # Relative Strength Index
     "macd",             # MACD line
@@ -142,12 +148,12 @@ features = [
     "macd_hist",        # MACD histogram
     "atr",              # Average True Range
     "ma60",             # Moving Average 60
-    
+
     # Lag features
     "ret_1",            # Return 1 period ago
     "ret_5",            # Return 5 periods ago
     "ret_10",           # Return 10 periods ago
-    
+
     # Volatility
     "volatility_10",    # Rolling std dev 10 periods
 ]
@@ -170,10 +176,10 @@ scores = []
 for train_idx, val_idx in tscv.split(X):
     X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
     y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
-    
+
     model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
-    
+
     scores.append({
         'accuracy': accuracy_score(y_val, y_pred),
         'precision': precision_score(y_val, y_pred),

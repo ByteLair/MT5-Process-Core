@@ -42,7 +42,7 @@ REPOSITÓRIO GITHUB:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1️⃣  EXECUTAR SCRIPT DE INSTALAÇÃO:
-   
+
    cd /home/felipe/mt5-trading-db
    sudo ./scripts/setup-backup.sh
 
@@ -61,7 +61,7 @@ REPOSITÓRIO GITHUB:
 
    Altere a linha:
    BACKUP_API_URL=http://SEU_IP_BACKUP:9101
-   
+
    Para (exemplo):
    BACKUP_API_URL=http://192.168.1.100:9101
 

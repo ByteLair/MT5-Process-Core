@@ -6,13 +6,15 @@
 
 **Localização**: `/terraform/`
 
-#### Arquivos Criados:
+#### Arquivos Criados
+
 - ✅ **`main.tf`** - Configuração principal (containers, networks, volumes)
 - ✅ **`variables.tf`** - Variáveis de entrada (API key, senhas, portas)
 - ✅ **`outputs.tf`** - Outputs (URLs, credenciais)
 - ✅ **`README.md`** - Documentação completa
 
-#### Recursos Provisionados:
+#### Recursos Provisionados
+
 1. **Docker Network**: `mt5_network` (bridge)
 2. **Volumes Persistentes**:
    - `mt5_postgres_data` - Dados do banco
@@ -32,7 +34,8 @@
 
 **Localização**: `/grafana/provisioning/dashboards/mt5-trading-main.json`
 
-#### Painéis Implementados:
+#### Painéis Implementados
+
 1. **Total Candles Inserted** - Contador total de candles
 2. **API Status** - Status UP/DOWN da API
 3. **Total Records in DB** - Tamanho do banco de dados
@@ -44,7 +47,8 @@
 9. **Price Chart** - Gráfico de preços (EURUSD, GBPUSD, USDJPY)
 10. **Latest Market Data** - Tabela com últimos 50 registros
 
-#### Features:
+#### Features
+
 - ✅ Auto-refresh a cada 5 segundos
 - ✅ Provisioning automático (configuração declarativa)
 - ✅ Data sources pré-configuradas (Prometheus + PostgreSQL)
@@ -57,14 +61,16 @@
 
 **Localização**: `/api/app/ingest.py`
 
-#### Novas Métricas Adicionadas:
+#### Novas Métricas Adicionadas
+
 1. **`ingest_candles_inserted_total`** - Total de candles inseridos
 2. **`ingest_requests_total{method, status}`** - Total de requisições por status
 3. **`ingest_duplicates_total{symbol, timeframe}`** - Candles duplicados
 4. **`ingest_latency_seconds`** - Histograma de latência (9 buckets)
 5. **`ingest_batch_size`** - Histograma de tamanho de batches
 
-#### Melhorias:
+#### Melhorias
+
 - ✅ Tracking de duplicatas por símbolo/timeframe
 - ✅ Medição de latência com buckets otimizados
 - ✅ Contador de requisições por status (200, 401, 500)
@@ -76,7 +82,8 @@
 
 **Localização**: `/grafana/provisioning/datasources/datasources.yml`
 
-#### Configurados:
+#### Configurados
+
 1. **Prometheus**
    - URL: `http://prometheus:9090`
    - Intervalo: 5s
@@ -129,6 +136,7 @@ docker compose up -d --force-recreate grafana
 ## 📋 Checklist de Integração
 
 ### Terraform
+
 - [x] Estrutura de diretórios criada
 - [x] `main.tf` com todos os recursos
 - [x] `variables.tf` com configurações
@@ -136,6 +144,7 @@ docker compose up -d --force-recreate grafana
 - [x] README completo com exemplos
 
 ### Grafana
+
 - [x] Dashboard JSON principal criado
 - [x] 10 painéis implementados
 - [x] Data sources configurados (Prometheus + PostgreSQL)
@@ -143,6 +152,7 @@ docker compose up -d --force-recreate grafana
 - [x] Queries otimizadas
 
 ### Métricas
+
 - [x] Contador de inserções
 - [x] Histograma de latência
 - [x] Contador de duplicatas
@@ -150,6 +160,7 @@ docker compose up -d --force-recreate grafana
 - [x] Análise de batch size
 
 ### Documentação
+
 - [x] README Terraform
 - [x] Guia de integração EA
 - [x] Este resumo
@@ -159,6 +170,7 @@ docker compose up -d --force-recreate grafana
 ## 🎨 Personalização do Dashboard
 
 ### Adicionar Novo Painel
+
 1. Edite `/grafana/provisioning/dashboards/mt5-trading-main.json`
 2. Adicione um novo objeto no array `panels`
 3. Configure `gridPos` (x, y, w, h)
@@ -166,6 +178,7 @@ docker compose up -d --force-recreate grafana
 5. Salve e recrie o container Grafana
 
 ### Exemplo de Painel Customizado
+
 ```json
 {
   "datasource": {"type": "postgres", "uid": "PostgreSQL"},
@@ -185,6 +198,7 @@ docker compose up -d --force-recreate grafana
 ## 🔍 Verificação
 
 ### 1. Terraform Status
+
 ```bash
 cd terraform
 terraform show
@@ -192,6 +206,7 @@ terraform output
 ```
 
 ### 2. Dashboard Grafana
+
 ```bash
 # Acessar Grafana
 open http://localhost:3000
@@ -201,6 +216,7 @@ open http://localhost:3000
 ```
 
 ### 3. Métricas Prometheus
+
 ```bash
 # Verificar métricas disponíveis
 curl http://localhost:18001/prometheus | grep ingest
@@ -211,6 +227,7 @@ open http://localhost:9090
 ```
 
 ### 4. Data Sources
+
 ```bash
 # Verificar data sources no Grafana
 curl -u admin:admin http://localhost:3000/api/datasources
@@ -230,6 +247,7 @@ curl -u admin:admin http://localhost:3000/api/datasources
 | `up` | Gauge | job, instance | Status dos serviços |
 
 ### Queries Úteis
+
 ```promql
 # Taxa de inserção (candles/seg)
 rate(ingest_candles_inserted_total[5m])
@@ -249,6 +267,7 @@ sum by (symbol) (rate(ingest_duplicates_total[5m]))
 ## 🛠️ Troubleshooting
 
 ### Dashboard não aparece
+
 ```bash
 # Verificar logs do Grafana
 docker logs mt5_grafana
@@ -261,6 +280,7 @@ docker compose up -d --force-recreate grafana
 ```
 
 ### Métricas não aparecem
+
 ```bash
 # Verificar endpoint de métricas
 curl http://localhost:18001/prometheus
@@ -270,6 +290,7 @@ curl http://localhost:9090/api/v1/targets
 ```
 
 ### Terraform apply falha
+
 ```bash
 # Limpar estado
 terraform destroy
@@ -285,7 +306,8 @@ terraform apply
 
 ## 📚 Próximos Passos
 
-### Melhorias Futuras:
+### Melhorias Futuras
+
 1. **Alertas no Grafana**
    - API down
    - Latência alta (> 1s)
@@ -311,17 +333,17 @@ terraform apply
 
 ## 🎉 Resumo
 
-✅ **Terraform completo** - Infraestrutura provisionável  
-✅ **Dashboard Grafana** - 10 painéis com métricas essenciais  
-✅ **Métricas Prometheus** - 5 novas métricas instrumentadas  
-✅ **Auto-provisioning** - Data sources e dashboards automáticos  
-✅ **Documentação** - READMEs completos e exemplos  
+✅ **Terraform completo** - Infraestrutura provisionável
+✅ **Dashboard Grafana** - 10 painéis com métricas essenciais
+✅ **Métricas Prometheus** - 5 novas métricas instrumentadas
+✅ **Auto-provisioning** - Data sources e dashboards automáticos
+✅ **Documentação** - READMEs completos e exemplos
 
 **O ambiente está pronto para monitoramento profissional!** 🚀
 
 ---
 
-**Versão:** 1.0  
-**Data:** 2025-10-18  
-**Autor:** GitHub Copilot  
+**Versão:** 1.0
+**Data:** 2025-10-18
+**Autor:** GitHub Copilot
 **Status:** ✅ Completo e Testado

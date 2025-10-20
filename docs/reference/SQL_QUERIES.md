@@ -6,7 +6,7 @@
 
 ```sql
 -- Total de registros e período coberto
-SELECT 
+SELECT
     COUNT(*) as total_records,
     MIN(ts) as first_record,
     MAX(ts) as last_record,
@@ -19,7 +19,7 @@ FROM market_data;
 
 ```sql
 -- Contagem de registros por símbolo
-SELECT 
+SELECT
     symbol,
     COUNT(*) as records,
     MIN(ts) as first_ts,
@@ -35,7 +35,7 @@ LIMIT 20;
 
 ```sql
 -- Registros recebidos nas últimas horas
-SELECT 
+SELECT
     symbol,
     timeframe,
     COUNT(*) FILTER (WHERE ts >= NOW() - INTERVAL '1 hour') as last_1h,
@@ -53,7 +53,7 @@ ORDER BY last_update DESC;
 ```sql
 -- Detectar gaps maiores que 5 minutos em M1
 WITH gaps AS (
-    SELECT 
+    SELECT
         symbol,
         ts,
         LAG(ts) OVER (PARTITION BY symbol ORDER BY ts) as prev_ts,
@@ -61,7 +61,7 @@ WITH gaps AS (
     FROM market_data
     WHERE timeframe = 'M1'
 )
-SELECT 
+SELECT
     symbol,
     prev_ts,
     ts,
@@ -77,14 +77,14 @@ LIMIT 50;
 
 ```sql
 -- Volume médio, mínimo e máximo por símbolo
-SELECT 
+SELECT
     symbol,
     AVG(volume) as avg_volume,
     MIN(volume) as min_volume,
     MAX(volume) as max_volume,
     STDDEV(volume) as stddev_volume
 FROM market_data
-WHERE timeframe = 'M1' 
+WHERE timeframe = 'M1'
   AND ts >= NOW() - INTERVAL '24 hours'
 GROUP BY symbol
 ORDER BY avg_volume DESC;
@@ -94,7 +94,7 @@ ORDER BY avg_volume DESC;
 
 ```sql
 -- Volatilidade (high-low) por símbolo nas últimas 24h
-SELECT 
+SELECT
     symbol,
     COUNT(*) as candles,
     AVG(high - low) as avg_range,
@@ -123,7 +123,7 @@ WITH current_prices AS (
     ORDER BY symbol, ts DESC
 ),
 averages AS (
-    SELECT 
+    SELECT
         symbol,
         AVG(close) as avg_24h,
         AVG(close) FILTER (WHERE ts >= NOW() - INTERVAL '1 hour') as avg_1h
@@ -132,7 +132,7 @@ averages AS (
       AND ts >= NOW() - INTERVAL '24 hours'
     GROUP BY symbol
 )
-SELECT 
+SELECT
     c.symbol,
     c.current_price,
     a.avg_1h,
@@ -152,7 +152,7 @@ LIMIT 20;
 
 ```sql
 -- Tamanho de cada tabela do banco
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
@@ -165,7 +165,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 ```sql
 -- Lista de índices e seus tamanhos
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
@@ -179,7 +179,7 @@ ORDER BY pg_relation_size(indexname::regclass) DESC;
 
 ```sql
 -- Listar conexões ativas ao banco
-SELECT 
+SELECT
     pid,
     usename,
     application_name,
@@ -200,7 +200,7 @@ ORDER BY query_start;
 
 ```sql
 -- Status de vacuum e análise das tabelas
-SELECT 
+SELECT
     schemaname,
     relname,
     last_vacuum,
@@ -221,9 +221,9 @@ ORDER BY n_dead_tup DESC;
 -- DELETE FROM market_data WHERE ts < NOW() - INTERVAL '1 year';
 
 -- Melhor: Contar quantos registros seriam deletados
-SELECT 
+SELECT
     COUNT(*) as records_to_delete,
-    pg_size_pretty(COUNT(*) * 
+    pg_size_pretty(COUNT(*) *
         (SELECT pg_column_size(ROW(m.*)) FROM market_data m LIMIT 1)
     ) as estimated_space_freed
 FROM market_data
@@ -234,7 +234,7 @@ WHERE ts < NOW() - INTERVAL '1 year';
 
 ```sql
 -- Verificar duplicatas (não deveria existir devido ao PK)
-SELECT 
+SELECT
     symbol,
     timeframe,
     ts,
@@ -251,7 +251,7 @@ LIMIT 100;
 
 ```sql
 -- Ver chunks da hypertable (se configurado)
-SELECT 
+SELECT
     chunk_schema,
     chunk_name,
     range_start,
@@ -267,7 +267,7 @@ LIMIT 20;
 
 ```sql
 -- Listar continuous aggregates (se existirem)
-SELECT 
+SELECT
     view_name,
     materialized_only,
     refresh_lag,
@@ -281,7 +281,7 @@ FROM timescaledb_information.continuous_aggregates;
 
 ```sql
 -- Extrair features para ML (últimas 10k linhas)
-SELECT 
+SELECT
     symbol,
     timeframe,
     ts,
@@ -304,7 +304,7 @@ SELECT
     -- Volatilidade
     STDDEV(close) OVER (PARTITION BY symbol, timeframe ORDER BY ts ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) as volatility_20
 FROM market_data
-WHERE symbol = 'EURUSD' 
+WHERE symbol = 'EURUSD'
   AND timeframe = 'M1'
   AND ts >= NOW() - INTERVAL '7 days'
 WINDOW w AS (PARTITION BY symbol, timeframe ORDER BY ts)
@@ -316,7 +316,7 @@ LIMIT 10000;
 
 ```sql
 -- Criar target (retorno futuro) para treinamento
-SELECT 
+SELECT
     symbol,
     timeframe,
     ts,
@@ -326,9 +326,9 @@ SELECT
     LEAD(close, 5) OVER w / close - 1 as target_ret_5,
     LEAD(close, 10) OVER w / close - 1 as target_ret_10,
     -- Classificação: direção do movimento
-    CASE 
-        WHEN LEAD(close, 1) OVER w > close THEN 1 
-        ELSE 0 
+    CASE
+        WHEN LEAD(close, 1) OVER w > close THEN 1
+        ELSE 0
     END as target_direction
 FROM market_data
 WHERE symbol = 'EURUSD'
@@ -345,7 +345,7 @@ LIMIT 50000;
 
 ```sql
 -- Taxa de inserção por hora nas últimas 24h
-SELECT 
+SELECT
     DATE_TRUNC('hour', ts) as hour,
     COUNT(*) as records_inserted,
     COUNT(DISTINCT symbol) as unique_symbols
@@ -359,7 +359,7 @@ ORDER BY hour DESC;
 
 ```sql
 -- Verificar qualidade dos dados (valores nulos, zero, outliers)
-SELECT 
+SELECT
     symbol,
     COUNT(*) as total,
     COUNT(*) FILTER (WHERE open IS NULL) as null_open,
@@ -384,7 +384,7 @@ ORDER BY (
 
 ```sql
 -- Última atualização de cada símbolo/timeframe
-SELECT 
+SELECT
     symbol,
     timeframe,
     MAX(ts) as last_update,
@@ -404,7 +404,7 @@ ORDER BY MAX(ts) DESC;
 -- \copy (SELECT * FROM market_data WHERE symbol = 'EURUSD' AND timeframe = 'M1' AND ts >= NOW() - INTERVAL '7 days') TO '/tmp/eurusd_m1_7days.csv' CSV HEADER;
 
 -- Alternativa: gerar comando de exportação
-SELECT 
+SELECT
     format(
         E'\\copy (SELECT * FROM market_data WHERE symbol = ''%s'' AND timeframe = ''%s'' AND ts >= NOW() - INTERVAL ''7 days'') TO ''/tmp/%s_%s_7days.csv'' CSV HEADER;',
         symbol,
@@ -419,7 +419,8 @@ FROM (SELECT DISTINCT symbol, timeframe FROM market_data ORDER BY symbol, timefr
 
 ## 💡 Dicas de Uso
 
-### Via Docker:
+### Via Docker
+
 ```bash
 # Executar query via docker exec
 docker exec mt5_db psql -U trader -d mt5_trading -c "SELECT COUNT(*) FROM market_data;"
@@ -431,12 +432,14 @@ docker exec -i mt5_db psql -U trader -d mt5_trading < query.sql
 docker exec -it mt5_db psql -U trader -d mt5_trading
 ```
 
-### Via pgAdmin:
-1. Acesse http://localhost:5051
+### Via pgAdmin
+
+1. Acesse <http://localhost:5051>
 2. Adicione servidor (Host: db, Port: 5432, User: trader, DB: mt5_trading)
 3. Cole e execute as queries acima
 
-### Performance:
+### Performance
+
 - Use `EXPLAIN ANALYZE` antes de queries complexas
 - Adicione índices se necessário
 - Use `LIMIT` para queries exploratórias

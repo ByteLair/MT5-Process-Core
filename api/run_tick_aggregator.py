@@ -1,4 +1,5 @@
 import os
+
 from app.tick_aggregator import run_loop
 
 if __name__ == "__main__":

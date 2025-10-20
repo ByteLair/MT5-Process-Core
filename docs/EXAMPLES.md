@@ -136,7 +136,7 @@ def get_model(model_name="lgbm_m1"):
     path = MODELS_DIR / f"{model_name}.pkl"
     if not path.exists():
         raise FileNotFoundError(f"Modelo {model_name} não encontrado")
-    
+
     model = joblib.load(path)
     features = [
         "close", "volume", "spread", "rsi", "macd", "macd_signal",
@@ -200,7 +200,7 @@ from .models import TradeRequest, TradeResponse
 def create_trade(trade: TradeRequest):
     """
     Cria uma nova ordem de trade
-    
+
     - **symbol**: Par de moedas (ex: EURUSD)
     - **action**: BUY ou SELL
     - **lots**: Volume da ordem
@@ -209,7 +209,7 @@ def create_trade(trade: TradeRequest):
     """
     # Lógica de criação de ordem
     order_id = 12345  # Simulated
-    
+
     return TradeResponse(
         order_id=order_id,
         status="PENDING",
@@ -328,7 +328,7 @@ def create_trade(trade: TradeRequest):
         symbol=trade.symbol,
         action=trade.action
     ).inc()
-    
+
     # Lógica de trade
     return {"status": "ok"}
 ```
@@ -427,8 +427,8 @@ SELECT
     -- Features existentes
     ...,
     -- Nova feature: RSI 21
-    (SELECT 
-        100 - (100 / (1 + 
+    (SELECT
+        100 - (100 / (1 +
             AVG(CASE WHEN close > LAG(close) OVER w THEN close - LAG(close) OVER w ELSE 0 END) OVER (ROWS BETWEEN 20 PRECEDING AND CURRENT ROW) /
             AVG(CASE WHEN close < LAG(close) OVER w THEN LAG(close) OVER w - close ELSE 0 END) OVER (ROWS BETWEEN 20 PRECEDING AND CURRENT ROW)
         ))
@@ -575,11 +575,11 @@ def test_ingest_to_signal():
     # 1. Ingest data
     response = client.post("/ingest", json=sample_data)
     assert response.status_code == 200
-    
+
     # 2. Wait for processing
     import time
     time.sleep(2)
-    
+
     # 3. Get signals
     response = client.get("/signals?timeframe=M1")
     assert response.status_code == 200
@@ -593,4 +593,4 @@ def test_ingest_to_signal():
 - **Documentação**: `docs/DOCUMENTATION.md`
 - **Diagramas**: `docs/DIAGRAMS.md`
 - **Onboarding**: `docs/ONBOARDING.md`
-- **API Docs**: http://localhost:8001/docs
+- **API Docs**: <http://localhost:8001/docs>

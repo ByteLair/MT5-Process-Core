@@ -1,10 +1,14 @@
+import gzip
+import json
+
 from fastapi import Request
-import gzip, json
+
 
 def maybe_gzip_decode(raw: bytes, content_encoding: str | None):
-    if content_encoding and 'gzip' in content_encoding.lower():
+    if content_encoding and "gzip" in content_encoding.lower():
         return gzip.decompress(raw)
     return raw
+
 
 async def read_json_body(request: Request):
     raw = await request.body()

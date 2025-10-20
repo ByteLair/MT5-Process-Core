@@ -145,15 +145,15 @@ echo -e "${GREEN}✓${NC} Services stopped"
 ################################################################################
 if [ "$SKIP_GIT" != true ]; then
     echo -e "${BLUE}[3/5]${NC} Restoring git repository..."
-    
+
     # Backup current .git (just in case)
     if [ -d ".git" ]; then
         mv .git .git.backup.$(date +%s)
     fi
-    
+
     # Clone from bundle
     git clone "${SNAPSHOT_DIR}/repository.bundle" . --quiet || true
-    
+
     echo -e "${GREEN}✓${NC} Git repository restored"
 else
     echo -e "${BLUE}[3/5]${NC} Skipping git restore"
@@ -164,17 +164,17 @@ fi
 ################################################################################
 if [ "$SKIP_DB" != true ]; then
     echo -e "${BLUE}[4/5]${NC} Restoring database..."
-    
+
     # Start only database
     docker-compose up -d db
     sleep 10
-    
+
     # Wait for database to be ready
     echo -e "  Waiting for database..."
     until docker exec mt5_db pg_isready -U trader > /dev/null 2>&1; do
         sleep 2
     done
-    
+
     # Restore database
     if [ -f "${SNAPSHOT_DIR}/database-full.sql.gz" ]; then
         echo -e "  Restoring full database..."
@@ -183,7 +183,7 @@ if [ "$SKIP_DB" != true ]; then
     else
         echo -e "${YELLOW}⚠${NC}  No database backup found in snapshot"
     fi
-    
+
     docker-compose stop db
 else
     echo -e "${BLUE}[4/5]${NC} Skipping database restore"
@@ -194,26 +194,26 @@ fi
 ################################################################################
 if [ "$SKIP_VOLUMES" != true ]; then
     echo -e "${BLUE}[5/5]${NC} Restoring Docker volumes..."
-    
+
     if [ -d "${SNAPSHOT_DIR}/volumes" ]; then
         for volume_archive in "${SNAPSHOT_DIR}"/volumes/*.tar.gz; do
             if [ -f "$volume_archive" ]; then
                 volume_name=$(basename "$volume_archive" .tar.gz)
                 echo -e "  Restoring ${volume_name}..."
-                
+
                 # Remove existing volume
                 docker volume rm "$volume_name" 2>/dev/null || true
-                
+
                 # Create new volume
                 docker volume create "$volume_name" >/dev/null
-                
+
                 # Restore data
                 docker run --rm \
                     -v "${volume_name}:/data" \
                     -v "${SNAPSHOT_DIR}/volumes:/backup:ro" \
                     alpine \
                     tar xzf "/backup/${volume_name}.tar.gz" -C /data
-                
+
                 echo -e "${GREEN}  ✓${NC} ${volume_name}"
             fi
         done

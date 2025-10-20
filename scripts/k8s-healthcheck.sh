@@ -86,7 +86,7 @@ for deployment in "${DEPLOYMENTS[@]}"; do
     if kubectl get deployment "$deployment" -n "$NAMESPACE" &> /dev/null; then
         READY=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.readyReplicas}')
         DESIRED=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.replicas}')
-        
+
         if [ "$READY" == "$DESIRED" ]; then
             log_success "$deployment: $READY/$DESIRED pods ready"
         else
@@ -143,7 +143,7 @@ if [ "$PODS_RUNNING" == "$PODS_TOTAL" ]; then
 else
     log_error "Some pods not running: $PODS_RUNNING/$PODS_TOTAL"
     ALL_HEALTHY=false
-    
+
     echo ""
     log_info "Non-running pods:"
     kubectl get pods -n "$NAMESPACE" | grep -v "Running" | tail -n +2

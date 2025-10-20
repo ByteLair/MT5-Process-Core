@@ -1,9 +1,11 @@
-import os
 import asyncio
-import orjson
-import time
+import os
 import pathlib
-from typing import Dict, Any, List
+import time
+from typing import Any
+
+import orjson
+
 from .db import insert_batch
 
 BATCH_MAX = int(os.getenv("BATCH_MAX", "1000"))
@@ -12,13 +14,13 @@ WAL_DIR = pathlib.Path(os.getenv("WAL_DIR", "/wal"))
 WAL_DIR.mkdir(parents=True, exist_ok=True)
 
 # Fila em memória
-_queue: asyncio.Queue[Dict[str, Any]] = asyncio.Queue()
+_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
 
 # Contador simples de falhas de DB (telemetria mínima)
 _db_fail = 0
 
 
-def wal_append(records: List[Dict[str, Any]]) -> None:
+def wal_append(records: list[dict[str, Any]]) -> None:
     """Grava os registros em JSONL (write-ahead) para não perder dados."""
     if not records:
         return
@@ -29,12 +31,12 @@ def wal_append(records: List[Dict[str, Any]]) -> None:
             f.write(b"\n")
 
 
-async def enqueue(item: Dict[str, Any]) -> None:
+async def enqueue(item: dict[str, Any]) -> None:
     """Enfileira um item validado pelo endpoint /ingest."""
     await _queue.put(item)
 
 
-async def _flush_batch(batch: List[Dict[str, Any]]) -> None:
+async def _flush_batch(batch: list[dict[str, Any]]) -> None:
     """Persiste no WAL e tenta inserir em batch no Postgres (UPSERT)."""
     global _db_fail
     if not batch:
@@ -59,7 +61,7 @@ async def consumer_loop() -> None:
     Consumidor que agrega itens em lote e faz flush por tamanho (BATCH_MAX)
     ou por tempo (BATCH_MAX_DELAY_MS).
     """
-    batch: List[Dict[str, Any]] = []
+    batch: list[dict[str, Any]] = []
     deadline = time.monotonic() + (BATCH_MAX_DELAY_MS / 1000.0)
 
     while True:

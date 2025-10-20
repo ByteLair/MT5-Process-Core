@@ -10,7 +10,7 @@ datasources:
     editable: false
     jsonData:
       timeInterval: "5s"
-      
+
   - name: PostgreSQL
     uid: PostgreSQL
     type: postgres

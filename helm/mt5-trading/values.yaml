@@ -14,12 +14,12 @@ postgres:
     repository: timescale/timescaledb
     tag: 2.14.2-pg16
     pullPolicy: IfNotPresent
-  
+
   auth:
     username: trader
     password: change-me-in-production
     database: mt5_trading
-  
+
   resources:
     requests:
       memory: 512Mi
@@ -27,12 +27,12 @@ postgres:
     limits:
       memory: 2Gi
       cpu: 2000m
-  
+
   persistence:
     enabled: true
     size: 20Gi
     storageClass: manual
-  
+
   service:
     type: ClusterIP
     port: 5432
@@ -41,14 +41,14 @@ postgres:
 api:
   enabled: true
   replicaCount: 2
-  
+
   image:
     repository: mt5-trading-api
     tag: latest
     pullPolicy: IfNotPresent
-  
+
   apiKey: mt5_trading_secure_key_2025_prod
-  
+
   resources:
     requests:
       memory: 256Mi
@@ -56,12 +56,12 @@ api:
     limits:
       memory: 1Gi
       cpu: 1000m
-  
+
   service:
     type: LoadBalancer
     port: 80
     targetPort: 8000
-  
+
   ingress:
     enabled: true
     className: nginx
@@ -69,7 +69,7 @@ api:
     tls:
       enabled: true
       secretName: mt5-trading-tls
-  
+
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -80,13 +80,13 @@ api:
 ## Machine Learning
 ml:
   enabled: true
-  
+
   trainer:
     image:
       repository: mt5-trading-ml
       tag: latest
       pullPolicy: IfNotPresent
-    
+
     resources:
       requests:
         memory: 1Gi
@@ -94,11 +94,11 @@ ml:
       limits:
         memory: 4Gi
         cpu: 2000m
-  
+
   scheduler:
     enabled: true
     schedule: "0 2 * * *"  # Daily at 2 AM
-    
+
     resources:
       requests:
         memory: 2Gi
@@ -106,7 +106,7 @@ ml:
       limits:
         memory: 8Gi
         cpu: 4000m
-  
+
   persistence:
     enabled: true
     size: 5Gi
@@ -115,15 +115,15 @@ ml:
 ## Prometheus
 prometheus:
   enabled: true
-  
+
   image:
     repository: prom/prometheus
     tag: v2.52.0
     pullPolicy: IfNotPresent
-  
+
   retention: 15d
   scrapeInterval: 5s
-  
+
   resources:
     requests:
       memory: 512Mi
@@ -131,16 +131,16 @@ prometheus:
     limits:
       memory: 2Gi
       cpu: 1000m
-  
+
   persistence:
     enabled: true
     size: 10Gi
     storageClass: manual
-  
+
   service:
     type: ClusterIP
     port: 9090
-  
+
   ingress:
     enabled: true
     className: nginx
@@ -152,16 +152,16 @@ prometheus:
 ## Grafana
 grafana:
   enabled: true
-  
+
   image:
     repository: grafana/grafana
     tag: 11.0.0
     pullPolicy: IfNotPresent
-  
+
   auth:
     adminUser: admin
     adminPassword: admin
-  
+
   resources:
     requests:
       memory: 256Mi
@@ -169,16 +169,16 @@ grafana:
     limits:
       memory: 512Mi
       cpu: 500m
-  
+
   persistence:
     enabled: true
     size: 2Gi
     storageClass: manual
-  
+
   service:
     type: LoadBalancer
     port: 3000
-  
+
   ingress:
     enabled: true
     className: nginx

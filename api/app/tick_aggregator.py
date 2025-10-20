@@ -1,23 +1,24 @@
+import logging
 import os
+import signal
 import sys
 import time
-import signal
-import logging
 from datetime import datetime, timezone
+
 from sqlalchemy import text
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-# =============================================================
-# Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
-# All rights reserved. | Todos os direitos reservados.
-# Private License: This code is the exclusive property of Felipe Petracco Carmo.
-# Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
-# Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
-# Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
-# =============================================================
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    # =============================================================
+    # Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
+    # All rights reserved. | Todos os direitos reservados.
+    # Private License: This code is the exclusive property of Felipe Petracco Carmo.
+    # Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
+    # Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+    # Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+    # =============================================================
 )
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,10 @@ except Exception:
     except Exception:
         # Last resort: build engine from env
         from sqlalchemy import create_engine
-        DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading")
+
+        DATABASE_URL = os.getenv(
+            "DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+        )
         ENGINE = create_engine(DATABASE_URL, pool_pre_ping=True)
         logger.info(f"Created ENGINE from DATABASE_URL: {DATABASE_URL}")
 
@@ -142,34 +146,41 @@ def aggregate_ticks_to_m1() -> dict:
 
         _set_last_received_at(conn, now)
 
-        return {"inserted": inserted, "updated": updated, "from": last.isoformat(), "to": now.isoformat()}
+        return {
+            "inserted": inserted,
+            "updated": updated,
+            "from": last.isoformat(),
+            "to": now.isoformat(),
+        }
 
 
 _shutdown_requested = False
+
 
 def _signal_handler(signum, frame):
     global _shutdown_requested
     logger.info(f"Received signal {signum}, shutting down gracefully...")
     _shutdown_requested = True
 
+
 def run_loop(interval_sec: int = 5):
     signal.signal(signal.SIGTERM, _signal_handler)
     signal.signal(signal.SIGINT, _signal_handler)
-    
+
     logger.info(f"Tick Aggregator started with interval={interval_sec}s")
-    
+
     while not _shutdown_requested:
         try:
             summary = aggregate_ticks_to_m1()
             logger.info(f"Aggregated ticks: {summary}")
         except Exception as e:
             logger.error(f"Error aggregating ticks: {e}", exc_info=True)
-        
+
         # Sleep in smaller increments to respond faster to shutdown
         for _ in range(interval_sec):
             if _shutdown_requested:
                 break
             time.sleep(1)
-    
+
     logger.info("Tick Aggregator stopped gracefully")
     sys.exit(0)

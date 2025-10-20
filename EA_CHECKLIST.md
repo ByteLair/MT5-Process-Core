@@ -1,8 +1,9 @@
 # Checklist Rápido - Análise de EA MQL5
 
-## 🔍 O que vou verificar no código do EA:
+## 🔍 O que vou verificar no código do EA
 
 ### 1. Configuração da URL e API Key
+
 ```mql5
 // ✅ CORRETO
 string api_url = "http://SEU_IP:18001/ingest";
@@ -14,6 +15,7 @@ string api_key = "wrong_key";
 ```
 
 ### 2. Formato do Timestamp
+
 ```mql5
 // ✅ CORRETO - ISO 8601 com timezone
 datetime dt = iTime(_Symbol, PERIOD_M1, 1);
@@ -29,6 +31,7 @@ string timestamp = TimeToString(TimeCurrent());
 ```
 
 ### 3. Conversão de Timeframe
+
 ```mql5
 // ✅ CORRETO
 string GetTimeframeString(ENUM_TIMEFRAMES period)
@@ -51,6 +54,7 @@ string tf = IntegerToString(period);  // Retorna "1" em vez de "M1"
 ```
 
 ### 4. Montagem do JSON
+
 ```mql5
 // ✅ CORRETO - JSON válido
 string json = StringFormat(
@@ -65,6 +69,7 @@ string json = "{ts:" + timestamp + ",symbol:" + symbol + "}";
 ```
 
 ### 5. Headers HTTP
+
 ```mql5
 // ✅ CORRETO
 string headers = "Content-Type: application/json\r\n";
@@ -76,6 +81,7 @@ string headers = "ApiKey: supersecretkey\r\n";  // nome do header errado
 ```
 
 ### 6. WebRequest
+
 ```mql5
 // ✅ CORRETO
 char post[];
@@ -113,6 +119,7 @@ WebRequest("POST", url, headers, 5000, post, result, result_headers);
 ```
 
 ### 7. Trigger Correto (OnTick vs OnTimer)
+
 ```mql5
 // ✅ MELHOR - Usa timer de 60 segundos
 int OnInit()
@@ -131,7 +138,7 @@ void OnTick()
 {
     static datetime last_bar = 0;
     datetime current_bar = iTime(_Symbol, PERIOD_M1, 0);
-    
+
     if(current_bar != last_bar)
     {
         last_bar = current_bar;
@@ -147,6 +154,7 @@ void OnTick()
 ```
 
 ### 8. Permissão WebRequest no MT5
+
 ```
 OBRIGATÓRIO:
 1. Ferramentas → Opções → Expert Advisors
@@ -156,6 +164,7 @@ OBRIGATÓRIO:
 ```
 
 ### 9. Logs e Debug
+
 ```mql5
 // ✅ BOM - Logs detalhados
 Print("=== Enviando candle ===");
@@ -171,6 +180,7 @@ SendCandle();  // Como vou saber se deu erro?
 ```
 
 ### 10. Tratamento de Erros Comuns
+
 ```mql5
 // Verifica se tem dados
 if(CopyRates(symbol, period, 1, 1, rates) != 1)
@@ -194,7 +204,7 @@ if(rates[0].time > TimeCurrent())
 }
 ```
 
-## 🎯 Erros Mais Comuns que vou procurar:
+## 🎯 Erros Mais Comuns que vou procurar
 
 1. ❌ Porta 8001 em vez de 18001
 2. ❌ Timestamp sem timezone (falta o "Z")
@@ -207,14 +217,14 @@ if(rates[0].time > TimeCurrent())
 9. ❌ Sem tratamento de erro HTTP
 10. ❌ Sem verificação de última barra (envia duplicado)
 
-## 📝 Informações que vou precisar:
+## 📝 Informações que vou precisar
 
 - [ ] Código completo do EA (.mq5)
 - [ ] Mensagens de erro no log do MT5 (aba Experts)
 - [ ] IP/hostname que o EA está tentando acessar
 - [ ] Se WebRequest está habilitado
 
-## ✅ Quando você enviar o código:
+## ✅ Quando você enviar o código
 
 1. Cole aqui ou compartilhe o arquivo .mq5
 2. Me diga qual erro aparece no log do MT5

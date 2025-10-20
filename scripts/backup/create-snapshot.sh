@@ -1,7 +1,7 @@
 #!/bin/bash
 ################################################################################
 # MT5 Trading - Repository Snapshot System
-# 
+#
 # Creates complete snapshots of the repository including:
 # - Git repository (bundle)
 # - Database backups
@@ -107,18 +107,18 @@ echo -e "${GREEN}✓${NC} Git metadata saved"
 echo -e "${BLUE}[3/7]${NC} Creating database backup..."
 if docker ps | grep -q mt5_db; then
     docker exec mt5_db pg_dumpall -U trader | gzip > "${SNAPSHOT_DIR}/database-full.sql.gz"
-    
+
     # Individual databases
     docker exec mt5_db pg_dump -U trader mt5_trading | gzip > "${SNAPSHOT_DIR}/database-mt5_trading.sql.gz"
-    
+
     # Database size info
     docker exec mt5_db psql -U trader -d mt5_trading -c "\
-        SELECT 
+        SELECT
             pg_size_pretty(pg_database_size('mt5_trading')) as db_size,
             COUNT(*) as table_count
-        FROM information_schema.tables 
+        FROM information_schema.tables
         WHERE table_schema = 'public';" > "${SNAPSHOT_DIR}/database-info.txt"
-    
+
     echo -e "${GREEN}✓${NC} Database backup created"
 else
     echo -e "${YELLOW}⚠${NC}  Database container not running, skipping DB backup"
@@ -182,16 +182,16 @@ if [ "$INCLUDE_LOGS" = true ]; then
     echo -e "${BLUE}[6/7]${NC} Including logs in snapshot..."
     LOGS_DIR="${SNAPSHOT_DIR}/logs"
     mkdir -p "${LOGS_DIR}"
-    
+
     # Copy recent logs only (last 7 days)
     find ./logs -type f -mtime -7 -exec cp --parents {} "${LOGS_DIR}/" \; 2>/dev/null || true
-    
+
     # Docker logs
     mkdir -p "${LOGS_DIR}/docker"
     for container in $(docker ps --format "{{.Names}}" | grep mt5_); do
         docker logs --tail 1000 "$container" > "${LOGS_DIR}/docker/${container}.log" 2>&1 || true
     done
-    
+
     echo -e "${GREEN}✓${NC} Logs included"
 else
     echo -e "${BLUE}[6/7]${NC} Skipping logs (use --full to include)"
@@ -264,7 +264,7 @@ echo -e "${GREEN}✓${NC} Snapshot compressed: ${SNAPSHOT_SIZE}"
 if [ "$UPLOAD_REMOTE" = true ]; then
     echo ""
     echo -e "${BLUE}Uploading to remote storage...${NC}"
-    
+
     if command -v rclone &> /dev/null; then
         # Upload with rclone (configure first: rclone config)
         rclone copy "${SNAPSHOT_NAME}.tar.gz" remote:mt5-backups/snapshots/ --progress

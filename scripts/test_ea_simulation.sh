@@ -40,7 +40,7 @@ for i in {9..0}; do
     LOW=$(generate_price $(echo "$OPEN - 0.0003" | bc -l))
     CLOSE=$(generate_price $OPEN)
     VOLUME=$((RANDOM % 1000 + 500))
-    
+
     JSON=$(cat <<EOF
 {
   "ts": "$TIMESTAMP",
@@ -54,17 +54,17 @@ for i in {9..0}; do
 }
 EOF
 )
-    
+
     echo "🕐 $TIMESTAMP | Close: $CLOSE | Vol: $VOLUME"
-    
+
     RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/ingest" \
         -H "Content-Type: application/json" \
         -H "X-API-Key: $API_KEY" \
         -d "$JSON")
-    
+
     HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
     BODY=$(echo "$RESPONSE" | head -n-1)
-    
+
     if [ "$HTTP_CODE" = "200" ]; then
         echo "  ✅ Enviado com sucesso"
         ((SUCCESS++))
@@ -73,7 +73,7 @@ EOF
         ((FAILED++))
     fi
     echo ""
-    
+
     # Pequeno delay para não sobrecarregar
     sleep 0.2
 done
@@ -85,16 +85,16 @@ echo "  ❌ Falhas:  $FAILED"
 echo ""
 echo "🔍 Verificando no banco de dados..."
 docker-compose exec -T db psql -U trader -d mt5_trading -c \
-    "SELECT COUNT(*) as novos_registros 
-     FROM market_data 
-     WHERE ts > NOW() - INTERVAL '15 minutes' 
+    "SELECT COUNT(*) as novos_registros
+     FROM market_data
+     WHERE ts > NOW() - INTERVAL '15 minutes'
      AND symbol = '$SYMBOL';"
 
 echo ""
 echo "📋 Últimos 5 registros inseridos:"
 docker-compose exec -T db psql -U trader -d mt5_trading -c \
-    "SELECT ts, symbol, timeframe, close, volume 
-     FROM market_data 
+    "SELECT ts, symbol, timeframe, close, volume
+     FROM market_data
      WHERE symbol = '$SYMBOL'
-     ORDER BY ts DESC 
+     ORDER BY ts DESC
      LIMIT 5;"

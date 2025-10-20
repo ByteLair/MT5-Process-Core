@@ -1,5 +1,6 @@
 # api/app/latest.py
 import os
+
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import create_engine
@@ -9,10 +10,11 @@ router = APIRouter(tags=["dashboard"])
 DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
 engine = create_engine(DB_URL)
 
+
 @router.get("/latest")
 def latest(
     symbol: str | None = Query(None, description="Filtra por símbolo, ex: EURUSD"),
-    timeframe: str | None = Query(None, description="Filtra por timeframe, ex: M1")
+    timeframe: str | None = Query(None, description="Filtra por timeframe, ex: M1"),
 ):
     base = "SELECT symbol, timeframe, ts, open, high, low, close, volume, spread, bid, ask FROM public.market_data_latest"
     where = []

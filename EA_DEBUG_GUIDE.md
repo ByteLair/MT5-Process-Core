@@ -3,6 +3,7 @@
 ## 📋 Informações da API
 
 ### Endpoint de Ingestão
+
 - **URL**: `http://localhost:18001/ingest` (ou seu IP externo)
 - **Método**: POST
 - **Header obrigatório**: `X-API-Key: supersecretkey`
@@ -11,6 +12,7 @@
 ### Formato dos Dados
 
 #### Opção 1: Single Candle
+
 ```json
 {
   "ts": "2025-10-17T21:30:00Z",
@@ -25,6 +27,7 @@
 ```
 
 #### Opção 2: Batch (múltiplos candles)
+
 ```json
 {
   "items": [
@@ -66,36 +69,49 @@
 ## 🔍 Checklist de Problemas Comuns no EA
 
 ### 1. Formato do Timestamp
-❌ **ERRADO**: 
+
+❌ **ERRADO**:
+
 - `"2025-10-17 21:30:00"` (falta o 'T' e timezone)
 - `"2025-10-17T21:30:00"` (falta o timezone 'Z')
 
 ✅ **CORRETO**:
+
 - `"2025-10-17T21:30:00Z"`
 - `"2025-10-17T21:30:00+00:00"`
 
 ### 2. Timeframe
-❌ **ERRADO**: 
+
+❌ **ERRADO**:
+
 - `"1"`, `"m1"`, `"1m"`, `"PERIOD_M1"`
 
 ✅ **CORRETO**:
+
 - `"M1"`, `"M5"`, `"M15"`, `"M30"`, `"H1"`, `"H4"`, `"D1"`
 
 ### 3. Header X-API-Key
+
 ❌ **ERRADO**:
+
 - Sem header
 - `"ApiKey: supersecretkey"`
 - `"Authorization: supersecretkey"`
 
 ✅ **CORRETO**:
+
 - `"X-API-Key: supersecretkey"`
 
 ### 4. Content-Type
+
 ✅ **OBRIGATÓRIO**:
+
 - `"Content-Type: application/json"`
 
 ### 5. URL
+
 Verifique se o EA está usando:
+
 - IP correto (localhost, 127.0.0.1 ou IP externo)
 - Porta correta: **18001** (não 8001!)
 - Endpoint: `/ingest`
@@ -103,6 +119,7 @@ Verifique se o EA está usando:
 ## 🧪 Teste Manual
 
 ### Teste 1: Usando curl (do Linux)
+
 ```bash
 curl -X POST http://localhost:18001/ingest \
   -H "Content-Type: application/json" \
@@ -120,11 +137,13 @@ curl -X POST http://localhost:18001/ingest \
 ```
 
 **Resposta esperada**:
+
 ```json
 {"ok":true,"inserted":1}
 ```
 
 ### Teste 2: Verificar se o dado foi inserido
+
 ```bash
 docker-compose exec db psql -U trader -d mt5_trading -c \
   "SELECT * FROM market_data ORDER BY ts DESC LIMIT 5;"
@@ -133,6 +152,7 @@ docker-compose exec db psql -U trader -d mt5_trading -c \
 ## 🐛 Como Debugar o EA
 
 ### 1. Verifique os Logs da API
+
 ```bash
 # Monitore em tempo real
 docker-compose logs -f api
@@ -142,12 +162,14 @@ docker-compose logs api --tail=50
 ```
 
 **O que procurar**:
+
 - ✅ Se aparecer `POST /ingest` = EA está enviando
 - ❌ Se aparecer `401` = API Key incorreta
 - ❌ Se aparecer `422` = Formato JSON inválido
 - ❌ Se não aparecer nada = EA não está enviando ou URL errada
 
 ### 2. Verifique se o EA está ativo no MT5
+
 - Expert Advisor está habilitado?
 - AutoTrading está ligado?
 - Há mensagens de erro no log do MT5?
@@ -162,19 +184,19 @@ bool SendCandle(string symbol, ENUM_TIMEFRAMES period)
 {
    string url = "http://SEU_IP:18001/ingest";
    string api_key = "supersecretkey";
-   
+
    // Pega o último candle fechado
    MqlRates rates[];
    if(CopyRates(symbol, period, 1, 1, rates) != 1)
       return false;
-   
+
    // Converte timestamp para ISO 8601
    datetime dt = rates[0].time;
    string timestamp = TimeToString(dt, TIME_DATE|TIME_MINUTES|TIME_SECONDS);
    StringReplace(timestamp, ".", "-");
    StringReplace(timestamp, " ", "T");
    timestamp += "Z";  // Adiciona timezone UTC
-   
+
    // Converte timeframe
    string tf = "M1";
    switch(period)
@@ -187,7 +209,7 @@ bool SendCandle(string symbol, ENUM_TIMEFRAMES period)
       case PERIOD_H4:  tf = "H4"; break;
       case PERIOD_D1:  tf = "D1"; break;
    }
-   
+
    // Monta JSON
    string json = StringFormat(
       "{\"ts\":\"%s\",\"symbol\":\"%s\",\"timeframe\":\"%s\","
@@ -196,21 +218,21 @@ bool SendCandle(string symbol, ENUM_TIMEFRAMES period)
       rates[0].open, rates[0].high, rates[0].low, rates[0].close,
       (int)rates[0].tick_volume
    );
-   
+
    // Prepara headers
    string headers = "Content-Type: application/json\r\n";
    headers += "X-API-Key: " + api_key + "\r\n";
-   
+
    // Envia request
    char post[];
    char result[];
    string result_headers;
-   
+
    ArrayResize(post, StringToCharArray(json, post, 0, WHOLE_ARRAY) - 1);
-   
+
    int timeout = 5000; // 5 segundos
    int res = WebRequest("POST", url, headers, timeout, post, result, result_headers);
-   
+
    if(res == 200)
    {
       Print("✅ Candle enviado com sucesso: ", symbol, " ", tf);
@@ -242,7 +264,7 @@ void OnTick()
 {
    static datetime last_bar = 0;
    datetime current_bar = iTime(_Symbol, PERIOD_M1, 0);
-   
+
    // Envia apenas quando fechar uma nova barra
    if(current_bar != last_bar)
    {
@@ -252,7 +274,7 @@ void OnTick()
 }
 ```
 
-### Pontos Importantes no Código MQL5:
+### Pontos Importantes no Código MQL5
 
 1. **WebRequest deve estar habilitado no MT5**:
    - Ferramentas → Opções → Expert Advisors
@@ -268,6 +290,7 @@ void OnTick()
 ## 📊 Monitoramento
 
 ### Script de monitoramento contínuo
+
 ```bash
 #!/bin/bash
 # Salve como monitor_ingest.sh
@@ -277,16 +300,16 @@ while true; do
     echo "=== MONITOR DE INGESTÃO MT5 ==="
     echo "Hora: $(date)"
     echo ""
-    
+
     echo "📊 Últimos 5 registros:"
     docker-compose exec -T db psql -U trader -d mt5_trading -c \
       "SELECT ts, symbol, timeframe, close, volume FROM market_data ORDER BY ts DESC LIMIT 5;"
-    
+
     echo ""
     echo "📈 Registros nos últimos 5 minutos:"
     docker-compose exec -T db psql -U trader -d mt5_trading -t -c \
       "SELECT COUNT(*) FROM market_data WHERE ts > NOW() - INTERVAL '5 minutes';"
-    
+
     sleep 10
 done
 ```
@@ -326,7 +349,7 @@ done
 ### Problema: HTTP 422 (Validation Error)
 
 - **Causa**: JSON com formato inválido
-- **Solução**: 
+- **Solução**:
   - Verifique o formato do timestamp
   - Verifique o timeframe (M1, M5, etc)
   - Use um validador JSON online

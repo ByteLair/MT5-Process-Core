@@ -221,7 +221,7 @@ exit
 
 ### 4.3 Visualize Métricas
 
-1. Abra Grafana: http://localhost:3000
+1. Abra Grafana: <http://localhost:3000>
 2. Login: admin/admin
 3. Dashboard: "MT5 ML/AI Dashboard"
 4. Veja logs e métricas de treinamento
@@ -333,6 +333,6 @@ bash scripts/backup.sh
 - Revise a documentação em `docs/`
 - Pergunte ao time no Slack/Discord
 - Abra uma issue no GitHub
-- Email: kuramopr@gmail.com
+- Email: <kuramopr@gmail.com>
 
 **Bem-vindo ao time! 🚀**

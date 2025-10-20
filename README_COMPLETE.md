@@ -10,24 +10,28 @@
 ## 🎯 Características Principais
 
 ### 1. Ingestão Híbrida de Dados
+
 - **Candles diretos**: M1/M5/M15/M30/H1/H4/D1 via `POST /ingest_batch`
 - **Ticks em tempo real**: Alta fluidez de mercado via `POST /ingest/tick`
 - **Agregação automática**: Ticks → Candles M1 a cada 5 segundos
 - **Deduplicação inteligente**: Por janela de tempo (timeframe bucket)
 
 ### 2. Processamento Server-Side
+
 - **Indicadores técnicos**: RSI, MACD, ATR, Bollinger Bands (cálculo consistente)
 - **Continuous Aggregates**: TimescaleDB gera M5/M15/H1/D1 automaticamente
 - **Workers assíncronos**: Agregação e cálculo paralelo
 - **State tracking**: Processamento incremental sem reprocessamento
 
 ### 3. Machine Learning Pipeline
+
 - **Feature engineering**: Extração automática de features
 - **Modelo treinado**: Random Forest / LightGBM
 - **Inferência em tempo real**: Endpoint `/predict`
 - **Backtesting**: Framework completo de validação
 
 ### 4. Observabilidade Completa
+
 - **Métricas Prometheus**: Latência, throughput, duplicados
 - **Logs estruturados**: JSON com contexto completo
 - **Tracing distribuído**: Jaeger OpenTelemetry
@@ -93,11 +97,13 @@
 ## 🚀 Quick Start
 
 ### Pré-requisitos
+
 - Docker & Docker Compose
 - 4GB RAM mínimo (8GB recomendado)
 - 20GB espaço em disco
 
 ### 1. Clone e Configure
+
 ```bash
 git clone https://github.com/Lysk-dot/mt5-trading-db.git
 cd mt5-trading-db
@@ -108,11 +114,13 @@ nano .env  # Ajuste credenciais e parâmetros
 ```
 
 ### 2. Criar Volumes
+
 ```bash
 docker volume create models_mt5
 ```
 
 ### 3. Subir Infraestrutura
+
 ```bash
 # Subir tudo
 docker-compose up -d
@@ -125,28 +133,32 @@ watch docker-compose ps
 ```
 
 ### 4. Inicializar Continuous Aggregates (primeira vez)
+
 ```bash
 docker-compose exec db psql -U trader -d mt5_trading \
   -f /docker-entrypoint-initdb.d/04-continuous-aggregates.sql
 ```
 
 ### 5. Testar Fluxo Completo
+
 ```bash
 ./test_hybrid_flow.sh
 ```
 
 ### 6. Acessar Interfaces
-- **API Docs**: http://localhost:18003/docs
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:19090
-- **Jaeger**: http://localhost:16686
-- **PgAdmin**: http://localhost:5050
+
+- **API Docs**: <http://localhost:18003/docs>
+- **Grafana**: <http://localhost:3000> (admin/admin)
+- **Prometheus**: <http://localhost:19090>
+- **Jaeger**: <http://localhost:16686>
+- **PgAdmin**: <http://localhost:5050>
 
 ## 📡 API Endpoints
 
 ### Ingestão de Dados
 
 #### POST `/ingest_batch` - Candles M1 Diretos (Recomendado)
+
 Envia array puro de candles. **Caminho mais rápido**.
 
 ```bash
@@ -171,6 +183,7 @@ curl -X POST http://localhost:18003/ingest_batch \
 ```
 
 **Resposta:**
+
 ```json
 {
   "ok": true,
@@ -190,6 +203,7 @@ curl -X POST http://localhost:18003/ingest_batch \
 ```
 
 #### POST `/ingest/tick` - Ticks Alta Fluidez
+
 Para mercados muito voláteis. Ticks são agregados automaticamente.
 
 ```bash
@@ -211,11 +225,13 @@ curl -X POST http://localhost:18003/ingest/tick \
 ```
 
 #### POST `/ingest` - Flexível
+
 Aceita candle único ou `{"items": [...]}`.
 
 ### Predição e Sinais
 
 #### GET `/predict?symbol=EURUSD&limit=30`
+
 Retorna probabilidade de alta com base nos últimos N candles.
 
 ```json
@@ -228,14 +244,17 @@ Retorna probabilidade de alta com base nos últimos N candles.
 ```
 
 #### GET `/signals/latest?symbol=EURUSD&period=M1`
+
 Gera sinal de trading baseado no modelo.
 
 ### Métricas
 
 #### GET `/prometheus`
+
 Métricas Prometheus para scraping.
 
 #### GET `/metrics`
+
 Métricas atuais em JSON.
 
 ## 🗂️ Estrutura de Dados
@@ -269,6 +288,7 @@ CREATE TABLE market_data (
 ```
 
 **Chave primária**: `(symbol, timeframe, ts_bucket)`
+
 - Garante 1 candle por janela de tempo
 - Normalização de ts antes de inserir
 
@@ -321,6 +341,7 @@ MODELS_DIR=./models
 ### Parâmetros dos Indicadores
 
 Configurados em `api/app/indicators_worker.py`:
+
 - **RSI**: 14 períodos
 - **MACD**: 12/26/9
 - **ATR**: 14 períodos
@@ -351,14 +372,14 @@ docker stats
 docker-compose exec db psql -U trader -d mt5_trading
 
 # Verificar candles por símbolo/timeframe
-SELECT symbol, timeframe, COUNT(*) as candles, 
+SELECT symbol, timeframe, COUNT(*) as candles,
        MIN(ts) as first, MAX(ts) as last
 FROM market_data
 GROUP BY symbol, timeframe
 ORDER BY symbol, timeframe;
 
 # Verificar ticks brutos
-SELECT source, COUNT(*) as records, 
+SELECT source, COUNT(*) as records,
        MIN(received_at) as first, MAX(received_at) as last
 FROM market_data_raw
 GROUP BY source;
@@ -367,27 +388,30 @@ GROUP BY source;
 SELECT * FROM aggregator_state;
 
 # Verificar continuous aggregates
-SELECT * FROM market_data_m5 
-WHERE symbol = 'EURUSD' 
+SELECT * FROM market_data_m5
+WHERE symbol = 'EURUSD'
 ORDER BY ts DESC LIMIT 10;
 ```
 
 ### Manutenção
 
 #### Limpeza de Ticks Antigos
+
 ```sql
 -- Remover ticks já processados (>7 dias)
-DELETE FROM market_data_raw 
+DELETE FROM market_data_raw
 WHERE received_at < NOW() - INTERVAL '7 days';
 ```
 
 #### Refresh Manual de Views
+
 ```sql
 CALL refresh_continuous_aggregate('market_data_m5', NULL, NULL);
 CALL refresh_continuous_aggregate('market_data_h1', NULL, NULL);
 ```
 
 #### Reindexação
+
 ```sql
 REINDEX TABLE market_data;
 ```
@@ -408,6 +432,7 @@ docker-compose exec db pg_dump -U trader --data-only mt5_trading > data_backup.s
 ## 🧪 Testes
 
 ### Teste Unitário de Endpoints
+
 ```bash
 # Rodar script de teste
 ./test_hybrid_flow.sh
@@ -417,6 +442,7 @@ curl -s http://localhost:18003/health | jq .
 ```
 
 ### Teste de Carga
+
 ```bash
 # Instalar wrk
 sudo apt install wrk
@@ -429,6 +455,7 @@ wrk -t4 -c100 -d30s --latency \
 ```
 
 ### Validação de Indicadores
+
 ```bash
 # Conectar e verificar
 docker-compose exec db psql -U trader -d mt5_trading -c "
@@ -459,6 +486,7 @@ docker-compose exec ml-trainer python eval_threshold.py
 ### Feature Engineering
 
 Features automáticas extraídas:
+
 - Preços OHLC
 - Volume
 - Spread
@@ -488,6 +516,7 @@ else:
 ## 🔍 Troubleshooting
 
 ### Containers não iniciam
+
 ```bash
 # Ver logs de erro
 docker-compose logs db
@@ -498,6 +527,7 @@ docker-compose up -d --build --force-recreate
 ```
 
 ### API retorna 404 nos novos endpoints
+
 ```bash
 # Verificar se código foi copiado
 docker exec mt5_api ls -la /app/app/ | grep ingest
@@ -508,6 +538,7 @@ docker-compose up -d --force-recreate api
 ```
 
 ### Workers não processam dados
+
 ```bash
 # Verificar logs
 docker-compose logs tick-aggregator indicators-worker
@@ -520,9 +551,10 @@ docker-compose restart tick-aggregator indicators-worker
 ```
 
 ### Continuous aggregates desatualizadas
+
 ```sql
 -- Ver políticas
-SELECT * FROM timescaledb_information.jobs 
+SELECT * FROM timescaledb_information.jobs
 WHERE proc_name LIKE '%continuous%';
 
 -- Forçar refresh
@@ -530,6 +562,7 @@ CALL refresh_continuous_aggregate('market_data_m5', NULL, NULL);
 ```
 
 ### Performance lenta
+
 ```bash
 # Ver queries lentas
 docker-compose exec db psql -U trader -d mt5_trading -c "
@@ -581,8 +614,8 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ## 📞 Suporte
 
-- Issues: https://github.com/Lysk-dot/mt5-trading-db/issues
-- Discussions: https://github.com/Lysk-dot/mt5-trading-db/discussions
+- Issues: <https://github.com/Lysk-dot/mt5-trading-db/issues>
+- Discussions: <https://github.com/Lysk-dot/mt5-trading-db/discussions>
 
 ---
 

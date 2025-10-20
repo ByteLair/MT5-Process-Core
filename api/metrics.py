@@ -1,16 +1,18 @@
 # api/app/metrics.py
-import os, json
+import json
+import os
 from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
+
 from .db import engine
-from sqlalchemy import create_engine
 
 router = APIRouter(tags=["ml"])
 
-DB_URL     = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
 MODELS_DIR = os.getenv("MODELS_DIR", "/models")
-MANIFEST   = Path(MODELS_DIR) / "manifest.json"
+MANIFEST = Path(MODELS_DIR) / "manifest.json"
 
 
 @router.get("/metrics")
@@ -33,12 +35,20 @@ def metrics():
     last_db = None
     try:
         with engine.begin() as conn:
-            row = conn.execute(text("""
+            row = (
+                conn.execute(
+                    text(
+                        """
                 SELECT created_at, model_name, metrics
                 FROM public.model_metrics
                 ORDER BY id DESC
                 LIMIT 1
-            """)).mappings().first()
+            """
+                    )
+                )
+                .mappings()
+                .first()
+            )
             if row:
                 last_db = {
                     "created_at": row["created_at"],
@@ -49,7 +59,4 @@ def metrics():
         # não quebra a rota; só devolve aviso
         last_db = {"warning": f"Falha ao ler model_metrics: {e}"}
 
-    return {
-        "current": current,
-        "last_db": last_db
-    }
+    return {"current": current, "last_db": last_db}

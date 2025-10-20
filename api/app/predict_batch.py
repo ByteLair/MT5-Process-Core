@@ -1,10 +1,11 @@
 import os
 import sys
+
 import joblib
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import create_engine, text
-from typing import List
+from sqlalchemy import text
+
 from .features_sql import LATEST_WINDOW_SQL
 
 # Add parent directory to path for imports
@@ -39,23 +40,38 @@ def predict_batch(symbols: str = Query(..., min_length=3), lookback: int = 180):
     results = []
     with engine.connect() as conn:
         for sym in syms:
-            df = pd.read_sql(text(LATEST_WINDOW_SQL), conn, params={"symbol": sym, "lookback": lookback})
+            df = pd.read_sql(
+                text(LATEST_WINDOW_SQL),
+                conn,
+                params={"symbol": sym, "lookback": lookback},
+            )
             if df.empty:
                 results.append({"symbol": sym, "error": "no data"})
                 continue
-            X = df[[
-                "close","volume","spread","rsi",
-                "macd","macd_signal","macd_hist","atr",
-                "ma60","ret_1"
-            ]].fillna(0)
+            X = df[
+                [
+                    "close",
+                    "volume",
+                    "spread",
+                    "rsi",
+                    "macd",
+                    "macd_signal",
+                    "macd_hist",
+                    "atr",
+                    "ma60",
+                    "ret_1",
+                ]
+            ].fillna(0)
             X = X[features]
-            proba = mdl["model"].predict_proba(X.iloc[[-1]])[0,1]
+            proba = mdl["model"].predict_proba(X.iloc[[-1]])[0, 1]
             label = int(proba >= float(os.environ.get("THRESHOLD", 0.55)))
-            results.append({
-                "symbol": sym,
-                "ts": df["ts"].iloc[-1].isoformat(),
-                "proba_up": round(float(proba), 4),
-                "label": label,
-            })
+            results.append(
+                {
+                    "symbol": sym,
+                    "ts": df["ts"].iloc[-1].isoformat(),
+                    "proba_up": round(float(proba), 4),
+                    "label": label,
+                }
+            )
 
     return {"ok": True, "results": results}

@@ -5,6 +5,7 @@ Este diretório contém os registros de decisões arquiteturais importantes do s
 ## O que é um ADR?
 
 Um Architecture Decision Record (ADR) documenta uma decisão significativa relacionada à arquitetura de software, incluindo:
+
 - **Contexto**: Por que a decisão foi necessária
 - **Decisão**: O que foi decidido
 - **Consequências**: Impactos positivos e negativos da decisão

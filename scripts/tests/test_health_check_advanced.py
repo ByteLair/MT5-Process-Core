@@ -1,8 +1,7 @@
-
 # Advanced health check tests for MT5 Trading System
-import subprocess
 import os
 import sqlite3
+import subprocess
 import time
 
 
@@ -18,13 +17,11 @@ def test_simulate_container_failure():
     subprocess.run(["docker", "start", "mt5_api"], capture_output=True)
 
 
-
 def test_restore_script():
     """
     Check that restore.sh script exists (do not run to avoid overwriting data).
     """
     assert os.path.exists("scripts/restore.sh")
-
 
 
 def test_performance_endpoints():
@@ -33,11 +30,12 @@ def test_performance_endpoints():
     If endpoint is offline, test does not fail.
     """
     import requests
+
     endpoints = [
         "http://localhost:8001/health",
         "http://localhost:8001/docs",
         "http://localhost:9090/-/healthy",
-        "http://localhost:3000/api/health"
+        "http://localhost:3000/api/health",
     ]
     for url in endpoints:
         start = time.time()
@@ -50,7 +48,6 @@ def test_performance_endpoints():
             pass  # Pode estar offline, não falha o teste
 
 
-
 def test_db_integrity():
     """
     Test that health check database exists and has recent records (last 1 day).
@@ -59,10 +56,11 @@ def test_db_integrity():
     assert os.path.exists(db_path)
     conn = sqlite3.connect(db_path)
     # Verifica se há registros recentes
-    count = conn.execute("SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-1 day');").fetchone()[0]
+    count = conn.execute(
+        "SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-1 day');"
+    ).fetchone()[0]
     assert count > 0
     conn.close()
-
 
 
 def test_logs_indexed():
@@ -74,7 +72,6 @@ def test_logs_indexed():
     assert any(f.startswith("daily_report_") for f in files)
 
 
-
 def test_timers_trigger():
     """
     Test that required systemd timers are active.
@@ -84,7 +81,7 @@ def test_timers_trigger():
         "mt5-tests.timer",
         "mt5-vuln-check.timer",
         "mt5-daily-report.timer",
-        "github-runner-check.timer"
+        "github-runner-check.timer",
     ]
     for t in timers:
         result = subprocess.run(["systemctl", "is-active", t], capture_output=True, text=True)

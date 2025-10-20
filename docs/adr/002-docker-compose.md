@@ -1,13 +1,14 @@
 # ADR-002: Arquitetura de Microserviços com Docker Compose
 
-**Status**: ✅ Aceito  
-**Data**: 2025-01-20  
-**Autor**: Equipe MT5 Trading  
+**Status**: ✅ Aceito
+**Data**: 2025-01-20
+**Autor**: Equipe MT5 Trading
 **Decisores**: Arquitetos de Sistema, DevOps, Tech Lead
 
 ## Contexto
 
 O sistema MT5 Trading possui múltiplos componentes com responsabilidades distintas:
+
 - API REST para ingestão de dados e consultas
 - ML scheduler para treinamento de modelos
 - Banco de dados TimescaleDB
@@ -15,6 +16,7 @@ O sistema MT5 Trading possui múltiplos componentes com responsabilidades distin
 - Stack de observabilidade (Prometheus, Grafana, Loki, Promtail, Jaeger)
 
 Precisamos de uma arquitetura que permita:
+
 - **Isolamento**: Cada componente em seu próprio ambiente
 - **Escalabilidade**: Escalar serviços individualmente
 - **Desenvolvimento**: Facilitar desenvolvimento local
@@ -26,6 +28,7 @@ Precisamos de uma arquitetura que permita:
 Adotar **arquitetura de microserviços orquestrada com Docker Compose** para ambiente de desenvolvimento e produção (single-node).
 
 A arquitetura consiste em:
+
 - **Serviços isolados**: Cada componente em container separado
 - **Rede Docker**: Comunicação interna via `mt5_network`
 - **Volumes nomeados**: Persistência de dados (DB, modelos, configs)
@@ -35,23 +38,25 @@ A arquitetura consiste em:
 ## Alternativas Consideradas
 
 ### Alternativa 1: Monolito (Single Container)
-- **Prós**: 
+
+- **Prós**:
   - Simplicidade extrema de deploy
   - Menos overhead de rede
   - Configuração mínima
-- **Contras**: 
+- **Contras**:
   - Escalabilidade limitada (tudo ou nada)
   - Acoplamento entre componentes
   - Dificuldade para updates parciais
   - Conflitos de dependências (Python + Node.js + etc)
 
 ### Alternativa 2: Kubernetes
-- **Prós**: 
+
+- **Prós**:
   - Escalabilidade horizontal automática
   - Self-healing robusto
   - Load balancing nativo
   - Multi-node clustering
-- **Contras**: 
+- **Contras**:
   - Complexidade operacional muito alta
   - Overhead de recursos (control plane)
   - Curva de aprendizado íngreme
@@ -59,11 +64,12 @@ A arquitetura consiste em:
   - Custos de infraestrutura maiores
 
 ### Alternativa 3: Docker Swarm
-- **Prós**: 
+
+- **Prós**:
   - Orquestração multi-node
   - Sintaxe similar ao Compose
   - Mais simples que Kubernetes
-- **Contras**: 
+- **Contras**:
   - Ecosystem menor
   - Menos features que Kubernetes
   - Community menor (less momentum)

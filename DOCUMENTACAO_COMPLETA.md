@@ -11,6 +11,7 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
 ## Estrutura de Diretórios
 
 ### Raiz
+
 - `.env`, `.env.example`, `.env.local`: Variáveis de ambiente para containers e serviços
 - `docker-compose.yml`, `docker-compose.override.yml`: Orquestração dos serviços
 - `Makefile`: Atalhos para operação e desenvolvimento
@@ -23,6 +24,7 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
 - `symbol`, `timeframe`: Listas auxiliares de símbolos/timeframes
 
 ### `api/`
+
 - `Dockerfile`: Imagem da API FastAPI
 - `requirements.txt`, `requirements.lock`: Dependências Python
 - `main_patch.txt`: Instruções de patch/middleware
@@ -42,6 +44,7 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
   - `test.http`: Exemplos de chamadas HTTP
 
 ### `db/`
+
 - `init/`: Scripts SQL de inicialização
   - `01-init.sql`: Criação de banco, schemas, tabelas
   - `01-trade_logs.sql`: Estruturas de logs de trade
@@ -50,11 +53,13 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
   - `20-signals.sql`: Fila de sinais e acks
 
 ### `docker/`
+
 - `postgres.conf.d/`: Configuração do Postgres
 - `logrotate/`: Regras de logrotate para containers
 - `daemon.json`: Configuração do Docker daemon
 
 ### `docs/`
+
 - `db_maintenance.md`: Procedimentos de manutenção do banco
 - `logging.md`: Padrões de logging
 - `cron_example.txt`: Exemplos de crontab
@@ -63,6 +68,7 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
 - `logging.md`: Logging e troubleshooting
 
 ### `ml/`
+
 - `Dockerfile`: Imagem base para ML
 - `requirements.txt`, `requirements-ml.txt`, `requirements.lock`: Dependências ML
 - Scripts principais:
@@ -76,9 +82,11 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
   - `worker/`: Workers auxiliares
 
 ### `models/`
+
 - Artefatos de modelo para API/ML (ex.: `latest_model.pkl`)
 
 ### `scripts/`
+
 - Scripts de operação/manutenção:
   - `backup.sh`, `pg_backup.sh`, `restore.sh`: Backup/restore do banco
   - `db_maintenance.sh`, `maintenance/restart-docker.sh`: Manutenção
@@ -90,18 +98,22 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
   - `monitor_ingest_realtime.sh`, `test_ea_simulation.sh`: Monitoramento e simulação de ingestão
 
 ### `sql/`
+
 - `features_labels.sql`: SQLs de features/labels para ML
 
 ### `systemd/`
+
 - Serviços/timers para orquestração em Linux
   - `mt5-api.service`, `mt5-compose.service`: Inicialização da API/stack
   - `mt5-healthcheck.service`, `mt5-healthcheck.timer`: Healthchecks
   - `mt5-scheduler.service`: Scheduler
 
 ### `data/`, `volumes/`, `logs/`, `logrotate.d/`
+
 - Dados locais, volumes persistentes, logs e regras de rotação
 
 ### Outros
+
 - `env/`, `env.template`: Templates de variáveis de ambiente
 - `ssh/`: Chaves SSH (deploy/backup)
 - `init-scripts/`: Scripts suplementares
@@ -131,6 +143,7 @@ Este projeto é uma stack para ingestão, armazenamento, análise e automação 
 - `/query`: Consulta tabelas/views whitelisted
 
 **Autenticação:**
+
 - Header obrigatório: `X-API-Key: <chave>`
 - CORS controlado por `ALLOW_ORIGINS`
 

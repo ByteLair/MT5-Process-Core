@@ -33,8 +33,10 @@ EA MT5 ──┬─> POST /ingest_batch (candles M1 diretos) ──> market_data
 ### 1. EA (Expert Advisor MT5)
 
 **Modo normal (minuto):**
+
 - Coleta candles M1 prontos do MT5
 - Envia para `POST /ingest_batch` com array puro:
+
   ```json
   [
     {
@@ -52,11 +54,14 @@ EA MT5 ──┬─> POST /ingest_batch (candles M1 diretos) ──> market_data
     }
   ]
   ```
+
 - Headers: `X-API-Key: <sua_chave>`, `Content-Type: application/json`
 
 **Modo alta fluidez (tick):**
+
 - Coleta ticks em tempo real
 - Envia para `POST /ingest/tick`:
+
   ```json
   {
     "ticks": [
@@ -75,11 +80,13 @@ EA MT5 ──┬─> POST /ingest_batch (candles M1 diretos) ──> market_data
 ### 2. Backend API (FastAPI)
 
 **Endpoints de ingestão:**
+
 - `POST /ingest`: aceita candle único ou `{"items":[...]}`
 - `POST /ingest_batch`: aceita array puro de candles
 - `POST /ingest/tick`: aceita `{"ticks":[...]}` para ticks brutos
 
 **Funcionalidades:**
+
 - Normalização de timestamp para bucket do timeframe (M1/M5/M15/M30/H1/H4/D1)
 - Deduplicação por chave `(symbol, timeframe, ts_bucket)`
 - Logs estruturados por item
@@ -89,6 +96,7 @@ EA MT5 ──┬─> POST /ingest_batch (candles M1 diretos) ──> market_data
 ### 3. Tick Aggregator (Worker)
 
 **Funcionamento:**
+
 - Roda a cada 5 segundos (configurável via `TICK_AGG_INTERVAL`)
 - Lê `market_data_raw` desde último processamento
 - Agrega ticks por minuto usando SQL:
@@ -99,6 +107,7 @@ EA MT5 ──┬─> POST /ingest_batch (candles M1 diretos) ──> market_data
 - Mantém estado em `public.aggregator_state`
 
 **Execução:**
+
 ```bash
 # Standalone
 python api/run_tick_aggregator.py
@@ -110,6 +119,7 @@ docker-compose up tick-aggregator
 ### 4. Indicators Worker
 
 **Funcionamento:**
+
 - Roda a cada 60 segundos (configurável via `INDICATORS_INTERVAL`)
 - Calcula indicadores técnicos server-side para últimos 200 minutos:
   - RSI (14 períodos)
@@ -120,6 +130,7 @@ docker-compose up tick-aggregator
 - **Garante consistência treino/produção** (mesmos parâmetros)
 
 **Execução:**
+
 ```bash
 # Standalone
 SYMBOLS=EURUSD,GBPUSD python api/run_indicators_worker.py
@@ -131,6 +142,7 @@ docker-compose up indicators-worker
 ### 5. Continuous Aggregates (TimescaleDB)
 
 **Views materializadas automáticas:**
+
 - `market_data_m5`: agregação de 5 minutos (refresh a cada 1 min)
 - `market_data_m15`: agregação de 15 minutos (refresh a cada 5 min)
 - `market_data_m30`: agregação de 30 minutos (refresh a cada 10 min)
@@ -139,15 +151,17 @@ docker-compose up indicators-worker
 - `market_data_d1`: agregação diária (refresh a cada 1 hora)
 
 **Benefícios:**
+
 - Zero processamento redundante
 - Atualização incremental automática
 - Queries rápidas em timeframes maiores
 
 **Uso:**
+
 ```sql
 -- Consultar M5 diretamente
-SELECT * FROM market_data_m5 
-WHERE symbol = 'EURUSD' 
+SELECT * FROM market_data_m5
+WHERE symbol = 'EURUSD'
   AND ts >= NOW() - INTERVAL '1 day'
 ORDER BY ts DESC;
 ```
@@ -155,6 +169,7 @@ ORDER BY ts DESC;
 ## Fluxo de Dados Completo
 
 ### 1. Candles Diretos (caminho rápido)
+
 ```
 EA M1 candle → /ingest_batch → market_data (M1) → Indicators Worker → RSI/MACD/etc
                                                                          ↓
@@ -164,6 +179,7 @@ EA M1 candle → /ingest_batch → market_data (M1) → Indicators Worker → RS
 ```
 
 ### 2. Ticks Alta Fluidez (fallback)
+
 ```
 EA ticks → /ingest/tick → market_data_raw → Tick Aggregator → market_data (M1)
                                                                       ↓
@@ -175,6 +191,7 @@ EA ticks → /ingest/tick → market_data_raw → Tick Aggregator → market_dat
 ## Qualidade dos Dados
 
 ### Normalização de Timestamp
+
 - **M1**: zera segundos/microssegundos
 - **M5**: bucket de 5 minutos (ex: 10:07 → 10:05)
 - **M15**: bucket de 15 minutos
@@ -184,16 +201,19 @@ EA ticks → /ingest/tick → market_data_raw → Tick Aggregator → market_dat
 - **D1**: meia-noite UTC
 
 ### Deduplicação
+
 - Chave primária: `(symbol, timeframe, ts_bucket)`
 - `ON CONFLICT DO NOTHING` para candles diretos
 - `ON CONFLICT DO UPDATE` para tick aggregator (permite atualização incremental)
 
 ### Indicadores Consistentes
+
 - Cálculo único server-side (não no EA)
 - Mesmos parâmetros treino/produção
 - Atualização periódica automática
 
 ### Monitoramento
+
 - Logs estruturados por item (candle/tick)
 - Métricas Prometheus:
   - `ingest_candles_inserted_total`
@@ -272,6 +292,7 @@ docker-compose exec db psql -U trader -d mt5_trading \
 ## Manutenção
 
 ### Refresh Manual das Views
+
 ```sql
 -- Se precisar forçar refresh completo
 CALL refresh_continuous_aggregate('market_data_m5', NULL, NULL);
@@ -281,13 +302,15 @@ CALL refresh_continuous_aggregate('market_data_d1', NULL, NULL);
 ```
 
 ### Limpeza de Ticks Antigos
+
 ```sql
 -- market_data_raw cresce rapidamente; limpe ticks já processados
-DELETE FROM market_data_raw 
+DELETE FROM market_data_raw
 WHERE received_at < NOW() - INTERVAL '7 days';
 ```
 
 ### Monitorar Aggregator State
+
 ```sql
 -- Ver última execução do aggregator
 SELECT * FROM aggregator_state WHERE key = 'tick_agg_last_received_at';
@@ -296,12 +319,14 @@ SELECT * FROM aggregator_state WHERE key = 'tick_agg_last_received_at';
 ## Performance
 
 ### Benchmarks Esperados
+
 - **Ingestão direta M1**: ~1-2ms latência, 10k candles/min
 - **Ingestão ticks**: ~5-10ms latência, 50k ticks/min
 - **Tick aggregator**: processa 100k ticks em ~2s
 - **Indicators worker**: calcula 200 candles/símbolo em ~500ms
 
 ### Otimizações
+
 - PgBouncer pool: 50 conexões
 - TimescaleDB compression (7 dias)
 - Retention policy (90 dias)
@@ -310,6 +335,7 @@ SELECT * FROM aggregator_state WHERE key = 'tick_agg_last_received_at';
 ## Troubleshooting
 
 ### Ticks não sendo agregados
+
 ```bash
 # Ver logs do aggregator
 docker-compose logs tick-aggregator
@@ -320,6 +346,7 @@ docker-compose exec db psql -U trader -d mt5_trading \
 ```
 
 ### Indicadores não calculados
+
 ```bash
 # Ver logs do worker
 docker-compose logs indicators-worker
@@ -330,9 +357,10 @@ docker-compose exec db psql -U trader -d mt5_trading \
 ```
 
 ### Continuous aggregate desatualizado
+
 ```sql
 -- Ver políticas de refresh
-SELECT * FROM timescaledb_information.jobs 
+SELECT * FROM timescaledb_information.jobs
 WHERE proc_name LIKE '%continuous%';
 
 -- Executar refresh manual

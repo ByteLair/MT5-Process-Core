@@ -1,8 +1,8 @@
 # ADR-001: Uso de TimescaleDB para Dados de Trading
 
-**Status**: ✅ Aceito  
-**Data**: 2025-01-15  
-**Autor**: Equipe MT5 Trading  
+**Status**: ✅ Aceito
+**Data**: 2025-01-15
+**Autor**: Equipe MT5 Trading
 **Decisores**: Arquitetos de Sistema, DBA, Desenvolvedores Backend
 
 ## Contexto
@@ -21,6 +21,7 @@ O sistema precisa armazenar grandes volumes de dados de trading com timestamped 
 Adotar **TimescaleDB** como banco de dados principal para armazenar dados de trading.
 
 TimescaleDB é uma extensão PostgreSQL otimizada para time-series data que oferece:
+
 - Hypertables: particionamento automático por tempo
 - Compression: redução de storage em dados históricos
 - Continuous aggregates: views materializadas incrementais
@@ -30,32 +31,35 @@ TimescaleDB é uma extensão PostgreSQL otimizada para time-series data que ofer
 ## Alternativas Consideradas
 
 ### Alternativa 1: InfluxDB
-- **Prós**: 
+
+- **Prós**:
   - Projetado especificamente para time-series
   - Alta performance de escrita
   - Compressão eficiente
-- **Contras**: 
+- **Contras**:
   - InfluxQL/Flux não são SQL padrão (curva de aprendizado)
   - Limitações em queries complexas e JOINs
   - Ecosystem menor que PostgreSQL
   - Dificuldade para ML workloads (precisa exportar dados)
 
 ### Alternativa 2: PostgreSQL Vanilla
-- **Prós**: 
+
+- **Prós**:
   - SQL completo
   - Ecosystem robusto
   - Familiaridade da equipe
-- **Contras**: 
+- **Contras**:
   - Performance inferior em queries time-series
   - Particionamento manual complexo
   - Sem compressão automática
   - Sem continuous aggregates
 
 ### Alternativa 3: MongoDB
-- **Prós**: 
+
+- **Prós**:
   - Flexibilidade de schema
   - Escalabilidade horizontal
-- **Contras**: 
+- **Contras**:
   - Não otimizado para time-series
   - Queries agregadas menos eficientes
   - Curva de aprendizado para NoSQL
@@ -121,7 +125,7 @@ SELECT add_compression_policy('market_data', INTERVAL '7 days');
 ### Continuous Aggregate (Features)
 
 ```sql
-CREATE MATERIALIZED VIEW features_m1 
+CREATE MATERIALIZED VIEW features_m1
 WITH (timescaledb.continuous) AS
 SELECT
     time_bucket('1 minute', ts) AS ts_bucket,

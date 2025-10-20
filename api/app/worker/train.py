@@ -1,9 +1,10 @@
 import os
 import sys
+
 import joblib
 import pandas as pd
-from sqlalchemy import create_engine, text
 from sklearn.ensemble import RandomForestClassifier
+from sqlalchemy import text
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -30,17 +31,24 @@ print(f"[train] {len(df)} linhas carregadas")
 if df.empty:
     raise SystemExit("[train] Nenhum dado disponível para treino.")
 
-X = df[[
-    "close", "volume", "spread", "rsi",
-    "macd", "macd_signal", "macd_hist", "atr",
-    "ma60", "ret_1"
-]].fillna(0)
+X = df[
+    [
+        "close",
+        "volume",
+        "spread",
+        "rsi",
+        "macd",
+        "macd_signal",
+        "macd_hist",
+        "atr",
+        "ma60",
+        "ret_1",
+    ]
+].fillna(0)
 
 y = (df["fwd_ret_5"] > 0).astype(int)
 
-m = RandomForestClassifier(
-    n_estimators=300, max_depth=None, random_state=42, n_jobs=-1
-)
+m = RandomForestClassifier(n_estimators=300, max_depth=None, random_state=42, n_jobs=-1)
 m.fit(X, y)
 
 joblib.dump({"model": m, "features": list(X.columns)}, MODEL_PATH)

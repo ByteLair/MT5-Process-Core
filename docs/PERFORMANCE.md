@@ -27,6 +27,7 @@ Este documento define benchmarks, limites e recomendações de otimização para
 | Erro Rate | < 0.1% | 0.03% | ✅ |
 
 **Condições de Teste:**
+
 - Payload: 60 candles M1 por request
 - Concorrência: 100 workers simultâneos
 - Hardware: 4 CPU cores, 8GB RAM
@@ -62,7 +63,7 @@ INSERT INTO market_data SELECT * FROM unnest(...);
 
 ```sql
 -- Últimos 100 candles de 1 símbolo
-SELECT * FROM market_data 
+SELECT * FROM market_data
 WHERE symbol='EURUSD' AND timeframe='M1'
 ORDER BY ts DESC LIMIT 100;
 -- Target: < 10ms
@@ -258,15 +259,15 @@ api_requests_per_sec > 800
 
 ```sql
 -- Índice principal (já implementado)
-CREATE INDEX idx_market_data_symbol_timeframe 
+CREATE INDEX idx_market_data_symbol_timeframe
 ON market_data (symbol, timeframe, ts DESC);
 
 -- Índice para queries de agregação
-CREATE INDEX idx_market_data_ts_bucket 
+CREATE INDEX idx_market_data_ts_bucket
 ON market_data (time_bucket('1 hour', ts), symbol);
 
 -- Índice para features lookup
-CREATE INDEX idx_features_symbol_ts 
+CREATE INDEX idx_features_symbol_ts
 ON features_m1 (symbol, ts_bucket DESC);
 
 -- Remover índices não utilizados
@@ -339,13 +340,13 @@ cache = redis.Redis(host='redis', port=6379)
 def get_latest_signals(symbol: str):
     key = f"signals:{symbol}:latest"
     cached = cache.get(key)
-    
+
     if cached:
         return json.loads(cached)
-    
+
     # Query DB
     signals = fetch_from_db(symbol)
-    
+
     # Cache por 1 minuto
     cache.setex(key, 60, json.dumps(signals))
     return signals
@@ -371,7 +372,7 @@ def get_signals_history(
 ):
     # Limitar response size
     limit = min(limit, 1000)
-    
+
     signals = query_db(symbol, limit, offset)
     return {
         "data": signals,
@@ -411,12 +412,12 @@ import joblib
 def get_or_compute_features(symbol, timeframe):
     cache_key = f"{symbol}_{timeframe}_features"
     cache_path = f"/tmp/{cache_key}.pkl"
-    
+
     if os.path.exists(cache_path):
         # Check se não expirou (1 hora)
         if time.time() - os.path.getmtime(cache_path) < 3600:
             return joblib.load(cache_path)
-    
+
     features = compute_features(symbol, timeframe)
     joblib.dump(features, cache_path)
     return features
@@ -458,7 +459,7 @@ groups:
     rules:
       - record: api:requests:rate5m
         expr: rate(api_requests_total[5m])
-      
+
       - record: api:latency:p95
         expr: histogram_quantile(0.95, api_request_duration_seconds_bucket)
 ```
@@ -533,7 +534,7 @@ py-spy record -o profile.svg --pid $(pgrep -f uvicorn)
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
 -- Queries mais lentas
-SELECT 
+SELECT
     query,
     calls,
     mean_exec_time,
@@ -553,10 +554,12 @@ SELECT pg_stat_statements_reset();
 ### API Lenta
 
 **Sintomas:**
+
 - Latência P95 > 200ms
 - Timeouts frequentes
 
 **Diagnóstico:**
+
 ```bash
 # Verificar logs
 docker logs mt5_api | grep -i "slow"
@@ -569,6 +572,7 @@ docker exec mt5_db psql -U trader -c "SELECT count(*) FROM pg_stat_activity;"
 ```
 
 **Soluções:**
+
 1. Aumentar workers Uvicorn: `--workers 8`
 2. Otimizar queries SQL (adicionar índices)
 3. Implementar caching (Redis)
@@ -577,26 +581,29 @@ docker exec mt5_db psql -U trader -c "SELECT count(*) FROM pg_stat_activity;"
 ### Database Lento
 
 **Sintomas:**
+
 - Queries > 500ms
 - Lock waits
 
 **Diagnóstico:**
+
 ```sql
 -- Queries bloqueadas
-SELECT * FROM pg_stat_activity 
+SELECT * FROM pg_stat_activity
 WHERE wait_event_type IS NOT NULL;
 
 -- Locks
 SELECT * FROM pg_locks WHERE NOT granted;
 
 -- Cache hit ratio
-SELECT 
+SELECT
     sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_ratio
 FROM pg_statio_user_tables;
 -- Target: > 0.99
 ```
 
 **Soluções:**
+
 1. Aumentar `shared_buffers` no PostgreSQL
 2. Vacuum/Analyze
 3. Adicionar índices
@@ -605,10 +612,12 @@ FROM pg_statio_user_tables;
 ### ML Training Lento
 
 **Sintomas:**
+
 - Treinamento > 30 minutos
 - OOM (Out of Memory)
 
 **Diagnóstico:**
+
 ```bash
 # RAM usage durante treinamento
 docker stats mt5_ml
@@ -618,6 +627,7 @@ docker exec mt5_db psql -U trader -c "SELECT count(*) FROM trainset_m1;"
 ```
 
 **Soluções:**
+
 1. Reduzir dataset (sample ou time window menor)
 2. Reduzir hiperparâmetros (`n_estimators`, `max_depth`)
 3. Usar modelo mais simples (Logistic Regression)

@@ -59,4 +59,4 @@ else
   echo "curl not found; skipping health test"
 fi
 
-echo "\nMaintenance script finished. Review output above for issues." 
+echo "\nMaintenance script finished. Review output above for issues."

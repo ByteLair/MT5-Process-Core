@@ -3,6 +3,7 @@
 ## 📚 Visão Geral
 
 Sistema completo de backup automatizado para o banco de dados MT5 Trading, com:
+
 - ✅ Backup local comprimido com `pg_dump`
 - ✅ Checksum SHA256 para verificação de integridade
 - ✅ Upload automático para servidor remoto via API REST
@@ -93,6 +94,7 @@ ss -ltnp | grep 9101
 ```
 
 Notas:
+
 - O app usa por padrão `LOG_DIR=./logs/api/` (ajustável via env). Evita permissões em `/app`.
 - O serviço executa uvicorn a partir do venv local: `~/.venv/bin/uvicorn`.
 - Em produção, recomende HTTPS atrás de um reverse proxy (nginx/caddy) e autenticação por token para endpoints de upload.
@@ -138,6 +140,7 @@ OnCalendar=*-*-* 03:00:00  # Formato: HH:MM:SS
 ```
 
 Após editar, recarregue:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart mt5-backup.timer
@@ -159,16 +162,19 @@ Se o endpoint não responder com status OK, o backup é abortado e um erro é re
 3. Se não houver resposta ou o status for diferente, o backup não é executado.
 
 **Exemplo de comando manual:**
+
 ```bash
 curl -sS --max-time 5 $BACKUP_API_URL/health
 ```
 
 **Logs:**
+
 ```bash
 sudo journalctl -u mt5-backup.service -n 100 | grep health
 ```
 
 **Importante:**
+
 - Certifique-se que o servidor de destino está ativo e ouvindo na porta correta.
 - O health check é obrigatório para evitar perda de backup ou uploads para destino errado.
 
@@ -262,6 +268,7 @@ sudo ./scripts/test-backup.sh
 ```
 
 Este script verifica:
+
 - ✅ Dependências instaladas
 - ✅ Diretórios e permissões
 - ✅ Conexão com PostgreSQL
@@ -297,6 +304,7 @@ sudo chown root:root /etc/default/mt5-backup
 ### Token de Autenticação
 
 O token de autenticação deve ser:
+
 - ✅ Único e complexo
 - ✅ Armazenado de forma segura
 - ✅ Sincronizado entre cliente e servidor
@@ -307,6 +315,7 @@ O token de autenticação deve ser:
 ⚠️ **Recomendação**: Use HTTPS em produção!
 
 Para configurar HTTPS:
+
 1. Obtenha certificado SSL (Let's Encrypt)
 2. Configure nginx/caddy como reverse proxy
 3. Atualize `BACKUP_API_URL` para usar `https://`
@@ -407,6 +416,7 @@ Os logs detalhados dos backups são salvos em `/var/backups/mt5/logs/`. Para int
 
 - Use Filebeat, rsyslog ou outro agente para enviar os arquivos de log para o servidor de log centralizado.
 - Exemplo de configuração Filebeat:
+
   ```yaml
   filebeat.inputs:
     - type: log
@@ -415,11 +425,13 @@ Os logs detalhados dos backups são salvos em `/var/backups/mt5/logs/`. Para int
   output.elasticsearch:
     hosts: ["http://SEU_ELK:9200"]
   ```
+
 - Para Graylog, configure o agente para enviar via GELF ou syslog.
 
 ### Fluxo Semanal Completo
 
 O fluxo semanal executa, em sequência:
+
 1. Backup do banco de dados (`scripts/backup.sh`)
 2. Backup completo do repositório (`scripts/backup-full-repo.sh`)
 3. Monitoramento do backup (`scripts/monitor-backup.sh`)
@@ -484,6 +496,7 @@ sha256sum -c backup.dump.sha256
 ## 📞 Suporte
 
 Para problemas ou dúvidas:
+
 1. Verifique os logs: `journalctl -u mt5-backup.service`
 2. Execute teste: `./scripts/test-backup.sh`
 3. Consulte a documentação do projeto
@@ -516,5 +529,5 @@ mt5-trading-db/
 
 ---
 
-**Versão**: 1.0.0  
+**Versão**: 1.0.0
 **Última atualização**: 2025-10-19

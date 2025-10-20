@@ -3,28 +3,29 @@ Worker para cálculo de indicadores técnicos server-side.
 Garante consistência entre treino e produção, evitando discrepâncias
 quando EA e pipeline de ML calculam indicadores de formas diferentes.
 """
+
+import logging
 import os
+import signal
 import sys
 import time
-import signal
-import logging
-import numpy as np
+from datetime import datetime, timedelta, timezone
+
 import pandas as pd
-from datetime import datetime, timezone, timedelta
 from sqlalchemy import text
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-# =============================================================
-# Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
-# All rights reserved. | Todos os direitos reservados.
-# Private License: This code is the exclusive property of Felipe Petracco Carmo.
-# Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
-# Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
-# Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
-# =============================================================
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    # =============================================================
+    # Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
+    # All rights reserved. | Todos os direitos reservados.
+    # Private License: This code is the exclusive property of Felipe Petracco Carmo.
+    # Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
+    # Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+    # Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+    # =============================================================
 )
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,10 @@ except Exception:
     except Exception:
         # Last resort: build engine from env
         from sqlalchemy import create_engine
-        DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading")
+
+        DATABASE_URL = os.getenv(
+            "DATABASE_URL", "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+        )
         ENGINE = create_engine(DATABASE_URL, pool_pre_ping=True)
         logger.info(f"Created ENGINE from DATABASE_URL: {DATABASE_URL}")
 
@@ -90,44 +94,47 @@ def calculate_indicators(symbol: str, lookback_minutes: int = 200) -> int:
     Retorna número de linhas atualizadas.
     """
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=lookback_minutes)
-    
+
     with ENGINE.begin() as conn:
         # Buscar candles M1 recentes sem indicadores ou desatualizados
         df = pd.read_sql(
-            text("""
+            text(
+                """
                 SELECT ts, symbol, open, high, low, close, volume
                 FROM public.market_data
                 WHERE symbol = :sym
                   AND timeframe = 'M1'
                   AND ts >= :cutoff
                 ORDER BY ts ASC
-            """),
+            """
+            ),
             conn,
-            params={"sym": symbol, "cutoff": cutoff}
+            params={"sym": symbol, "cutoff": cutoff},
         )
-        
+
         if df.empty or len(df) < 30:  # Mínimo para indicadores
             return 0
-        
+
         # Calcular indicadores
-        df['rsi'] = compute_rsi(df['close'], period=14)
-        macd, macd_sig, macd_h = compute_macd(df['close'])
-        df['macd'] = macd
-        df['macd_signal'] = macd_sig
-        df['macd_hist'] = macd_h
-        df['atr'] = compute_atr(df['high'], df['low'], df['close'], period=14)
-        bb_upper, bb_middle, bb_lower = compute_bollinger(df['close'], period=20)
-        df['bb_upper'] = bb_upper
-        df['bb_middle'] = bb_middle
-        df['bb_lower'] = bb_lower
-        
+        df["rsi"] = compute_rsi(df["close"], period=14)
+        macd, macd_sig, macd_h = compute_macd(df["close"])
+        df["macd"] = macd
+        df["macd_signal"] = macd_sig
+        df["macd_hist"] = macd_h
+        df["atr"] = compute_atr(df["high"], df["low"], df["close"], period=14)
+        bb_upper, bb_middle, bb_lower = compute_bollinger(df["close"], period=20)
+        df["bb_upper"] = bb_upper
+        df["bb_middle"] = bb_middle
+        df["bb_lower"] = bb_lower
+
         # Atualizar apenas linhas com indicadores calculados (não-NaN)
-        df_valid = df.dropna(subset=['rsi', 'macd', 'atr', 'bb_upper'])
-        
+        df_valid = df.dropna(subset=["rsi", "macd", "atr", "bb_upper"])
+
         updated = 0
         for _, row in df_valid.iterrows():
             result = conn.execute(
-                text("""
+                text(
+                    """
                     UPDATE public.market_data
                     SET rsi = :rsi,
                         macd = :macd,
@@ -140,43 +147,46 @@ def calculate_indicators(symbol: str, lookback_minutes: int = 200) -> int:
                     WHERE symbol = :symbol
                       AND timeframe = 'M1'
                       AND ts = :ts
-                """),
+                """
+                ),
                 {
-                    "symbol": row['symbol'],
-                    "ts": row['ts'],
-                    "rsi": float(row['rsi']),
-                    "macd": float(row['macd']),
-                    "macd_signal": float(row['macd_signal']),
-                    "macd_hist": float(row['macd_hist']),
-                    "atr": float(row['atr']),
-                    "bb_upper": float(row['bb_upper']),
-                    "bb_middle": float(row['bb_middle']),
-                    "bb_lower": float(row['bb_lower']),
-                }
+                    "symbol": row["symbol"],
+                    "ts": row["ts"],
+                    "rsi": float(row["rsi"]),
+                    "macd": float(row["macd"]),
+                    "macd_signal": float(row["macd_signal"]),
+                    "macd_hist": float(row["macd_hist"]),
+                    "atr": float(row["atr"]),
+                    "bb_upper": float(row["bb_upper"]),
+                    "bb_middle": float(row["bb_middle"]),
+                    "bb_lower": float(row["bb_lower"]),
+                },
             )
             updated += result.rowcount
-        
+
         return updated
 
 
 _shutdown_requested = False
+
 
 def _signal_handler(signum, frame):
     global _shutdown_requested
     logger.info(f"Received signal {signum}, shutting down gracefully...")
     _shutdown_requested = True
 
+
 def run_loop(interval_sec: int = 60, symbols: list[str] | None = None):
     """Loop principal do worker de indicadores."""
     signal.signal(signal.SIGTERM, _signal_handler)
     signal.signal(signal.SIGINT, _signal_handler)
-    
+
     if symbols is None:
         symbols_str = os.getenv("SYMBOLS", "EURUSD,GBPUSD,USDJPY")
         symbols = [s.strip() for s in symbols_str.split(",")]
-    
+
     logger.info(f"Indicators Worker started for symbols: {symbols}, interval={interval_sec}s")
-    
+
     while not _shutdown_requested:
         try:
             for symbol in symbols:
@@ -189,13 +199,13 @@ def run_loop(interval_sec: int = 60, symbols: list[str] | None = None):
                     logger.debug(f"{symbol}: no rows updated")
         except Exception as e:
             logger.error(f"Error calculating indicators: {e}", exc_info=True)
-        
+
         # Sleep in smaller increments to respond faster to shutdown
         for _ in range(interval_sec):
             if _shutdown_requested:
                 break
             time.sleep(1)
-    
+
     logger.info("Indicators Worker stopped gracefully")
     sys.exit(0)
 

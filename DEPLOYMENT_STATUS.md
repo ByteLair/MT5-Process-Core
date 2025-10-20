@@ -1,6 +1,6 @@
 # Status do Deploy - Sistema MT5 Trading
 
-**Data:** 20 de Outubro de 2025  
+**Data:** 20 de Outubro de 2025
 **Status:** ✅ PRODUÇÃO
 
 ## 🎯 Sistema Híbrido de Ingestão - ATIVO
@@ -24,16 +24,19 @@
 #### Ingestão de Dados
 
 1. **POST /ingest** - Candle único ou batch com envelope
+
    ```json
    {"items": [{"symbol":"EURUSD", "timeframe":"M1", ...}]}
    ```
 
 2. **POST /ingest_batch** - Array direto de candles
+
    ```json
    [{"symbol":"EURUSD", "timeframe":"M1", ...}]
    ```
 
 3. **POST /ingest/tick** - Dados tick-by-tick
+
    ```json
    {"ticks": [{"symbol":"EURUSD", "ts":"...", "bid":1.0850, "ask":1.0852}]}
    ```
@@ -41,6 +44,7 @@
 **Autenticação:** Header `X-API-Key` (valor em `.env`)
 
 **Resposta Detalhada:** Todos endpoints retornam array `details` com status por item:
+
 ```json
 {
   "ok": true,
@@ -62,6 +66,7 @@
 ### ⚙️ Workers Ativos
 
 #### 1. Tick Aggregator
+
 - **Intervalo:** 5 segundos (configurável via `TICK_AGG_INTERVAL`)
 - **Função:** Converte ticks de `market_data_raw` em candles M1 em `market_data`
 - **Método:** Agregação SQL com `time_bucket` do TimescaleDB
@@ -69,6 +74,7 @@
 - **Logs:** Estruturados com contador de inserted/updated
 
 #### 2. Indicators Worker
+
 - **Intervalo:** 60 segundos (configurável via `INDICATORS_INTERVAL`)
 - **Símbolos:** EURUSD, GBPUSD, USDJPY (configurável via `SYMBOLS`)
 - **Lookback:** 200 minutos (garantir períodos suficientes)
@@ -126,43 +132,51 @@
 **Testes Realizados:**
 
 ✅ POST /ingest_batch com candle M1
+
 ```bash
 curl -X POST http://localhost:18002/ingest_batch \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '[{"symbol":"EURUSD","timeframe":"M1","ts":"2025-10-20T02:20:00Z",...}]'
 ```
+
 **Resultado:** `{"ok":true,"inserted":1,"details":[{"status":"inserted"}]}`
 
 ✅ POST /ingest/tick com 3 ticks
+
 ```bash
 curl -X POST http://localhost:18002/ingest/tick \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"ticks":[{"symbol":"EURUSD","ts":"...","bid":1.0850,"ask":1.0852}]}'
 ```
+
 **Resultado:** `{"ok":true,"received":3,"details":[...]}`
 
 ✅ Agregação de ticks → M1
 **Log:** `Aggregated ticks: {'inserted': 1, 'updated': 0, ...}`
 
 ✅ Dados no banco
+
 ```sql
-SELECT symbol, timeframe, ts, open, high, low, close 
-FROM market_data 
-WHERE symbol='EURUSD' AND timeframe='M1' 
+SELECT symbol, timeframe, ts, open, high, low, close
+FROM market_data
+WHERE symbol='EURUSD' AND timeframe='M1'
 ORDER BY ts DESC LIMIT 5;
 ```
+
 **Resultado:** 2 candles encontrados (1 via /ingest_batch, 1 via tick_aggregator)
 
 ### 📝 Logging
 
 Todos componentes com logging estruturado:
+
 - **API:** Logs por request com detalhes de ingestão
 - **tick_aggregator:** INFO logs a cada execução com contadores
 - **indicators_worker:** INFO logs por símbolo processado
 
 **Formato:**
+
 ```
 2025-10-20 02:20:09,940 - app.tick_aggregator - INFO - Aggregated ticks: {'inserted': 1, 'updated': 0, 'from': '...', 'to': '...'}
 ```
@@ -170,6 +184,7 @@ Todos componentes com logging estruturado:
 ### 🔧 Configuração
 
 **Variáveis de Ambiente:**
+
 - `DATABASE_URL` - Conexão direta ao PostgreSQL (não pgbouncer)
 - `TICK_AGG_INTERVAL` - Intervalo do agregador em segundos (padrão: 5)
 - `INDICATORS_INTERVAL` - Intervalo do worker de indicadores (padrão: 60)
@@ -185,6 +200,7 @@ Todos componentes com logging estruturado:
 ### 🚀 Próximos Passos
 
 1. **Aplicar Continuous Aggregates**
+
    ```bash
    docker exec mt5_db psql -U trader -d mt5_trading -f /docker-entrypoint-initdb.d/04-continuous-aggregates.sql
    ```
@@ -198,16 +214,19 @@ Todos componentes com logging estruturado:
 ### 🐛 Troubleshooting
 
 **Workers marcados como unhealthy:**
+
 - Verificar logs: `docker logs mt5_tick_aggregator`
 - Healthcheck usa `pgrep` que pode não estar disponível na imagem
 - Se logs mostram processamento, workers estão OK
 
 **Erro "wrong password type":**
+
 - Workers conectam direto no DB, não no pgbouncer
 - API também conecta direto no DB
 - Verificar `DATABASE_URL` aponta para `@db:5432`
 
 **Containers travados:**
+
 - Obter PID: `docker inspect <container> | grep '"Pid"'`
 - Matar processo: `sudo kill -9 <PID>`
 - Remover: `docker rm -f <container>`
@@ -215,6 +234,6 @@ Todos componentes com logging estruturado:
 
 ---
 
-**Última Atualização:** 2025-10-20 02:35 UTC  
-**Desenvolvedor:** IA + Felipe  
+**Última Atualização:** 2025-10-20 02:35 UTC
+**Desenvolvedor:** IA + Felipe
 **Ambiente:** Produção Local

@@ -1,7 +1,7 @@
 # 📸 Snapshot Workflow - Test Report
 
-**Data:** 2025-10-20  
-**Teste:** Manual execution of create-snapshot.sh  
+**Data:** 2025-10-20
+**Teste:** Manual execution of create-snapshot.sh
 **Status:** ✅ **SUCESSO COMPLETO**
 
 ---
@@ -9,11 +9,13 @@
 ## 🧪 Teste Executado
 
 ### Comando
+
 ```bash
 ./scripts/backup/create-snapshot.sh -n "mt5-snapshot-test-20251020_130615"
 ```
 
 ### Duração
+
 - **Início:** 13:06:00
 - **Fim:** 13:07:00
 - **Duração Total:** ~1 minuto
@@ -23,6 +25,7 @@
 ## ✅ Resultados do Teste
 
 ### 1. **Script Execution** ✅
+
 ```
 Status: SUCCESS
 Exit Code: 0
@@ -31,6 +34,7 @@ Warnings: pg_dump circular foreign-key constraints (expected for TimescaleDB)
 ```
 
 ### 2. **Snapshot Created** ✅
+
 ```
 Name: mt5-snapshot-test-20251020_130615
 Size: 197MB (compressed)
@@ -56,6 +60,7 @@ Format: .tar.gz
 ### 4. **Docker Volumes Backed Up** ✅
 
 All 6 volumes successfully backed up:
+
 ```
 ✓ mt5-trading-db_db_data.tar.gz
 ✓ mt5-trading-db_prometheus_data.tar.gz
@@ -68,10 +73,13 @@ All 6 volumes successfully backed up:
 ### 5. **Integrity Verification** ✅
 
 #### Checksum Verification
+
 ```bash
 sha256sum -c checksums.sha256
 ```
+
 **Result:** All files verified OK
+
 - ✅ SNAPSHOT_INFO.txt: OK
 - ✅ database-mt5_trading.sql.gz: OK
 - ✅ repository.bundle: OK
@@ -80,10 +88,13 @@ sha256sum -c checksums.sha256
 - ⚠️ checksums.sha256: FAILED (expected - can't checksum itself)
 
 #### Git Bundle Verification
+
 ```bash
 git bundle verify repository.bundle
 ```
+
 **Result:** ✅ Bundle is okay
+
 ```
 The bundle contains 16 refs
 The bundle records a complete history
@@ -94,6 +105,7 @@ repository.bundle is okay
 ### 6. **Snapshot Metadata** ✅
 
 Complete metadata captured:
+
 - ✅ Timestamp and hostname
 - ✅ System info (OS, Docker versions)
 - ✅ Running containers (13 containers)
@@ -119,13 +131,15 @@ Complete metadata captured:
 ## ⚠️ Warnings Detected
 
 ### TimescaleDB Foreign Key Warnings
+
 ```
 pg_dump: warning: there are circular foreign-key constraints on this table:
 pg_dump: detail: hypertable, chunk, continuous_agg
 pg_dump: hint: Consider using a full dump instead of a --data-only dump
 ```
 
-**Analysis:** 
+**Analysis:**
+
 - ✅ **Normal behavior** for TimescaleDB
 - ✅ Warnings are expected due to hypertable relationships
 - ✅ Full dump is already being used (pg_dumpall + pg_dump)
@@ -137,6 +151,7 @@ pg_dump: hint: Consider using a full dump instead of a --data-only dump
 ## 🔍 Detailed File Structure
 
 ### Snapshot Contents
+
 ```
 mt5-snapshot-test-20251020_130615/
 ├── SNAPSHOT_INFO.txt          (3.3KB) - Metadata and restore info
@@ -168,12 +183,14 @@ mt5-snapshot-test-20251020_130615/
 ## 🎯 Test Scenarios Validated
 
 ### ✅ Basic Functionality
+
 - [x] Script executes without errors
 - [x] All 7 steps complete successfully
 - [x] Snapshot directory created
 - [x] Files generated with correct permissions
 
 ### ✅ Database Backup
+
 - [x] Database container detected
 - [x] pg_dumpall executes successfully
 - [x] Individual database backup created
@@ -181,12 +198,14 @@ mt5-snapshot-test-20251020_130615/
 - [x] Backups are compressed (gzip)
 
 ### ✅ Docker Integration
+
 - [x] All running containers detected
 - [x] Docker volumes listed correctly
 - [x] Volume backups created
 - [x] Alpine container used for backup
 
 ### ✅ Git Integration
+
 - [x] Git bundle created
 - [x] All branches included
 - [x] All tags included
@@ -194,16 +213,19 @@ mt5-snapshot-test-20251020_130615/
 - [x] Bundle is verifiable
 
 ### ✅ Compression
+
 - [x] Tar.gz created successfully
 - [x] Reasonable compression ratio
 - [x] Archive is readable
 
 ### ✅ Cleanup
+
 - [x] Old snapshots cleaned (keeps last 10)
 - [x] Old directories cleaned (keeps last 5)
 - [x] Snapshot index updated
 
 ### ✅ Metadata
+
 - [x] SNAPSHOT_INFO.txt created
 - [x] Complete system information
 - [x] Restore instructions included
@@ -216,40 +238,50 @@ mt5-snapshot-test-20251020_130615/
 ### Workflow Steps Validated
 
 #### 1. Preflight Check ✅
+
 ```yaml
 - test -d scripts/backup
 - test -f scripts/backup/create-snapshot.sh
 - chmod +x scripts/backup/create-snapshot.sh
 - mkdir -p /home/felipe/backups/snapshots
 ```
+
 **Result:** All checks pass
 
 #### 2. Create Snapshot ✅
+
 ```yaml
 ./scripts/backup/create-snapshot.sh ${SNAPSHOT_OPTS}
 ```
+
 **Result:** Executes successfully
 
 #### 3. Extract Output Variables ✅
+
 ```yaml
 FILE=$(ls -t /home/felipe/backups/snapshots/mt5-snapshot-*.tar.gz | head -1)
 NAME=$(basename "$FILE" .tar.gz)
 SIZE=$(du -sh "$FILE" | cut -f1)
 ```
+
 **Result:** All variables extracted correctly
 
 #### 4. Verify Integrity ✅
+
 ```yaml
 tar xzf "${NAME}.tar.gz"
 sha256sum -c checksums.sha256
 ```
+
 **Result:** Verification passes
 
 #### 5. Cleanup ✅
+
 ```yaml
 ls -t mt5-snapshot-*.tar.gz | tail -n +11 | xargs -r rm -f
 ls -td mt5-snapshot-*/ | tail -n +6 | xargs -r rm -rf
 ```
+
 **Result:** Old snapshots cleaned successfully
 
 ---
@@ -274,15 +306,18 @@ ls -td mt5-snapshot-*/ | tail -n +6 | xargs -r rm -rf
 ## 📋 Recommendations
 
 ### ✅ Approved for Production
+
 The snapshot workflow is **production-ready** with the following notes:
 
 #### 1. **Current State: EXCELLENT** ✅
+
 - Script is robust and well-tested
 - All error handling works correctly
 - Workflow integration validated
 - No blocking issues found
 
 #### 2. **Optional Enhancements** (Low Priority)
+
 ```bash
 # Suppress TimescaleDB warnings (optional)
 pg_dump --disable-triggers mt5_trading
@@ -295,6 +330,7 @@ curl -X POST webhook_url -d "Snapshot failed"
 ```
 
 #### 3. **Restore Testing** (Recommended)
+
 ```bash
 # Test restore in staging environment
 ./scripts/backup/restore-snapshot.sh mt5-snapshot-test-20251020_130615
@@ -305,6 +341,7 @@ curl -X POST webhook_url -d "Snapshot failed"
 ## 📊 Comparison with Previous Snapshots
 
 ### Recent Snapshots
+
 ```
 2025-10-20 13:06 - mt5-snapshot-test-20251020_130615   (197MB) ✅ Test
 2025-10-20 05:38 - mt5-snapshot-20251020_053832        (176MB) ✅ Auto
@@ -314,6 +351,7 @@ curl -X POST webhook_url -d "Snapshot failed"
 ```
 
 ### Size Growth Analysis
+
 - Growth rate: ~10-20MB/day
 - Reason: Database growing + model updates
 - Status: Normal and expected
@@ -327,18 +365,21 @@ curl -X POST webhook_url -d "Snapshot failed"
 O script `create-snapshot.sh` e o workflow do GitHub Actions estão:
 
 **✅ Funcionando perfeitamente**
+
 - Zero erros críticos
 - Todas as verificações passaram
 - Performance aceitável
 - Automação completa
 
 **✅ Confiável**
+
 - Integridade verificada
 - Metadata completo
 - Restore command gerado
 - Cleanup automático
 
 **✅ Pronto para uso**
+
 - GitHub Actions workflow validado
 - Self-hosted runner compatível
 - Cron schedule funcional
@@ -356,19 +397,22 @@ O script `create-snapshot.sh` e o workflow do GitHub Actions estão:
 ## 📚 Documentação
 
 ### Scripts
+
 - `scripts/backup/create-snapshot.sh` - ✅ Testado e aprovado
 - `scripts/backup/restore-snapshot.sh` - ⏭️ Pendente teste
 
 ### Workflows
+
 - `.github/workflows/snapshots.yml` - ✅ Validado
 
 ### Logs
+
 - Test log: `/tmp/snapshot-test.log`
 - Snapshot metadata: `mt5-snapshot-test-*/SNAPSHOT_INFO.txt`
 
 ---
 
-**Testado por:** Felipe  
-**Data:** 2025-10-20  
-**Versão do Script:** 1.0.0  
+**Testado por:** Felipe
+**Data:** 2025-10-20
+**Versão do Script:** 1.0.0
 **Status Final:** ✅ **APROVADO**

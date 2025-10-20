@@ -17,13 +17,13 @@
 
 Deploy completo da plataforma MT5 Trading em Kubernetes com:
 
-✅ **Multi-ambiente** - Dev, Staging, Production  
-✅ **Auto-scaling** - HPA configurado para API  
-✅ **Persistent Storage** - PV/PVC para dados críticos  
-✅ **Health Checks** - Liveness e Readiness probes  
-✅ **Service Discovery** - ClusterIP e LoadBalancer  
-✅ **Ingress** - NGINX com TLS  
-✅ **RBAC** - Service Accounts e Roles configurados  
+✅ **Multi-ambiente** - Dev, Staging, Production
+✅ **Auto-scaling** - HPA configurado para API
+✅ **Persistent Storage** - PV/PVC para dados críticos
+✅ **Health Checks** - Liveness e Readiness probes
+✅ **Service Discovery** - ClusterIP e LoadBalancer
+✅ **Ingress** - NGINX com TLS
+✅ **RBAC** - Service Accounts e Roles configurados
 
 ---
 
@@ -48,6 +48,7 @@ docker --version
 ### Cluster Kubernetes
 
 Você pode usar:
+
 - **Minikube** (desenvolvimento local)
 - **Kind** (Kubernetes in Docker)
 - **K3s** (lightweight)
@@ -220,7 +221,7 @@ Crie `my-values.yaml`:
 api:
   replicaCount: 3
   apiKey: "your-secure-production-key"
-  
+
   autoscaling:
     minReplicas: 3
     maxReplicas: 20
@@ -229,7 +230,7 @@ api:
 postgres:
   auth:
     password: "your-secure-postgres-password"
-  
+
   persistence:
     size: 50Gi
 
@@ -354,9 +355,10 @@ kubectl port-forward -n mt5-trading svc/prometheus-service 9090:9090
 ```
 
 Acesse:
-- API: http://localhost:8000/docs
-- Grafana: http://localhost:3000 (admin/admin)
-- Prometheus: http://localhost:9090
+
+- API: <http://localhost:8000/docs>
+- Grafana: <http://localhost:3000> (admin/admin)
+- Prometheus: <http://localhost:9090>
 
 #### LoadBalancer (se disponível)
 
@@ -476,6 +478,7 @@ kubectl describe hpa mt5-api-hpa -n mt5-trading
 ### Secrets Management
 
 **Desenvolvimento:**
+
 ```bash
 # Criar secrets
 kubectl create secret generic mt5-trading-secrets \
@@ -487,6 +490,7 @@ kubectl create secret generic mt5-trading-secrets \
 **Produção (recomendado):**
 
 Use ferramentas externas:
+
 - **HashiCorp Vault**
 - **AWS Secrets Manager**
 - **Azure Key Vault**
@@ -565,6 +569,7 @@ kubectl delete -k k8s/overlays/dev
 ## 🤝 Suporte
 
 Para problemas ou dúvidas:
+
 1. Verificar logs: `kubectl logs <pod> -n mt5-trading`
 2. Verificar events: `kubectl get events -n mt5-trading`
 3. Executar health check: `./scripts/k8s-healthcheck.sh`

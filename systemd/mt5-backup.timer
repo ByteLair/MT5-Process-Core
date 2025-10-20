@@ -8,7 +8,7 @@ Requires=mt5-backup.service
 # Executar backup todo sábado às 05:00 AM
 OnCalendar=Sat *-*-* 05:00:00
 
-# Se o sistema estiver desligado no horário agendado, 
+# Se o sistema estiver desligado no horário agendado,
 # executar assim que o sistema ligar (até 1 hora de atraso)
 Persistent=true
 

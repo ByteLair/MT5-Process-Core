@@ -1,6 +1,6 @@
 # ✅ Sistema MT5 Trading - Todos Containers Ativos
 
-**Data:** 2025-10-20 02:42 UTC  
+**Data:** 2025-10-20 02:42 UTC
 **Status:** 🟢 TODOS OS SERVIÇOS OPERACIONAIS
 
 ## 📊 Containers em Execução (13/13)
@@ -24,23 +24,26 @@
 ## 🌐 Portas e Acessos
 
 ### Aplicação Principal
+
 | Serviço | Porta | URL | Descrição |
 |---------|-------|-----|-----------|
-| **API** | 18002, 18003 | http://localhost:18002/docs | Swagger UI |
-| **API Health** | 18002 | http://localhost:18002/health | Health check |
+| **API** | 18002, 18003 | <http://localhost:18002/docs> | Swagger UI |
+| **API Health** | 18002 | <http://localhost:18002/health> | Health check |
 | **PgBouncer** | 6432 | postgresql://localhost:6432 | Connection pool |
 
 ### Monitoramento e Observabilidade
+
 | Serviço | Porta | URL | Descrição |
 |---------|-------|-----|-----------|
-| **Grafana** | 13000 | http://localhost:13000 | Dashboards (admin/admin) |
-| **Prometheus** | 19090 | http://localhost:19090 | Métricas |
-| **Jaeger UI** | 26686 | http://localhost:26686 | Traces distribuídos |
-| **Loki** | 13100 | http://localhost:13100 | API de logs |
-| **Node Exporter** | 9100 | http://localhost:9100/metrics | Métricas do host |
-| **PgAdmin** | 5051 | http://localhost:5051 | Admin PostgreSQL |
+| **Grafana** | 13000 | <http://localhost:13000> | Dashboards (admin/admin) |
+| **Prometheus** | 19090 | <http://localhost:19090> | Métricas |
+| **Jaeger UI** | 26686 | <http://localhost:26686> | Traces distribuídos |
+| **Loki** | 13100 | <http://localhost:13100> | API de logs |
+| **Node Exporter** | 9100 | <http://localhost:9100/metrics> | Métricas do host |
+| **PgAdmin** | 5051 | <http://localhost:5051> | Admin PostgreSQL |
 
 ### Jaeger (Tracing)
+
 | Porta | Protocolo | Descrição |
 |-------|-----------|-----------|
 | 26686 | HTTP | UI Web |
@@ -57,11 +60,13 @@
 ## 🔌 API Endpoints
 
 ### Base URL
+
 ```
 http://localhost:18002
 ```
 
 ### Autenticação
+
 ```bash
 # Header obrigatório
 X-API-Key: <valor_do_.env>
@@ -70,7 +75,9 @@ X-API-Key: <valor_do_.env>
 ### Endpoints de Ingestão
 
 #### 1. POST /ingest
+
 Envia candle único ou batch com envelope
+
 ```json
 {
   "items": [
@@ -90,7 +97,9 @@ Envia candle único ou batch com envelope
 ```
 
 #### 2. POST /ingest_batch
+
 Envia array direto de candles (mais simples)
+
 ```json
 [
   {
@@ -108,7 +117,9 @@ Envia array direto de candles (mais simples)
 ```
 
 #### 3. POST /ingest/tick
+
 Envia dados tick-by-tick para alta frequência
+
 ```json
 {
   "ticks": [
@@ -129,7 +140,9 @@ Envia dados tick-by-tick para alta frequência
 ```
 
 ### Resposta com Detalhes
+
 Todos endpoints retornam array `details` com status por item:
+
 ```json
 {
   "ok": true,
@@ -158,6 +171,7 @@ Todos endpoints retornam array `details` com status por item:
 ## ⚙️ Workers Configuração
 
 ### Tick Aggregator
+
 ```yaml
 Intervalo: 5 segundos (TICK_AGG_INTERVAL)
 Fonte: market_data_raw (ticks em JSONB)
@@ -167,6 +181,7 @@ OHLC: Calculado de (bid + ask) / 2
 ```
 
 ### Indicators Worker
+
 ```yaml
 Intervalo: 60 segundos (INDICATORS_INTERVAL)
 Símbolos: EURUSD, GBPUSD, USDJPY (SYMBOLS)
@@ -226,25 +241,29 @@ docker exec mt5_db psql -U trader -d mt5_trading \
 ## 📊 Acessar Dashboards
 
 ### Grafana
-1. Acesse: http://localhost:13000
+
+1. Acesse: <http://localhost:13000>
 2. Login: `admin` / `admin`
 3. Dashboards disponíveis em "Browse"
 
 ### Prometheus
-1. Acesse: http://localhost:19090
+
+1. Acesse: <http://localhost:19090>
 2. Query exemplos:
    - `up` - status dos serviços
    - `process_cpu_seconds_total` - CPU
    - `process_resident_memory_bytes` - Memória
 
 ### Jaeger
-1. Acesse: http://localhost:26686
+
+1. Acesse: <http://localhost:26686>
 2. Selecione serviço: `mt5-trading-api`
 3. Visualize traces das requisições
 
 ### PgAdmin
-1. Acesse: http://localhost:5051
-2. Login: admin@example.com / admin123
+
+1. Acesse: <http://localhost:5051>
+2. Login: <admin@example.com> / admin123
 3. Adicionar servidor:
    - Host: `db`
    - Port: `5432`
@@ -254,6 +273,7 @@ docker exec mt5_db psql -U trader -d mt5_trading \
 ## 📝 Comandos Úteis
 
 ### Gerenciamento
+
 ```bash
 # Subir todos
 docker-compose up -d
@@ -280,6 +300,7 @@ docker-compose down -v
 ```
 
 ### Monitoramento
+
 ```bash
 # Ver logs dos workers
 docker logs 15c1ad2b98f5_mt5_tick_aggregator --tail 50 -f
@@ -296,6 +317,7 @@ docker exec mt5_tick_aggregator nc -zv db 5432
 ```
 
 ### Banco de Dados
+
 ```bash
 # Conectar ao banco
 docker exec -it mt5_db psql -U trader -d mt5_trading
@@ -307,9 +329,9 @@ SELECT * FROM market_data ORDER BY ts DESC LIMIT 10;
 SELECT COUNT(*) FROM market_data_raw;
 
 # Verificar indicadores
-SELECT symbol, ts, close, rsi, macd 
-FROM market_data 
-WHERE rsi IS NOT NULL 
+SELECT symbol, ts, close, rsi, macd
+FROM market_data
+WHERE rsi IS NOT NULL
 ORDER BY ts DESC LIMIT 10;
 ```
 
@@ -360,6 +382,7 @@ ORDER BY ts DESC LIMIT 10;
 ## 🔧 Troubleshooting
 
 ### Container unhealthy mas funcionando
+
 ```bash
 # Workers aparecem unhealthy por falta do comando pgrep
 # Verificar logs para confirmar funcionamento:
@@ -369,6 +392,7 @@ docker logs <container_name> --tail 20
 ```
 
 ### Porta em uso
+
 ```bash
 # Ver processos usando a porta
 sudo lsof -i :<porta>
@@ -380,6 +404,7 @@ sudo kill -9 <PID>
 ```
 
 ### Worker não processa
+
 ```bash
 # Verificar conectividade com banco
 docker exec <worker> nc -zv db 5432
@@ -392,6 +417,7 @@ docker-compose restart tick-aggregator indicators-worker
 ```
 
 ### Grafana não carrega dashboards
+
 ```bash
 # Verificar se Prometheus está acessível
 curl http://localhost:19090/-/healthy
@@ -411,6 +437,7 @@ docker-compose up -d --force-recreate grafana
 ## ⚡ Alterações Realizadas
 
 ### Portas Modificadas (conflitos resolvidos)
+
 - **PgAdmin:** 5050 → 15050 (depois 5051 devido conflito)
 - **Grafana:** 3000 → 13000
 - **Prometheus:** 9090 → 19090
@@ -423,12 +450,13 @@ docker-compose up -d --force-recreate grafana
 - Outras portas Jaeger: faixa 25000-29000
 
 ### Conexões Corrigidas
+
 - Workers e API conectam diretamente em `db:5432`
 - Removido uso de `pgbouncer` nos workers (evita erro "wrong password type")
 
 ---
 
-**Status:** ✅ SISTEMA COMPLETO OPERACIONAL  
-**Última Verificação:** 2025-10-20 02:42 UTC  
-**Ambiente:** Produção Local  
+**Status:** ✅ SISTEMA COMPLETO OPERACIONAL
+**Última Verificação:** 2025-10-20 02:42 UTC
+**Ambiente:** Produção Local
 **Total Containers:** 13/13 ativos 🚀

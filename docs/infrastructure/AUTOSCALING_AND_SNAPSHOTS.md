@@ -1,6 +1,7 @@
 # 🚀 Kubernetes Auto-Scaling e Sistema de Snapshots
 
 ## 📋 Índice
+
 - [Auto-Scaling no Kubernetes](#auto-scaling-no-kubernetes)
 - [Sistema de Snapshots](#sistema-de-snapshots)
 - [Integração CI/CD](#integração-cicd)
@@ -48,6 +49,7 @@ spec:
 ```
 
 **Comportamento**:
+
 - **Scale Up**: Imediato quando CPU > 70% ou MEM > 80%
 - **Scale Down**: Espera 5 minutos para estabilizar
 - **Política**: Dobra pods ao escalar (máx 4 pods por vez)
@@ -71,6 +73,7 @@ spec:
 ```
 
 **Comportamento**:
+
 - **Scale Up**: Aguarda 1 minuto
 - **Scale Down**: Espera 10 minutos (tarefas ML são longas)
 
@@ -259,6 +262,7 @@ while true; do :; done
 ### Visão Geral
 
 Sistema completo de snapshots automáticos que captura:
+
 - ✅ Repositório Git (bundle completo)
 - ✅ Backup do banco de dados
 - ✅ Volumes Docker
@@ -351,6 +355,7 @@ on:
 ```
 
 **Fluxo**:
+
 1. ✅ Push no branch `main`
 2. ✅ CI/CD roda e passa todos os testes
 3. ✅ Deploy é feito com sucesso
@@ -487,6 +492,7 @@ gh run view --workflow=snapshots.yml
 ### 🧹 Limpeza Automática
 
 O script mantém automaticamente:
+
 - **10 snapshots comprimidos** mais recentes
 - **5 snapshots descomprimidos** mais recentes
 
@@ -599,12 +605,14 @@ git bundle verify test-restore/repository.bundle
 ### Auto-Scaling
 
 ✅ **DO**:
+
 - Monitorar métricas do HPA regularmente
 - Ajustar `minReplicas` baseado no tráfego real
 - Usar PDB para garantir disponibilidade
 - Testar scaling sob carga antes de produção
 
 ❌ **DON'T**:
+
 - Não usar HPA e VPA juntos no mesmo deployment
 - Não definir `maxReplicas` muito alto sem teste
 - Não ignorar alertas de CPU/MEM altos
@@ -613,12 +621,14 @@ git bundle verify test-restore/repository.bundle
 ### Snapshots
 
 ✅ **DO**:
+
 - Criar snapshot antes de mudanças críticas
 - Testar restore periodicamente
 - Manter snapshots em storage remoto
 - Documentar mudanças importantes
 
 ❌ **DON'T**:
+
 - Não confiar apenas em snapshots locais
 - Não deixar snapshots sem verificação
 - Não restaurar sem backup atual
@@ -682,5 +692,5 @@ sha256sum -c checksums.sha256
 
 ---
 
-**Última atualização**: 2025-10-18  
+**Última atualização**: 2025-10-18
 **Versão**: 1.0.0

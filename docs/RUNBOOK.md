@@ -39,6 +39,7 @@ ls -lth ml/models/ | head -5
 ```
 
 **Ações se algum check falhar:**
+
 - Serviço down → Ver [Resposta a Incidentes](#resposta-a-incidentes)
 - Disk > 80% → Ver [Manutenção - Limpeza](#limpeza-de-disco)
 - Alertas ativos → Investigar logs e métricas
@@ -46,13 +47,15 @@ ls -lth ml/models/ | head -5
 ### Monitoramento Contínuo
 
 **Dashboards principais:**
-1. **MT5 Trading Main**: http://localhost:3000/d/mt5-trading-main
-2. **Infrastructure & Logs**: http://localhost:3000/d/mt5-infra-logs
-3. **Database Metrics**: http://localhost:3000/d/mt5-db-dashboard
+
+1. **MT5 Trading Main**: <http://localhost:3000/d/mt5-trading-main>
+2. **Infrastructure & Logs**: <http://localhost:3000/d/mt5-infra-logs>
+3. **Database Metrics**: <http://localhost:3000/d/mt5-db-dashboard>
 
 **Frequência de verificação:**
+
 - Dashboards: A cada 2 horas
-- Email alerts: Imediato (kuramopr@gmail.com)
+- Email alerts: Imediato (<kuramopr@gmail.com>)
 - Daily report: 04:30 (automatizado)
 
 ---
@@ -518,7 +521,7 @@ SELECT * FROM pg_locks WHERE NOT granted;
 
 -- Cache hit ratio
 docker exec mt5_db psql -U trader -d mt5_trading -c "
-SELECT 
+SELECT
     sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_ratio
 FROM pg_statio_user_tables;
 "
@@ -572,7 +575,7 @@ docker system prune -af --volumes
 
 # 3. Compressão forçada TimescaleDB (dados > 7 dias)
 docker exec mt5_db psql -U trader -d mt5_trading -c "
-SELECT compress_chunk(i) 
+SELECT compress_chunk(i)
 FROM show_chunks('market_data') i
 WHERE range_end < now() - interval '7 days';
 "
@@ -747,7 +750,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now mt5-update.timer mt5-tests.timer mt5-daily-report.timer
 ```
 
-**RTO (Recovery Time Objective):** 2 horas  
+**RTO (Recovery Time Objective):** 2 horas
 **RPO (Recovery Point Objective):** 24 horas (backup diário)
 
 ---
@@ -767,5 +770,5 @@ Database Admin: [...]
 - **Documentação**: `docs/DOCUMENTATION.md`
 - **Performance**: `docs/PERFORMANCE.md`
 - **Troubleshooting**: `docs/DOCUMENTATION.md#troubleshooting`
-- **Grafana Dashboards**: http://localhost:3000
-- **Prometheus**: http://localhost:9090
+- **Grafana Dashboards**: <http://localhost:3000>
+- **Prometheus**: <http://localhost:9090>

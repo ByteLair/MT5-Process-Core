@@ -12,6 +12,7 @@ docker-compose run --rm ml-trainer python ml/eval_threshold.py
 ```
 
 O script `eval_threshold.py` irá:
+
 1. Conectar ao banco de dados
 2. Carregar dados históricos
 3. Avaliar diferentes thresholds (0.40-0.80)
@@ -48,9 +49,11 @@ docker-compose up -d
 ### Manutenção e Troubleshooting
 
 #### Docker e Permissões
+
 Se encontrar problemas de permissão:
 
 1. Execute o script de correção de permissões:
+
 ```bash
 sudo ./setup_docker_permissions.sh
 ```
@@ -59,6 +62,7 @@ sudo ./setup_docker_permissions.sh
 3. Reinicie o VS Code se necessário
 
 Para limpar containers antigos:
+
 ```bash
 docker-compose down --remove-orphans
 docker system prune -f
@@ -80,14 +84,16 @@ O sistema inclui rotinas automatizadas de manutenção do banco de dados:
    - Atualização de estatísticas
 
 Para mais detalhes sobre manutenção do banco:
+
 - Consulte `docs/db_maintenance.md`
 - Verifique os logs em `/var/log/mt5/db_maintenance.log`
 
 #### Monitoramento de Espaço
 
 Verificar uso de espaço do banco:
+
 ```sql
-SELECT 
+SELECT
     hypertable_name,
     pg_size_pretty(total_bytes) as total_size,
     pg_size_pretty(total_compressed_bytes) as compressed_size,
@@ -127,6 +133,7 @@ systemctl list-timers | grep recalibra
 ### Ajustar horário
 
 1. Edite o arquivo do timer:
+
 ```bash
 sudo nano /etc/systemd/system/recalibra-threshold.timer
 ```
@@ -134,10 +141,12 @@ sudo nano /etc/systemd/system/recalibra-threshold.timer
 2. Modifique a linha `OnCalendar=*-*-* 02:30:00`
 
 3. Reinicie o timer:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart recalibra-threshold.timer
 ```
+
 ### Teste rápido de validação
 
 Após uma recalibração automática ou manual:
@@ -161,12 +170,14 @@ curl -fsS "http://localhost:8001/signals/latest?symbol=EURUSD&period=H1"
 
 - Documentação detalhada: [docs/observabilidade.md](docs/observabilidade.md)
 - Suba os serviços:
+
   ```bash
   docker compose up -d prometheus grafana
   ```
+
 - Acesse:
-  - Prometheus: http://localhost:9090
-  - Grafana: http://localhost:3000 (login: admin/admin)
+  - Prometheus: <http://localhost:9090>
+  - Grafana: <http://localhost:3000> (login: admin/admin)
 
 ## Infraestrutura como Código (Terraform)
 

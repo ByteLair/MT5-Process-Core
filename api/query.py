@@ -1,5 +1,6 @@
 # api/app/query.py
 import os
+
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import create_engine, text
@@ -18,10 +19,13 @@ WHITELIST = {
     "market_data_raw",
 }
 
+
 @router.get("/query")
-def query(table: str = Query(..., description="Nome da tabela/view (whitelist)"),
-          limit: int = Query(100, ge=1, le=5000),
-          order_by: str | None = Query(None, description="Ex: ts DESC")):
+def query(
+    table: str = Query(..., description="Nome da tabela/view (whitelist)"),
+    limit: int = Query(100, ge=1, le=5000),
+    order_by: str | None = Query(None, description="Ex: ts DESC"),
+):
     if table not in WHITELIST:
         raise HTTPException(400, f"Tabela/View não permitida. Permitidas: {sorted(WHITELIST)}")
     if order_by and ";" in order_by:

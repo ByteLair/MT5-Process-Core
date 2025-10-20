@@ -118,7 +118,7 @@ tar -czf "${BACKUP_NAME}.tar.gz" "$BACKUP_NAME" 2>/dev/null
 if [ -f "${BACKUP_NAME}.tar.gz" ]; then
     backup_size=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
     echo -e "${GREEN}✅ Backup compressed ($backup_size)${NC}"
-    
+
     # Remove uncompressed backup
     rm -rf "$BACKUP_NAME"
 else

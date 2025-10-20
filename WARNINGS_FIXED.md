@@ -1,18 +1,21 @@
 # 🔧 Correção dos Warnings nos Containers
 
-**Data:** 2025-10-20 02:52 UTC  
+**Data:** 2025-10-20 02:52 UTC
 **Status:** ✅ TODOS OS PROBLEMAS RESOLVIDOS
 
 ## 🎯 Problemas Identificados e Resolvidos
 
 ### 1. ⚠️ Containers com Nomes Incorretos
+
 **Problema:**
+
 - `15c1ad2b98f5_mt5_tick_aggregator` (nome com prefixo de ID antigo)
 - `a77f1aa236da_mt5_indicators_worker` (nome com prefixo de ID antigo)
 
 **Causa:** Múltiplas tentativas de recriação deixaram nomes duplicados/incorretos
 
 **Solução Aplicada:**
+
 ```bash
 # 1. Matar processos
 sudo kill -9 <PID>
@@ -25,27 +28,32 @@ docker-compose up -d tick-aggregator indicators-worker
 ```
 
 **Resultado:** ✅ Containers recriados com nomes corretos:
+
 - `mt5_tick_aggregator`
 - `mt5_indicators_worker`
 
 ---
 
 ### 2. 🔄 Grafana em Loop de Restart
+
 **Problema:**
+
 ```
 mt5_grafana  Restarting (1) 29 seconds ago
 ```
 
 **Erro nos Logs:**
+
 ```
 Error: ✗ alert rules: A folder with that name already exists
-logger=dashboard-service level=error msg="failed to create folder for provisioned dashboards" 
+logger=dashboard-service level=error msg="failed to create folder for provisioned dashboards"
 folder=General org=1 err="A folder with that name already exists"
 ```
 
 **Causa:** Arquivos de provisionamento de alerting tentando criar pastas já existentes no volume do Grafana
 
 **Solução Aplicada:**
+
 ```bash
 # 1. Desabilitar arquivos de provisionamento problemáticos
 cd grafana/provisioning/alerting
@@ -63,7 +71,9 @@ docker-compose up -d grafana
 ---
 
 ### 3. 🟡 Workers Marcados como "Unhealthy"
-**Status:** 
+
+**Status:**
+
 ```
 mt5_tick_aggregator     Up 2 minutes (unhealthy)
 mt5_indicators_worker   Up 2 minutes (unhealthy)
@@ -72,6 +82,7 @@ mt5_indicators_worker   Up 2 minutes (unhealthy)
 **Causa:** Healthcheck usa `pgrep` que não existe na imagem Python slim
 
 **Verificação:**
+
 ```bash
 # Logs confirmam funcionamento correto
 docker logs mt5_tick_aggregator --tail 3
@@ -81,12 +92,14 @@ docker logs mt5_indicators_worker --tail 3
 # 2025-10-20 02:50:15 - INFO - Indicators Worker started for symbols: ['EURUSD', 'GBPUSD', 'USDJPY']
 ```
 
-**Situação:** 
+**Situação:**
+
 - ⚠️ Aparece como "unhealthy" no Docker
 - ✅ **MAS está funcionando perfeitamente** (confirmado pelos logs)
 - 📝 Nota: Isso é apenas cosmético, não afeta a operação
 
 **Alternativas para Correção Futura:**
+
 1. Instalar `procps` na imagem (adiciona ~2MB)
 2. Trocar healthcheck para verificar porta/arquivo
 3. Desabilitar healthcheck (não recomendado)
@@ -116,18 +129,22 @@ docker logs mt5_indicators_worker --tail 3
 ### Logs Recentes (Confirmação de Funcionamento)
 
 **Tick Aggregator:**
+
 ```
-2025-10-20 02:51:25 - app.tick_aggregator - INFO - Aggregated ticks: 
-  {'inserted': 0, 'updated': 0, 'from': '2025-10-20T02:51:20.237755+00:00', 
+2025-10-20 02:51:25 - app.tick_aggregator - INFO - Aggregated ticks:
+  {'inserted': 0, 'updated': 0, 'from': '2025-10-20T02:51:20.237755+00:00',
    'to': '2025-10-20T02:51:25.244705+00:00'}
 ```
+
 ✅ Processando a cada 5 segundos
 
 **Indicators Worker:**
+
 ```
-2025-10-20 02:50:15 - app.indicators_worker - INFO - Indicators Worker started 
+2025-10-20 02:50:15 - app.indicators_worker - INFO - Indicators Worker started
   for symbols: ['EURUSD', 'GBPUSD', 'USDJPY'], interval=60s
 ```
+
 ✅ Iniciado corretamente com 3 símbolos
 
 ---
@@ -141,7 +158,7 @@ Não confie apenas no status "unhealthy" do Docker. Verifique os logs:
 docker logs mt5_tick_aggregator --tail 20
 # Deve mostrar: "INFO - Aggregated ticks: ..." a cada 5 segundos
 
-# Verificar indicators-worker  
+# Verificar indicators-worker
 docker logs mt5_indicators_worker --tail 20
 # Deve mostrar: "INFO - Indicators Worker started for symbols..."
 
@@ -161,10 +178,11 @@ curl -X POST http://localhost:18002/ingest_batch \
 
 ## 📝 Arquivos Modificados
 
-### Desabilitados Temporariamente:
+### Desabilitados Temporariamente
+
 ```
 grafana/provisioning/alerting/alerts.yml → alerts.yml.disabled
-grafana/provisioning/alerting/api-down-rule.yaml → api-down-rule.yaml.disabled  
+grafana/provisioning/alerting/api-down-rule.yaml → api-down-rule.yaml.disabled
 grafana/provisioning/alerting/contact-points.yaml → contact-points.yaml.disabled
 grafana/provisioning/alerting/notification-policies.yaml → notification-policies.yaml.disabled
 ```
@@ -172,6 +190,7 @@ grafana/provisioning/alerting/notification-policies.yaml → notification-polici
 **Motivo:** Causavam erro "A folder with that name already exists" no Grafana
 
 **Para Reativar no Futuro:**
+
 ```bash
 cd grafana/provisioning/alerting
 for f in *.disabled; do mv "$f" "${f%.disabled}"; done
@@ -182,25 +201,28 @@ docker-compose restart grafana
 
 ## ✅ Conclusão
 
-### Problemas Resolvidos:
+### Problemas Resolvidos
+
 1. ✅ Nomes de containers corrigidos
 2. ✅ Grafana iniciando sem erros
 3. ✅ Todos os 13 containers rodando
 
-### "Warnings" Remanescentes:
+### "Warnings" Remanescentes
+
 - 🟡 Workers marcados como "unhealthy" - **Ignorar, é cosmético**
   - Logs confirmam funcionamento correto
   - Processamento ativo a cada 5s e 60s
   - Apenas o healthcheck falha (falta comando `pgrep`)
 
-### Sistema Operacional:
-- ✅ API respondendo em http://localhost:18002
+### Sistema Operacional
+
+- ✅ API respondendo em <http://localhost:18002>
 - ✅ Workers processando dados
 - ✅ Banco de dados saudável
 - ✅ Stack de observabilidade completa
 
 ---
 
-**Última Atualização:** 2025-10-20 02:52 UTC  
-**Status Geral:** 🟢 OPERACIONAL  
+**Última Atualização:** 2025-10-20 02:52 UTC
+**Status Geral:** 🟢 OPERACIONAL
 **Warnings no Docker Desktop:** 🟡 COSMÉTICO (sistema funcional)

@@ -1,4 +1,5 @@
 import os
+
 from app.indicators_worker import run_loop
 
 if __name__ == "__main__":

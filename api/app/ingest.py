@@ -1,14 +1,15 @@
 # api/app/ingest.py
-from fastapi import APIRouter, Header, HTTPException
 import json
-from pydantic import BaseModel, Field
-from sqlalchemy import text
+import logging
 import os
 import sys
 import time
 from datetime import datetime
-import logging
+
+from fastapi import APIRouter, Header, HTTPException
 from prometheus_client import Counter, Histogram
+from pydantic import BaseModel, Field
+from sqlalchemy import text
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +26,7 @@ except Exception:  # pragma: no cover - fallback for different loaders
 API_KEY = os.getenv("API_KEY", "supersecretkey")
 
 router = APIRouter(tags=["ingest"])
+
 
 class Candle(BaseModel):
     ts: datetime
@@ -48,8 +50,10 @@ class Candle(BaseModel):
     bb_middle: float | None = None
     bb_lower: float | None = None
 
+
 class CandleBatch(BaseModel):
     items: list[Candle]
+
 
 def auth(x_api_key: str | None):
     if not x_api_key or x_api_key != API_KEY:
@@ -78,51 +82,53 @@ def _bucket_start(ts: datetime, timeframe: str) -> datetime:
     # Fallback: zera segundos
     return ts.replace(second=0, microsecond=0)
 
+
 # Prometheus metrics
 INGEST_INSERTED_TOTAL = Counter(
     "ingest_candles_inserted_total",
-    "Total de candles inseridos via /ingest"
-# =============================================================
-# Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
-# All rights reserved. | Todos os direitos reservados.
-# Private License: This code is the exclusive property of Felipe Petracco Carmo.
-# Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
-# Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
-# Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
-# =============================================================
+    "Total de candles inseridos via /ingest",
+    # =============================================================
+    # Copyright (c) 2025 Felipe Petracco Carmo <kuramopr@gmail.com>
+    # All rights reserved. | Todos os direitos reservados.
+    # Private License: This code is the exclusive property of Felipe Petracco Carmo.
+    # Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
+    # Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+    # Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+    # =============================================================
 )
 
 INGEST_REQUESTS_TOTAL = Counter(
     "ingest_requests_total",
     "Total de requisições ao endpoint /ingest",
-    ["method", "status"]
+    ["method", "status"],
 )
 
 INGEST_DUPLICATES_TOTAL = Counter(
     "ingest_duplicates_total",
     "Total de candles duplicados (ignorados)",
-    ["symbol", "timeframe"]
+    ["symbol", "timeframe"],
 )
 
 INGEST_LATENCY = Histogram(
     "ingest_latency_seconds",
     "Latência do processamento de ingest",
-    buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]
+    buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0],
 )
 
 INGEST_BATCH_SIZE = Histogram(
     "ingest_batch_size",
     "Tamanho dos batches recebidos",
-    buckets=[1, 5, 10, 25, 50, 100, 250, 500, 1000]
+    buckets=[1, 5, 10, 25, 50, 100, 250, 500, 1000],
 )
+
 
 @router.post("/ingest")
 def ingest(data: Candle | CandleBatch, x_api_key: str | None = Header(None)):
     start_time = time.time()
-    
+
     try:
         auth(x_api_key)
-        
+
         # Convert single candle to list for unified processing
         candles = data.items if isinstance(data, CandleBatch) else [data]
         batch_size = len(candles)
@@ -152,8 +158,7 @@ def ingest(data: Candle | CandleBatch, x_api_key: str | None = Header(None)):
                     # Duplicate detected
                     status = "duplicate"
                     INGEST_DUPLICATES_TOTAL.labels(
-                        symbol=candle.symbol,
-                        timeframe=candle.timeframe
+                        symbol=candle.symbol, timeframe=candle.timeframe
                     ).inc()
                 else:
                     status = "inserted"
@@ -167,16 +172,22 @@ def ingest(data: Candle | CandleBatch, x_api_key: str | None = Header(None)):
                 }
                 logging.info("ingest_item", extra={"ingest": info})
                 details.append(info)
-        
+
         if inserted:
             INGEST_INSERTED_TOTAL.inc(inserted)
-        
+
         # Record success
         INGEST_REQUESTS_TOTAL.labels(method="POST", status="200").inc()
         INGEST_LATENCY.observe(time.time() - start_time)
-        
-        return {"ok": True, "inserted": inserted, "received": batch_size, "duplicates": batch_size - inserted, "details": details}
-        
+
+        return {
+            "ok": True,
+            "inserted": inserted,
+            "received": batch_size,
+            "duplicates": batch_size - inserted,
+            "details": details,
+        }
+
     except HTTPException as e:
         # Record auth failure
         INGEST_REQUESTS_TOTAL.labels(method="POST", status=str(e.status_code)).inc()
@@ -260,6 +271,7 @@ def ingest_batch(candles: list[Candle], x_api_key: str | None = Header(None)):
 
 class TickWrapper(BaseModel):
     """Wrapper para compatibilidade com EA que envia {"ticks": [...]}"""
+
     ticks: list[dict]
 
 
@@ -280,7 +292,11 @@ def ingest_tick(data: TickWrapper, x_api_key: str | None = Header(None)):
             symbol = t.get("symbol")
             try:
                 # Parse ts se vier em string ISO8601
-                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")) if isinstance(ts_str, str) else ts_str
+                ts = (
+                    datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    if isinstance(ts_str, str)
+                    else ts_str
+                )
             except Exception:
                 ts = None
             ts_bucket = None

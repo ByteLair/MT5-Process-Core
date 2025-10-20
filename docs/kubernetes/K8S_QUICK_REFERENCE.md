@@ -306,32 +306,38 @@ kubectl get pods -n ingress-nginx
 ## 🎯 Common Tasks
 
 ### Verificar se tudo está OK
+
 ```bash
 ./scripts/k8s-healthcheck.sh production
 ```
 
 ### Ver logs da API em tempo real
+
 ```bash
 ./scripts/k8s-logs.sh production mt5-api
 ```
 
 ### Escalar API para 5 réplicas
+
 ```bash
 ./scripts/k8s-scale.sh production mt5-api 5
 ```
 
 ### Fazer rollback da API
+
 ```bash
 ./scripts/k8s-rollback.sh production mt5-api
 ```
 
 ### Backup do database
+
 ```bash
 kubectl exec -it <postgres-pod> -n mt5-trading -- \
   pg_dump -U trader mt5_trading > backup.sql
 ```
 
 ### Restore do database
+
 ```bash
 kubectl cp backup.sql mt5-trading/<postgres-pod>:/tmp/
 kubectl exec -it <postgres-pod> -n mt5-trading -- \
@@ -339,6 +345,7 @@ kubectl exec -it <postgres-pod> -n mt5-trading -- \
 ```
 
 ### Reiniciar todos os pods
+
 ```bash
 kubectl rollout restart deployment/postgres -n mt5-trading
 kubectl rollout restart deployment/mt5-api -n mt5-trading
@@ -348,6 +355,7 @@ kubectl rollout restart deployment/grafana -n mt5-trading
 ```
 
 ### Verificar recursos (CPU/Memory)
+
 ```bash
 kubectl top pods -n mt5-trading
 kubectl describe node | grep -A 5 "Allocated resources"
@@ -385,5 +393,5 @@ helm install --help
 
 ---
 
-**Última atualização**: 18/10/2025  
+**Última atualização**: 18/10/2025
 **Versão**: 2.0.0

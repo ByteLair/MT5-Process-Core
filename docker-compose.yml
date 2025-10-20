@@ -148,7 +148,7 @@ services:
       --host 0.0.0.0
       --port 8001
       --access-log
-    
+
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8001/health >/dev/null || exit 1"]
       interval: 10s
@@ -239,7 +239,7 @@ services:
           cpus: "1"
           memory: "1g"
     mem_limit: 1g
-      
+
 
 
   pgadmin:

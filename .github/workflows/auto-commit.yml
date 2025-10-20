@@ -15,12 +15,12 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Configure Git
         run: |
           git config user.name "AutoCommit Bot"
           git config user.email "autocommit@mt5-trading-db.local"
-      
+
       - name: Check for changes
         id: check
         run: |
@@ -29,7 +29,7 @@ jobs:
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Generate commit message
         if: steps.check.outputs.has_changes == 'true'
         id: message
@@ -38,27 +38,27 @@ jobs:
           ADDED=$(git status --porcelain | grep "^??" | wc -l)
           MODIFIED=$(git status --porcelain | grep "^ M" | wc -l)
           DELETED=$(git status --porcelain | grep "^ D" | wc -l)
-          
+
           CHANGED_FILES=$(git status --porcelain | awk '{print $2}' | head -10 | sed 's/^/  - /')
-          
+
           cat > /tmp/commit_msg.txt << EOF
           chore: automated commit - $TIMESTAMP
-          
+
           Auto-generated commit by scheduled workflow
-          
+
           Changes summary:
           - Added: $ADDED file(s)
           - Modified: $MODIFIED file(s)
           - Deleted: $DELETED file(s)
-          
+
           Modified files:
           $CHANGED_FILES
-          
+
           [skip ci]
           EOF
-          
+
           echo "Commit message generated"
-      
+
       - name: Commit and push changes
         if: steps.check.outputs.has_changes == 'true'
         run: |
@@ -66,7 +66,7 @@ jobs:
           git commit -F /tmp/commit_msg.txt
           git push origin main
           echo "✅ Changes committed and pushed successfully!"
-      
+
       - name: No changes
         if: steps.check.outputs.has_changes == 'false'
         run: |

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ################################################################################
 # MT5 Trading DB - Backup Test Script
-# 
+#
 # Testa a conectividade e funcionalidade do sistema de backup
 ################################################################################
 
@@ -80,7 +80,7 @@ export PGPASSWORD="$POSTGRES_PASSWORD"
 
 if pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" &> /dev/null; then
     log_success "PostgreSQL está acessível em ${POSTGRES_HOST}:${POSTGRES_PORT}"
-    
+
     # Testar query
     if psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
         -c "SELECT 1;" &> /dev/null; then
@@ -102,25 +102,25 @@ echo ""
 if [ -n "$BACKUP_API_URL" ]; then
     log_info "4. Testando API de backup remota..."
     log_info "URL: $BACKUP_API_URL"
-    
+
     # Testar endpoint /health
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKUP_API_URL/health" 2>/dev/null || echo "000")
-    
+
     if [ "$HTTP_CODE" = "200" ]; then
         log_success "API de backup está acessível (HTTP $HTTP_CODE)"
-        
+
         # Testar autenticação
         AUTH_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${BACKUP_API_TOKEN}" \
             "$BACKUP_API_URL/api/backup/list" 2>/dev/null || echo "000")
-        
+
         if [ "$AUTH_CODE" = "200" ]; then
             log_success "Autenticação com API: OK"
-            
+
             # Listar backups existentes
             RESPONSE=$(curl -s -H "Authorization: Bearer ${BACKUP_API_TOKEN}" \
                 "$BACKUP_API_URL/api/backup/list?limit=5")
-            
+
             if command -v jq &> /dev/null; then
                 BACKUP_COUNT=$(echo "$RESPONSE" | jq -r '.total // 0')
                 log_info "Backups remotos encontrados: $BACKUP_COUNT"
@@ -154,7 +154,7 @@ fi
 
 if systemctl is-active mt5-backup.timer &> /dev/null; then
     log_success "Timer está ativo"
-    
+
     # Mostrar próxima execução
     NEXT_RUN=$(systemctl list-timers mt5-backup.timer --no-pager | grep mt5-backup | awk '{print $1, $2, $3}')
     log_info "Próxima execução: $NEXT_RUN"

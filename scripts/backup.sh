@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ################################################################################
 # MT5 Trading DB Backup Script with Remote Upload
-# 
+#
 # Features:
 #   - PostgreSQL database backup using pg_dump
 #   - Compression with gzip (level 9)
@@ -121,7 +121,7 @@ trap cleanup_on_error ERR
 # Função para verificar dependências
 check_dependencies() {
     local missing_deps=()
-    
+
     for cmd in pg_dump curl sha256sum; do
         if ! command -v "$cmd" &> /dev/null; then
             missing_deps+=("$cmd")
@@ -138,7 +138,7 @@ check_dependencies() {
             fi
         fi
     fi
-    
+
     if [ ${#missing_deps[@]} -gt 0 ]; then
         log_error "Dependências ausentes: ${missing_deps[*]}"
         log_error "Instale: sudo apt-get install postgresql-client curl coreutils"
@@ -165,7 +165,7 @@ perform_database_backup() {
     log_info "Banco: ${DB}"
     log_info "Host: ${HOST}:${PORT}"
     log_info "Arquivo: ${BACKUP_FILE}"
-    
+
     local start_time=$(date +%s)
 
     # Escolher estratégia de dump
@@ -228,7 +228,7 @@ perform_database_backup() {
 
 generate_checksum() {
     log_info "Gerando checksum SHA256..."
-    
+
     if sha256sum "$BACKUP_FILE" > "$CHECKSUM_FILE"; then
         local checksum=$(cut -d' ' -f1 "$CHECKSUM_FILE")
         log_success "Checksum gerado: ${checksum}"
@@ -242,7 +242,7 @@ generate_checksum() {
 
 verify_backup_integrity() {
     log_info "Verificando integridade do backup..."
-    
+
     if sha256sum -c "$CHECKSUM_FILE" &> /dev/null; then
         log_success "Integridade verificada: OK"
         return 0
@@ -261,27 +261,27 @@ upload_to_remote_server() {
         log_warn "BACKUP_API_URL não configurada, pulando upload remoto"
         return 0
     fi
-    
+
     if [ -z "$BACKUP_API_TOKEN" ]; then
         log_error "BACKUP_API_TOKEN não configurada"
         return 1
     fi
-    
+
     log_info "=========================================="
     log_info "UPLOAD PARA SERVIDOR REMOTO"
     log_info "=========================================="
     log_info "URL: ${BACKUP_API_URL}"
-    
+
     local filename=$(basename "$BACKUP_FILE")
     local checksum=$(cut -d' ' -f1 "$CHECKSUM_FILE")
     local file_size=$(stat -f%z "$BACKUP_FILE" 2>/dev/null || stat -c%s "$BACKUP_FILE")
-    
+
     local retry=0
     local success=false
-    
+
     while [ $retry -lt $MAX_RETRIES ]; do
         log_info "Tentativa $((retry + 1))/${MAX_RETRIES}..."
-        
+
         # Realizar upload com curl
         local response=$(curl -s -w "\n%{http_code}" \
             -X POST "${BACKUP_API_URL}/api/backup/upload" \
@@ -291,26 +291,26 @@ upload_to_remote_server() {
             -H "X-DB-Name: ${DB}" \
             -F "file=@${BACKUP_FILE}" \
             2>&1)
-        
+
         local http_code=$(echo "$response" | tail -n1)
         local body=$(echo "$response" | head -n-1)
-        
+
         if [ "$http_code" = "200" ]; then
             log_success "Upload concluído com sucesso!"
             log_info "Resposta: ${body}"
-            
+
             # Extrair backup_id da resposta JSON (se possível)
             if command -v jq &> /dev/null; then
                 local backup_id=$(echo "$body" | jq -r '.backup_id // empty')
                 [ -n "$backup_id" ] && log_info "Backup ID: ${backup_id}"
             fi
-            
+
             success=true
             break
         else
             log_error "Upload falhou com HTTP ${http_code}"
             log_error "Resposta: ${body}"
-            
+
             retry=$((retry + 1))
             if [ $retry -lt $MAX_RETRIES ]; then
                 local wait_time=$((RETRY_DELAY * retry))
@@ -319,7 +319,7 @@ upload_to_remote_server() {
             fi
         fi
     done
-    
+
     if [ "$success" = true ]; then
         return 0
     else
@@ -337,26 +337,26 @@ rotate_local_backups() {
     log_info "ROTAÇÃO DE BACKUPS LOCAIS"
     log_info "=========================================="
     log_info "Mantendo últimos ${KEEP_LOCAL_BACKUPS} backups"
-    
+
     # Lista backups ordenados por data (mais antigos primeiro)
     local backups=($(ls -1t "${BACKUP_DIR}"/*.dump 2>/dev/null || true))
     local total=${#backups[@]}
-    
+
     log_info "Total de backups locais: ${total}"
-    
+
     if [ "$total" -gt "$KEEP_LOCAL_BACKUPS" ]; then
         local to_remove=$((total - KEEP_LOCAL_BACKUPS))
         log_info "Removendo ${to_remove} backup(s) antigo(s)..."
-        
+
         # Remove backups excedentes (do final da lista, que são os mais antigos)
         for ((i=KEEP_LOCAL_BACKUPS; i<total; i++)); do
             local old_backup="${backups[$i]}"
             local old_checksum="${old_backup}.sha256"
-            
+
             log_info "Removendo: $(basename "$old_backup")"
             rm -f "$old_backup" "$old_checksum"
         done
-        
+
         log_success "Rotação concluída"
     else
         log_info "Nenhum backup precisa ser removido"
@@ -370,7 +370,7 @@ rotate_local_backups() {
 generate_report() {
     local status=$1
     local duration=$2
-    
+
     log_info "=========================================="
     log_info "RELATÓRIO DE BACKUP"
     log_info "=========================================="
@@ -379,13 +379,13 @@ generate_report() {
     log_info "Duração total: ${duration}s"
     log_info "Arquivo: ${BACKUP_FILE}"
     log_info "Log: ${LOG_FILE}"
-    
+
     if [ "$status" = "SUCCESS" ]; then
         log_info "Backup local: $([ -f "$BACKUP_FILE" ] && echo "✓ Disponível" || echo "✗ Não encontrado")"
         log_info "Checksum: $([ -f "$CHECKSUM_FILE" ] && echo "✓ Gerado" || echo "✗ Não gerado")"
         log_info "Upload remoto: $([ -n "$BACKUP_API_URL" ] && echo "✓ Configurado" || echo "⊝ Não configurado")"
     fi
-    
+
     log_info "=========================================="
 }
 
@@ -414,12 +414,12 @@ check_remote_health() {
 main() {
     local script_start=$(date +%s)
     local exit_code=0
-    
+
     log_info "=========================================="
     log_info "MT5 TRADING DB - BACKUP SYSTEM"
     log_info "Versão: 1.0.0"
     log_info "=========================================="
-    
+
     # Verificar dependências
     check_dependencies
 
@@ -428,13 +428,13 @@ main() {
         log_error "Abortando backup: endpoint remoto indisponível."
         exit 2
     fi
-    
+
     # Executar backup
     if ! perform_database_backup; then
         log_error "Backup do banco de dados falhou"
         exit_code=1
     fi
-    
+
     # Gerar e verificar checksum
     if [ $exit_code -eq 0 ]; then
         if ! generate_checksum; then
@@ -445,7 +445,7 @@ main() {
             exit_code=1
         fi
     fi
-    
+
     # Upload remoto (não bloqueia o sucesso do backup local)
     if [ $exit_code -eq 0 ] && [ -n "$BACKUP_API_URL" ]; then
         if ! upload_to_remote_server; then
@@ -453,16 +453,16 @@ main() {
             # Não altera exit_code para permitir que backup local seja considerado sucesso
         fi
     fi
-    
+
     # Rotação de backups locais
     if [ $exit_code -eq 0 ]; then
         rotate_local_backups
     fi
-    
+
     # Relatório final
     local script_end=$(date +%s)
     local total_duration=$((script_end - script_start))
-    
+
     if [ $exit_code -eq 0 ]; then
         generate_report "SUCCESS" "$total_duration"
         log_success "✓ BACKUP CONCLUÍDO COM SUCESSO!"
@@ -470,7 +470,7 @@ main() {
         generate_report "FAILED" "$total_duration"
         log_error "✗ BACKUP FALHOU!"
     fi
-    
+
     exit $exit_code
 }
 

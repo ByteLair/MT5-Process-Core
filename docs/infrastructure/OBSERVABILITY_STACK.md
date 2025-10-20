@@ -1,6 +1,7 @@
 # Sistema de Observabilidade: Loki + Jaeger + Prometheus
 
 ## 📋 Índice
+
 - [Visão Geral](#visão-geral)
 - [Arquitetura](#arquitetura)
 - [Loki - Agregação de Logs](#loki---agregação-de-logs)
@@ -19,19 +20,19 @@ Stack completa de observabilidade para o MT5 Trading System:
 
 | Componente | Função | Porta | URL |
 |------------|--------|-------|-----|
-| **Loki** | Agregação de logs | 3100 | http://192.168.15.20:3100 |
+| **Loki** | Agregação de logs | 3100 | <http://192.168.15.20:3100> |
 | **Promtail** | Coleta de logs | 9080 | - |
-| **Jaeger** | Distributed tracing | 16686 | http://192.168.15.20:16686 |
-| **Prometheus** | Métricas time-series | 9090 | http://192.168.15.20:9090 |
-| **Grafana** | Dashboards | 3000 | http://192.168.15.20:3000 |
+| **Jaeger** | Distributed tracing | 16686 | <http://192.168.15.20:16686> |
+| **Prometheus** | Métricas time-series | 9090 | <http://192.168.15.20:9090> |
+| **Grafana** | Dashboards | 3000 | <http://192.168.15.20:3000> |
 
 ### Benefícios
 
-✅ **Logs Centralizados**: Todos os logs em um único lugar  
-✅ **Correlação**: Traces → Logs → Metrics  
-✅ **Performance**: Identificar gargalos com tracing  
-✅ **Debugging**: Rastrear requests através de microserviços  
-✅ **Alertas**: Notificações proativas de problemas  
+✅ **Logs Centralizados**: Todos os logs em um único lugar
+✅ **Correlação**: Traces → Logs → Metrics
+✅ **Performance**: Identificar gargalos com tracing
+✅ **Debugging**: Rastrear requests através de microserviços
+✅ **Alertas**: Notificações proativas de problemas
 
 ---
 
@@ -99,6 +100,7 @@ limits_config:
 ### Fontes de Logs
 
 #### 1. Docker Containers
+
 ```yaml
 # Promtail coleta logs de containers via JSON files
 - job_name: docker
@@ -106,6 +108,7 @@ limits_config:
 ```
 
 #### 2. API MT5
+
 ```yaml
 # Logs da aplicação
 - job_name: mt5_api
@@ -113,6 +116,7 @@ limits_config:
 ```
 
 #### 3. Health Checks
+
 ```yaml
 # Sistema de monitoramento
 - job_name: health_checks
@@ -120,6 +124,7 @@ limits_config:
 ```
 
 #### 4. PostgreSQL
+
 ```yaml
 # Logs do banco de dados
 - job_name: postgres
@@ -198,7 +203,7 @@ groups:
           sum by (job) (rate({level="ERROR"}[5m])) > 0.05
         annotations:
           summary: "Taxa de erro alta em {{ $labels.job }}"
-          
+
       - alert: APIDown
         expr: |
           absent_over_time({job="mt5_api"}[5m])
@@ -214,7 +219,7 @@ groups:
 
 - **Storage**: Badger (local)
 - **UI Port**: 16686
-- **Collector Ports**: 
+- **Collector Ports**:
   - gRPC: 14250
   - HTTP: 14268
   - OTLP gRPC: 4317
@@ -265,8 +270,8 @@ from tracing import add_span_attributes, add_span_event
 span = trace.get_current_span()
 
 # Adicionar atributos
-add_span_attributes(span, 
-    user_id=123, 
+add_span_attributes(span,
+    user_id=123,
     symbol="EURUSD",
     timeframe="M1"
 )
@@ -302,7 +307,7 @@ ENVIRONMENT=production
 
 ### Navegação no Jaeger UI
 
-1. **Search**: http://192.168.15.20:16686/search
+1. **Search**: <http://192.168.15.20:16686/search>
    - Filtrar por serviço, operação, tags
    - Buscar traces com erros
 
@@ -370,7 +375,7 @@ active_connections = Gauge(
 rate(http_requests_total[5m])
 
 # Latência p95
-histogram_quantile(0.95, 
+histogram_quantile(0.95,
   rate(http_request_duration_seconds_bucket[5m])
 )
 
@@ -438,28 +443,31 @@ Configurado em `grafana/provisioning/datasources/datasources.yml`:
 {job="mt5_api"} |~ "traceID=\\w+"
 
 # Erros com trace context
-{job="mt5_api", level="ERROR"} 
-  | json 
+{job="mt5_api", level="ERROR"}
+  | json
   | line_format "{{.message}} [trace={{.traceID}}]"
 ```
 
 ### Troubleshooting Common Issues
 
 #### 1. API Lenta
+
 ```logql
 # Encontrar requests lentos no log
-{job="mt5_api"} 
-  | json 
-  | duration > 1000 
+{job="mt5_api"}
+  | json
+  | duration > 1000
   | line_format "Slow request: {{.path}} - {{.duration}}ms"
 ```
 
 Então no Jaeger:
+
 ```
 minDuration=1s operation=GET /signals/latest
 ```
 
 #### 2. Erros no Database
+
 ```logql
 # Logs de erro do PostgreSQL
 {job="postgres", level="ERROR"}
@@ -467,12 +475,14 @@ minDuration=1s operation=GET /signals/latest
 ```
 
 #### 3. Memory Leaks
+
 ```promql
 # Crescimento de memória
 rate(container_memory_usage_bytes{container="mt5_api"}[1h])
 ```
 
 #### 4. Rate Limiting
+
 ```logql
 # Requests rejeitados
 {job="mt5_api"} |~ "rate limit|too many requests"
@@ -498,7 +508,7 @@ rate(container_memory_usage_bytes{container="mt5_api"}[1h])
 #### Painel: Top 10 Slow Endpoints
 
 ```promql
-topk(10, 
+topk(10,
   histogram_quantile(0.95,
     sum by (endpoint) (
       rate(http_request_duration_seconds_bucket[5m])
@@ -514,12 +524,14 @@ topk(10,
 ### Loki não está recebendo logs
 
 1. **Verificar Promtail**:
+
 ```bash
 docker logs mt5_promtail
 curl http://localhost:9080/metrics
 ```
 
 2. **Verificar paths dos logs**:
+
 ```bash
 # Promtail deve ter acesso aos logs
 docker exec mt5_promtail ls -la /var/lib/docker/containers/
@@ -527,6 +539,7 @@ docker exec mt5_promtail ls -la /app/logs/
 ```
 
 3. **Testar ingestão manual**:
+
 ```bash
 curl -H "Content-Type: application/json" \
   -XPOST -s "http://localhost:3100/loki/api/v1/push" \
@@ -536,6 +549,7 @@ curl -H "Content-Type: application/json" \
 ### Jaeger não está recebendo traces
 
 1. **Verificar endpoint**:
+
 ```bash
 # Testar collector
 curl http://localhost:14268/api/traces
@@ -545,11 +559,13 @@ curl http://localhost:14269/
 ```
 
 2. **Verificar variáveis de ambiente da API**:
+
 ```bash
 docker exec mt5_api env | grep JAEGER
 ```
 
 3. **Logs da aplicação**:
+
 ```bash
 docker logs mt5_api | grep -i jaeger
 ```
@@ -557,6 +573,7 @@ docker logs mt5_api | grep -i jaeger
 ### Grafana não mostra dados
 
 1. **Testar datasources**:
+
 ```bash
 # Loki
 curl http://localhost:3100/ready
@@ -579,6 +596,7 @@ curl http://localhost:9090/-/healthy
 ### Logging
 
 1. **Structured Logging**: Use JSON format
+
 ```python
 import logging
 import json
@@ -598,6 +616,7 @@ logger.info(json.dumps({
    - `DEBUG`: Informações detalhadas para debugging
 
 3. **Incluir TraceID**: Sempre que possível
+
 ```python
 span = trace.get_current_span()
 trace_id = span.get_span_context().trace_id
@@ -607,6 +626,7 @@ logger.info(f"Processing request [traceID={trace_id:032x}]")
 ### Tracing
 
 1. **Span Names**: Usar nomes descritivos
+
 ```python
 # ❌ Ruim
 with tracer.start_as_current_span("func1"):
@@ -616,6 +636,7 @@ with tracer.start_as_current_span("generate_trading_signal"):
 ```
 
 2. **Attributes**: Adicionar contexto relevante
+
 ```python
 span.set_attribute("symbol", symbol)
 span.set_attribute("timeframe", timeframe)
@@ -631,6 +652,7 @@ span.set_attribute("user_id", user_id)
    - Exemplo: `mt5_http_requests_total`
 
 2. **Labels**: Não usar valores de alta cardinalidade
+
 ```python
 # ❌ Ruim (user_id tem muitos valores)
 counter.labels(user_id=123, endpoint="/signals")
@@ -640,6 +662,7 @@ counter.labels(endpoint="/signals", method="GET")
 ```
 
 3. **Histograms**: Definir buckets apropriados
+
 ```python
 Histogram(
     'http_request_duration_seconds',
@@ -658,6 +681,7 @@ Histogram(
 ### Performance
 
 1. **Sampling de Traces**: Em produção com alto volume
+
 ```python
 # Configurar sampling ratio (ex: 10%)
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
@@ -668,6 +692,7 @@ sampler = TraceIdRatioBased(0.1)
 2. **Batching**: Loki e Jaeger usam batching por padrão
 
 3. **Rate Limiting**: Configurado no Loki para proteger
+
 ```yaml
 limits_config:
   ingestion_rate_mb: 10
@@ -704,14 +729,15 @@ curl http://localhost:3000/api/health
 
 ### 3. Acessar interfaces
 
-- **Grafana**: http://192.168.15.20:3000 (admin/admin)
-- **Jaeger UI**: http://192.168.15.20:16686
-- **Prometheus**: http://192.168.15.20:9090
-- **Loki** (API): http://192.168.15.20:3100
+- **Grafana**: <http://192.168.15.20:3000> (admin/admin)
+- **Jaeger UI**: <http://192.168.15.20:16686>
+- **Prometheus**: <http://192.168.15.20:9090>
+- **Loki** (API): <http://192.168.15.20:3100>
 
 ### 4. Importar dashboards no Grafana
 
 Os dashboards são provisionados automaticamente em:
+
 - `grafana/dashboards/loki-logs-dashboard.json`
 - `grafana/dashboards/health-check-dashboard.json`
 
@@ -743,6 +769,6 @@ curl http://localhost:16686/api/traces?service=mt5-trading-api
 
 ---
 
-**Última atualização**: 2025-10-18  
-**Versão**: 1.0.0  
+**Última atualização**: 2025-10-18
+**Versão**: 1.0.0
 **Autor**: MT5 Trading System Team

@@ -1,5 +1,6 @@
 # api/app/symbols.py
 import os
+
 import pandas as pd
 from fastapi import APIRouter
 from sqlalchemy import create_engine
@@ -8,6 +9,7 @@ router = APIRouter(tags=["dashboard"])
 
 DB_URL = os.getenv("DATABASE_URL", "postgresql://trader:trader123@db:5432/mt5_trading")
 engine = create_engine(DB_URL)
+
 
 @router.get("/symbols")
 def symbols():

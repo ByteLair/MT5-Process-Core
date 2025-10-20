@@ -1,11 +1,15 @@
-import os, joblib, pandas as pd, psycopg2
+import os
+
+import joblib
+import pandas as pd
+import psycopg2
 from sklearn.ensemble import RandomForestClassifier
 
 conn = psycopg2.connect(
-    dbname=os.getenv("DB_NAME","mt5_trading"),
-    user=os.getenv("DB_USER","trader"),
-    password=os.getenv("DB_PASS","trader123"),
-    host=os.getenv("DB_HOST","db"),
+    dbname=os.getenv("DB_NAME", "mt5_trading"),
+    user=os.getenv("DB_USER", "trader"),
+    password=os.getenv("DB_PASS", "trader123"),
+    host=os.getenv("DB_HOST", "db"),
 )
 sql = """
 SELECT f.mean_close, f.volatility, f.pct_change, l.fwd_ret_5 AS fwd_ret_5
@@ -23,10 +27,10 @@ if df.empty:
 
 # criar label binário a partir de fwd_ret_5 (ex.: positivo -> 1)
 df = df.dropna()
-df['label'] = (df['fwd_ret_5'] > 0).astype(int)
+df["label"] = (df["fwd_ret_5"] > 0).astype(int)
 
-X = df[['mean_close','volatility','pct_change']]
-y = df['label']
+X = df[["mean_close", "volatility", "pct_change"]]
+y = df["label"]
 model = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
 model.fit(X, y)
 os.makedirs("/models", exist_ok=True)

@@ -43,12 +43,12 @@ jobs:
           echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
           echo "Branch: ${{ github.event.workflow_run.head_branch }}"
           echo "Commit: ${{ github.event.workflow_run.head_sha }}"
-          
+
           if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
             echo "❌ CI/CD failed - skipping snapshot creation"
             exit 1
           fi
-          
+
           echo "✅ CI/CD passed - proceeding with snapshot"
 
       - name: Checkout repository
@@ -60,17 +60,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           echo "🔍 Verifying environment..."
           test -d scripts/backup || { echo "❌ scripts/backup not found"; exit 1; }
           test -f scripts/backup/create-snapshot.sh || { echo "❌ create-snapshot.sh not found"; exit 1; }
-          
+
           echo "🔧 Setting permissions..."
           chmod +x scripts/backup/create-snapshot.sh
-          
+
           echo "📁 Creating backup directory..."
           mkdir -p /home/felipe/backups/snapshots
-          
+
           echo "✅ Preflight checks complete"
 
       - name: Create snapshot
@@ -78,45 +78,45 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           echo "📸 Starting snapshot creation..."
-          
+
           # Build options
           SNAPSHOT_OPTS=""
-          
+
           # Include logs if requested
           if [ "${{ github.event.inputs.include_logs || 'false' }}" == "true" ]; then
             echo "📝 Including logs in snapshot"
             SNAPSHOT_OPTS="$SNAPSHOT_OPTS --full"
           fi
-          
+
           # Upload to remote for scheduled runs or if explicitly requested
           if [ "${{ github.event_name }}" == "schedule" ] || [ "${{ github.event.inputs.upload_remote || 'false' }}" == "true" ]; then
             echo "☁️  Remote upload enabled"
             SNAPSHOT_OPTS="$SNAPSHOT_OPTS --remote"
           fi
-          
+
           # Execute snapshot script
           echo "🚀 Running: ./scripts/backup/create-snapshot.sh ${SNAPSHOT_OPTS}"
           ./scripts/backup/create-snapshot.sh ${SNAPSHOT_OPTS}
-          
+
           # Get snapshot details
           echo "📊 Extracting snapshot information..."
           FILE=$(ls -t /home/felipe/backups/snapshots/mt5-snapshot-*.tar.gz 2>/dev/null | head -1)
-          
+
           if [ -z "$FILE" ]; then
             echo "❌ No snapshot file found"
             exit 1
           fi
-          
+
           NAME=$(basename "$FILE" .tar.gz)
           SIZE=$(du -sh "$FILE" | cut -f1)
-          
+
           echo "✅ Snapshot created successfully"
           echo "   Name: $NAME"
           echo "   Size: $SIZE"
           echo "   Path: $FILE"
-          
+
           # Set outputs
           echo "snapshot_path=$FILE" >> "$GITHUB_OUTPUT"
           echo "snapshot_name=$NAME" >> "$GITHUB_OUTPUT"
@@ -126,18 +126,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           NAME="${{ steps.snapshot.outputs.snapshot_name }}"
           BACKUP_DIR="/home/felipe/backups/snapshots"
-          
+
           echo "🔍 Verifying snapshot integrity: $NAME"
-          
+
           cd "$BACKUP_DIR"
-          
+
           # Extract snapshot
           echo "📦 Extracting snapshot for verification..."
           tar xzf "${NAME}.tar.gz"
-          
+
           # Verify checksums if available
           if [ -f "${NAME}/checksums.sha256" ]; then
             echo "🔐 Verifying checksums..."
@@ -157,25 +157,25 @@ jobs:
         run: |
           SNAPSHOT_NAME="${{ steps.snapshot.outputs.snapshot_name }}"
           SNAPSHOT_SIZE="${{ steps.snapshot.outputs.snapshot_size }}"
-          
+
           cat >> $GITHUB_STEP_SUMMARY << EOF
           # 📸 Snapshot Report
-          
-          **Snapshot:** \`${SNAPSHOT_NAME}\`  
-          **Size:** ${SNAPSHOT_SIZE}  
-          **Created:** $(date)  
-          **Trigger:** ${{ github.event_name }}  
-          **Branch:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}  
-          **Commit:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}  
-          
+
+          **Snapshot:** \`${SNAPSHOT_NAME}\`
+          **Size:** ${SNAPSHOT_SIZE}
+          **Created:** $(date)
+          **Trigger:** ${{ github.event_name }}
+          **Branch:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+          **Commit:** ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
           ## Status
           - ✅ Snapshot created successfully
           - ✅ Integrity verified
           ${{ github.event_name == 'workflow_run' && '- ✅ CI/CD passed before snapshot' || '' }}
-          
+
           ## Location
           \`/home/felipe/backups/snapshots/${SNAPSHOT_NAME}.tar.gz\`
-          
+
           ## Restore Command
           \`\`\`bash
           ./scripts/backup/restore-snapshot.sh ${SNAPSHOT_NAME}
@@ -186,20 +186,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           echo "🧹 Cleaning up old snapshots..."
           cd /home/felipe/backups/snapshots
-          
+
           # Keep last 10 compressed snapshots
           echo "📦 Keeping last 10 compressed snapshots..."
           ls -t mt5-snapshot-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f || true
-          
+
           # Keep last 5 extracted directories
           echo "📁 Keeping last 5 extracted directories..."
           ls -td mt5-snapshot-*/ 2>/dev/null | tail -n +6 | xargs -r rm -rf || true
-          
+
           echo "✅ Cleanup complete"
-          
+
           # Show remaining snapshots
           echo ""
           echo "📊 Current snapshots:"
@@ -209,7 +209,7 @@ jobs:
         shell: bash
         run: |
           SNAPSHOT_INDEX="/home/felipe/backups/snapshots/snapshots-index.txt"
-          
+
           if [ -f "$SNAPSHOT_INDEX" ]; then
             echo "📋 Last 5 snapshots in index:"
             tail -5 "$SNAPSHOT_INDEX"
@@ -232,17 +232,17 @@ jobs:
         run: |
           # Try to get from previous job output first
           NAME="${{ needs.create-snapshot.outputs.snapshot_name }}"
-          
+
           # Fallback to finding latest if not available
           if [ -z "$NAME" ]; then
             NAME=$(ls -t /home/felipe/backups/snapshots/mt5-snapshot-*.tar.gz 2>/dev/null | head -1 | xargs -I{} basename {} .tar.gz)
           fi
-          
+
           if [ -z "$NAME" ]; then
             echo "❌ No snapshot found for testing"
             exit 1
           fi
-          
+
           echo "snapshot_name=$NAME" >> "$GITHUB_OUTPUT"
           echo "📦 Testing snapshot: $NAME"
 
@@ -250,28 +250,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           SNAPSHOT_NAME="${{ steps.latest.outputs.snapshot_name }}"
           SNAPSHOT_FILE="/home/felipe/backups/snapshots/${SNAPSHOT_NAME}.tar.gz"
-          
+
           echo "🧪 Testing restore of: $SNAPSHOT_NAME"
-          
+
           # Create temp directory for test
           RESTORE_DIR=$(mktemp -d)
           echo "📁 Temp directory: $RESTORE_DIR"
-          
+
           # Extract snapshot
           echo "📦 Extracting snapshot..."
           tar xzf "$SNAPSHOT_FILE" -C "$RESTORE_DIR"
-          
+
           SNAPSHOT_DIR="$RESTORE_DIR/$SNAPSHOT_NAME"
-          
+
           # Verify snapshot contents
           echo "🔍 Checking snapshot contents..."
-          
+
           if [ -f "$SNAPSHOT_DIR/repository.bundle" ]; then
             echo "✅ Git bundle found"
-            
+
             # Verify git bundle
             echo "🔐 Verifying git bundle..."
             if git bundle verify "$SNAPSHOT_DIR/repository.bundle"; then
@@ -284,17 +284,17 @@ jobs:
             echo "❌ Git bundle not found"
             exit 1
           fi
-          
+
           [ -f "$SNAPSHOT_DIR/database-full.sql.gz" ] && echo "✅ Database backup found" || echo "⚠️  Database backup not found"
           [ -f "$SNAPSHOT_DIR/database-mt5_trading.sql.gz" ] && echo "✅ MT5 database backup found" || echo "⚠️  MT5 database backup not found"
           [ -d "$SNAPSHOT_DIR/volumes" ] && echo "✅ Volume backups found" || echo "⚠️  Volume backups not found"
           [ -f "$SNAPSHOT_DIR/SNAPSHOT_INFO.txt" ] && echo "✅ Snapshot info found" || echo "⚠️  Snapshot info not found"
           [ -f "$SNAPSHOT_DIR/checksums.sha256" ] && echo "✅ Checksums found" || echo "⚠️  Checksums not found"
-          
+
           # Cleanup
           echo "🧹 Cleaning up test directory..."
           rm -rf "$RESTORE_DIR"
-          
+
           echo "✅ Snapshot restore test passed"
 
   notify:
@@ -308,21 +308,21 @@ jobs:
         run: |
           CREATE_STATUS="${{ needs.create-snapshot.result }}"
           TEST_STATUS="${{ needs.test-restore.result }}"
-          
+
           cat >> $GITHUB_STEP_SUMMARY << EOF
           # 📊 Snapshot Workflow Summary
-          
+
           ## Job Results
-          
+
           | Job | Status |
           |-----|--------|
           | Create Snapshot | $( [ "$CREATE_STATUS" == "success" ] && echo "✅ Success" || echo "❌ Failed" ) |
           | Test Restore | $( [ "$TEST_STATUS" == "success" ] && echo "✅ Success" || [ "$TEST_STATUS" == "skipped" ] && echo "⏭️ Skipped" || echo "❌ Failed" ) |
-          
+
           ## Details
-          
+
           EOF
-          
+
           if [ "$CREATE_STATUS" == "success" ]; then
             echo "✅ Snapshot created successfully"
             echo "- Snapshot Name: ${{ needs.create-snapshot.outputs.snapshot_name }}"
@@ -330,7 +330,7 @@ jobs:
           else
             echo "❌ Snapshot creation failed"
           fi
-          
+
           if [ "$TEST_STATUS" == "success" ]; then
             echo "✅ Restore test passed"
           elif [ "$TEST_STATUS" == "skipped" ]; then

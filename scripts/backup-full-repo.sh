@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ################################################################################
 # MT5 Trading DB - Full Repository Backup Script
-# 
+#
 # Features:
 #   - Compresses entire repository (excluding libraries, logs, volumes)
 #   - Uploads to remote backup server via API
@@ -75,25 +75,25 @@ main() {
     log_info "=========================================="
     log_info "MT5 TRADING DB - FULL REPOSITORY BACKUP"
     log_info "=========================================="
-    
+
     # Validar configuração
     if [ -z "$BACKUP_API_URL" ]; then
         log_error "BACKUP_API_URL não configurada"
         exit 1
     fi
-    
+
     if [ -z "$BACKUP_API_TOKEN" ]; then
         log_error "BACKUP_API_TOKEN não configurada"
         exit 1
     fi
-    
+
     # Criar backup do repositório
     log_info "Compactando repositório..."
     log_info "Diretório: $REPO_DIR"
     log_info "Arquivo: $BACKUP_FILE"
-    
+
     cd "$REPO_DIR"
-    
+
     if tar --exclude='logs' \
            --exclude='__pycache__' \
            --exclude='*.dump' \
@@ -107,7 +107,7 @@ main() {
            --exclude='*.pyo' \
            --exclude='.git' \
            -czf "$BACKUP_FILE" .; then
-        
+
         local file_size=$(stat -c%s "$BACKUP_FILE")
         local formatted_size=$(numfmt --to=iec-i --suffix=B "$file_size" 2>/dev/null || echo "${file_size} bytes")
         log_success "Backup compactado com sucesso!"
@@ -116,14 +116,14 @@ main() {
         log_error "Falha ao compactar repositório"
         exit 1
     fi
-    
+
     # Upload para servidor remoto
     log_info "=========================================="
     log_info "UPLOAD PARA SERVIDOR REMOTO"
     log_info "=========================================="
     log_info "URL: ${BACKUP_API_URL}"
     log_info "Timeout: ${MAX_UPLOAD_TIME}s"
-    
+
     local response=$(curl -s -w "\n%{http_code}" \
         -X POST "${BACKUP_API_URL}/api/backup/upload" \
         -H "Authorization: Bearer ${BACKUP_API_TOKEN}" \
@@ -133,14 +133,14 @@ main() {
         -F "file=@${BACKUP_FILE}" \
         --max-time "$MAX_UPLOAD_TIME" \
         2>&1)
-    
+
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | head -n-1)
-    
+
     if [ "$http_code" = "200" ]; then
         log_success "Upload concluído com sucesso!"
         log_info "Resposta: ${body}"
-        
+
         # Extrair informações da resposta JSON (se possível)
         if command -v jq &> /dev/null; then
             local remote_path=$(echo "$body" | jq -r '.path // empty')
@@ -148,7 +148,7 @@ main() {
             [ -n "$remote_path" ] && log_info "Caminho remoto: ${remote_path}"
             [ -n "$remote_sha256" ] && log_info "SHA256: ${remote_sha256}"
         fi
-        
+
         log_info "=========================================="
         log_success "✓ BACKUP DO REPOSITÓRIO CONCLUÍDO!"
         log_info "=========================================="

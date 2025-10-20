@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ################################################################################
 # MT5 Trading DB - Backup System Installation Script
-# 
+#
 # Este script configura todo o sistema de backup automático:
 #   - Cria diretórios necessários
 #   - Configura permissões
@@ -39,7 +39,7 @@ log_error() {
 }
 
 # Verificar se está rodando como root
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then
     log_error "Este script precisa ser executado como root"
     log_info "Use: sudo $0"
     exit 1
@@ -152,19 +152,19 @@ if [[ $REPLY =~ ^[Ss]$ ]]; then
     log_info "=========================================="
     log_info "EXECUTANDO BACKUP DE TESTE"
     log_info "=========================================="
-    
+
     if systemctl start mt5-backup.service; then
         log_success "Backup de teste iniciado"
         log_info "Aguardando conclusão..."
         sleep 5
-        
+
         log_info "Status do serviço:"
         systemctl status mt5-backup.service --no-pager | tail -n 20
-        
+
         echo ""
         log_info "Verificando backups criados:"
         ls -lh /var/backups/mt5/*.dump 2>/dev/null || log_warn "Nenhum backup encontrado ainda"
-        
+
         echo ""
         log_info "Últimas linhas do log:"
         ls -t /var/backups/mt5/logs/*.log 2>/dev/null | head -n1 | xargs tail -n 20 || log_warn "Log não encontrado"

@@ -4,20 +4,20 @@ Health Check API - Simple web interface for health check logs
 Provides REST API and simple HTML dashboard
 """
 
-
 # Flask is used for the web API and dashboard
-from flask import Flask, jsonify, render_template_string, request
-# SQLite3 is used for local health check storage
-import sqlite3
 import os
 
+# SQLite3 is used for local health check storage
+import sqlite3
+
+from flask import Flask, jsonify, render_template_string, request
 
 # Initialize Flask app
 app = Flask(__name__)
 
 
 # Path to health check database
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'logs', 'health-checks', 'health_checks.db')
+DB_PATH = os.path.join(os.path.dirname(__file__), "..", "logs", "health-checks", "health_checks.db")
 
 
 def get_db():
@@ -30,7 +30,8 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/')
+
+@app.route("/")
 def dashboard():
     """
     Render the main dashboard HTML page.
@@ -177,19 +178,19 @@ def dashboard():
                     // Load stats
                     const statsRes = await fetch('/api/stats');
                     const stats = await statsRes.json();
-                    
+
                     document.getElementById('total-checks').textContent = stats.total_checks;
                     document.getElementById('healthy-checks').textContent = stats.healthy_checks;
                     document.getElementById('unhealthy-checks').textContent = stats.unhealthy_checks;
                     document.getElementById('active-alerts').textContent = stats.active_alerts;
-                    
+
                     // Load recent checks
                     const checksRes = await fetch('/api/recent-checks?limit=20');
                     const checks = await checksRes.json();
-                    
+
                     const tbody = document.getElementById('checks-tbody');
                     tbody.innerHTML = '';
-                    
+
                     checks.forEach(check => {
                         const row = tbody.insertRow();
                         row.innerHTML = `
@@ -201,11 +202,11 @@ def dashboard():
                             <td>${check.details || '-'}</td>
                         `;
                     });
-                    
+
                     // Load alerts
                     const alertsRes = await fetch('/api/alerts');
                     const alerts = await alertsRes.json();
-                    
+
                     const alertsDiv = document.getElementById('alerts-container');
                     if (alerts.length > 0) {
                         alertsDiv.style.display = 'block';
@@ -224,12 +225,12 @@ def dashboard():
                     } else {
                         alertsDiv.style.display = 'none';
                     }
-                    
+
                 } catch (error) {
                     console.error('Error loading dashboard:', error);
                 }
             }
-            
+
             // Load dashboard on page load
             window.onload = () => {
                 loadDashboard();
@@ -245,7 +246,7 @@ def dashboard():
                 <span class="live-indicator"></span>
                 Real-time monitoring | Auto-refresh every 30s
             </p>
-            
+
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-label">Total Checks (24h)</div>
@@ -264,12 +265,12 @@ def dashboard():
                     <div class="stat-value" id="active-alerts">-</div>
                 </div>
             </div>
-            
+
             <div id="alerts-container" class="alert-section" style="display: none;">
                 <h2>🚨 Active Alerts</h2>
                 <div id="alerts-list"></div>
             </div>
-            
+
             <div class="checks-table">
                 <h2 style="padding: 20px; color: #667eea;">📊 Recent Health Checks</h2>
                 <table>
@@ -288,7 +289,7 @@ def dashboard():
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="refresh-info">
                 Dashboard updates automatically every 30 seconds<br>
                 Database: {{ db_path }}
@@ -300,7 +301,7 @@ def dashboard():
     return render_template_string(html, db_path=DB_PATH)
 
 
-@app.route('/api/stats')
+@app.route("/api/stats")
 def api_stats():
     """
     API endpoint: Get health check statistics for the last 24 hours.
@@ -311,24 +312,22 @@ def api_stats():
     cur = conn.cursor()
     # Query stats for dashboard
     stats = {
-        'total_checks': cur.execute(
+        "total_checks": cur.execute(
             "SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-24 hours')"
         ).fetchone()[0],
-        'healthy_checks': cur.execute(
+        "healthy_checks": cur.execute(
             "SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-24 hours') AND status='healthy'"
         ).fetchone()[0],
-        'unhealthy_checks': cur.execute(
+        "unhealthy_checks": cur.execute(
             "SELECT COUNT(*) FROM health_checks WHERE timestamp > datetime('now', '-24 hours') AND status IN ('unhealthy', 'down', 'critical')"
         ).fetchone()[0],
-        'active_alerts': cur.execute(
-            "SELECT COUNT(*) FROM alerts WHERE resolved=0"
-        ).fetchone()[0]
+        "active_alerts": cur.execute("SELECT COUNT(*) FROM alerts WHERE resolved=0").fetchone()[0],
     }
     conn.close()
     return jsonify(stats)
 
 
-@app.route('/api/recent-checks')
+@app.route("/api/recent-checks")
 def api_recent_checks():
     """
     API endpoint: Get recent health checks.
@@ -337,20 +336,20 @@ def api_recent_checks():
     Returns:
         JSON list of health check records.
     """
-    limit = request.args.get('limit', 50, type=int)
+    limit = request.args.get("limit", 50, type=int)
     conn = get_db()
     cur = conn.cursor()
     checks = cur.execute(
-        """SELECT * FROM health_checks 
-           ORDER BY timestamp DESC 
+        """SELECT * FROM health_checks
+           ORDER BY timestamp DESC
            LIMIT ?""",
-        (limit,)
+        (limit,),
     ).fetchall()
     conn.close()
     return jsonify([dict(check) for check in checks])
 
 
-@app.route('/api/alerts')
+@app.route("/api/alerts")
 def api_alerts():
     """
     API endpoint: Get active alerts.
@@ -360,15 +359,15 @@ def api_alerts():
     conn = get_db()
     cur = conn.cursor()
     alerts = cur.execute(
-        """SELECT * FROM alerts 
-           WHERE resolved=0 
+        """SELECT * FROM alerts
+           WHERE resolved=0
            ORDER BY timestamp DESC"""
     ).fetchall()
     conn.close()
     return jsonify([dict(alert) for alert in alerts])
 
 
-@app.route('/api/component/<component>')
+@app.route("/api/component/<component>")
 def api_component_history(component):
     """
     API endpoint: Get health check history for a specific component.
@@ -379,22 +378,22 @@ def api_component_history(component):
     Returns:
         JSON list of health check records for the component.
     """
-    hours = request.args.get('hours', 24, type=int)
+    hours = request.args.get("hours", 24, type=int)
     conn = get_db()
     cur = conn.cursor()
     history = cur.execute(
-        """SELECT * FROM health_checks 
-           WHERE component_name=? 
-           AND timestamp > datetime('now', '-{} hours')
-           ORDER BY timestamp DESC""".format(hours),
-        (component,)
+        f"""SELECT * FROM health_checks
+           WHERE component_name=?
+           AND timestamp > datetime('now', '-{hours} hours')
+           ORDER BY timestamp DESC""",
+        (component,),
     ).fetchall()
     conn.close()
     return jsonify([dict(h) for h in history])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Ensure database directory exists before running the app
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     # Start Flask app for health check dashboard
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    app.run(host="0.0.0.0", port=5001, debug=False)

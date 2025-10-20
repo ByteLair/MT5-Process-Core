@@ -3,43 +3,54 @@
 Para receber um email com o status do repositório a cada commit:
 
 1. Adicione o seguinte hook ao seu repositório:
+
   ```bash
   echo '#!/bin/bash\nbash /home/felipe/mt5-trading-db/scripts/git_commit_email_notify.sh' > .git/hooks/post-commit
   chmod +x .git/hooks/post-commit
   ```
+
 2. Após cada commit, você receberá um email com o resumo e status do repositório.
+
 ### GitHub Actions Runner (serviço)
 
 Para garantir que o runner do GitHub Actions esteja sempre ativo após reinicializações:
 
 1. Execute o script:
+
   ```bash
   bash scripts/start_github_runner.sh
   ```
+
   Isso inicia e habilita o serviço para inicialização automática.
 
 2. Para verificar o status:
+
   ```bash
   systemctl status actions.runner.Lysk-dot-mt5-trading-db.2v4g1.service
   ```
+
 ### Atualização automática do stack
 
 Para garantir que o sistema esteja sempre atualizado, utilize a automação via systemd:
 
 1. Execute o script de instalação:
+
   ```bash
   bash scripts/install_update_systemd.sh
   ```
+
   Isso instala e ativa o serviço/timer que verifica e atualiza o stack todo dia às 10h da manhã.
 
 2. O script `scripts/update_stack.sh` faz o processo completo de atualização do código, imagens Docker e dependências.
 
 3. Para verificar o status do timer:
+
   ```bash
   systemctl status mt5-update.timer
   ```
 
 Logs e resultados da atualização podem ser consultados via `journalctl -u mt5-update.service`.
+
 ### Email alerting (Grafana)
 
 Para receber alertas por email, configure o SMTP no arquivo de configuração do Grafana (`grafana.ini` ou via variáveis de ambiente):
@@ -58,6 +69,7 @@ skip_verify = true
 Depois, edite o arquivo `grafana/provisioning/alerting/contact-points.yaml` e coloque seu email em `addresses:`.
 
 Os alertas já estão provisionados para avisar se a API ficar fora do ar (regra "API Down").
+
 # 🚀 MT5 Trading DB - Complete Trading Infrastructure
 
 > Sistema completo de coleta, análise e predição de dados de mercado MT5 com Machine Learning, monitoramento e infraestrutura como código.
@@ -73,18 +85,17 @@ Os alertas já estão provisionados para avisar se a API ficar fora do ar (regra
 
 ## 📋 Índice
 
-
 ## 🎯 Visão Geral
 
 Sistema completo para trading algorítmico com:
 
-✅ **Coleta de Dados** - Ingestão em tempo real de candles do MT5  
-✅ **Armazenamento** - TimescaleDB otimizado para séries temporais  
-✅ **Machine Learning** - Modelos preditivos (RandomForest, Informer)  
-✅ **API REST** - FastAPI com autenticação e rate limiting  
-✅ **Monitoramento** - Prometheus + Grafana com 10 dashboards  
-✅ **Infraestrutura** - Terraform para provisionamento automatizado  
-✅ **Alertas** - Notificações automáticas de problemas  
+✅ **Coleta de Dados** - Ingestão em tempo real de candles do MT5
+✅ **Armazenamento** - TimescaleDB otimizado para séries temporais
+✅ **Machine Learning** - Modelos preditivos (RandomForest, Informer)
+✅ **API REST** - FastAPI com autenticação e rate limiting
+✅ **Monitoramento** - Prometheus + Grafana com 10 dashboards
+✅ **Infraestrutura** - Terraform para provisionamento automatizado
+✅ **Alertas** - Notificações automáticas de problemas
 
 ---
 
@@ -158,17 +169,18 @@ terraform apply
 
 | Serviço | URL | Credenciais |
 |---------|-----|-------------|
-| **API** | http://localhost:18001 | API Key header |
-| **API Docs** | http://localhost:18001/docs | - |
-| **Grafana** | http://localhost:3000 | admin/admin |
-| **Prometheus** | http://localhost:9090 | - |
-| **pgAdmin** | http://localhost:5051 | - |
+| **API** | <http://localhost:18001> | API Key header |
+| **API Docs** | <http://localhost:18001/docs> | - |
+| **Grafana** | <http://localhost:3000> | admin/admin |
+| **Prometheus** | <http://localhost:9090> | - |
+| **pgAdmin** | <http://localhost:5051> | - |
 
 ---
 
 ## 🧩 Componentes
 
 ### 1. Database (TimescaleDB)
+
 - **Porta**: 5432 (interna)
 - **Usuário**: trader
 - **Database**: mt5_trading
@@ -176,6 +188,7 @@ terraform apply
 - **Backups**: Automáticos via `./backup.sh`
 
 ### 2. API (FastAPI)
+
 - **Porta**: 18001
 - **Endpoints**: `/ingest`, `/metrics`, `/signals/*`, `/predict`
 - **Auth**: X-API-Key header
@@ -183,12 +196,14 @@ terraform apply
 - **Métricas**: Prometheus em `/prometheus`
 
 ### 3. Machine Learning
+
 - **Modelos**: RandomForest, Informer (Transformer)
 - **Features**: 18+ indicadores técnicos
 - **Training**: Automatizado via scheduler
 - **Storage**: Volume `models_mt5`
 
 ### 4. Monitoramento
+
 - **Prometheus**: Coleta de métricas a cada 5s
 - **Grafana**: 10 dashboards pré-configurados
 - **Alertas**: 6 regras de alerta configuradas
@@ -237,6 +252,7 @@ docker compose logs -f api
 A plataforma está pronta para deploy em Kubernetes com:
 
 **✅ Recursos Implementados:**
+
 - 📦 Deployments para todos os serviços
 - 🔄 HorizontalPodAutoscaler (2-10 réplicas)
 - 💾 PersistentVolumes (DB, Models, Grafana, Prometheus)
@@ -363,9 +379,10 @@ Antes de deploy em produção:
 
 ### Dashboard Grafana
 
-Acesse: http://localhost:3000 (admin/admin)
+Acesse: <http://localhost:3000> (admin/admin)
 
 **10 Painéis Disponíveis:**
+
 1. Total Candles Inserted
 2. API Status (UP/DOWN)
 3. Total Records in DB
@@ -408,12 +425,15 @@ Mantemos uma API FastAPI (uvicorn) local para receber/envio de backups e health-
 ### Arquivo do serviço
 
 Local do unit no repositório:
+
 - `systemd/mt5-backup-api.service`
 
 Instalado em tempo de execução em:
+
 - `~/.config/systemd/user/mt5-backup-api.service`
 
 Conteúdo (resumo):
+
 - WorkingDirectory: `/home/felipe/mt5-trading-db`
 - ExecStart: `~/.venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port 9101`
 - Logs: `~/mt5-trading-db/logs/api/`
@@ -474,18 +494,19 @@ curl http://SEU_IP_LINUX:9101/health
 - Serviço não sobe no boot: confirme `loginctl enable-linger $USER` e `systemctl --user is-enabled mt5-backup-api.service`.
 - Ver PID e socket: `ss -ltnp | grep 9101`
 
-
 ## �🤖 Machine Learning
 
 ### Modelos Disponíveis
 
 #### 1. RandomForest Regressor
+
 - **Features**: 18 indicadores técnicos
 - **Target**: Retorno futuro (1, 5, 10 períodos)
 - **Métricas**: R², MAE
 - **Storage**: `models/random_forest.pkl`
 
 #### 2. Informer (Transformer)
+
 - **Task**: Classificação binária (trade positivo)
 - **Seq Length**: 32-64 candles
 - **Métricas**: Precision, Recall, AUC-ROC
@@ -523,6 +544,7 @@ docker compose run --rm ml-trainer python eval_threshold.py
 ### Authentication
 
 Todas as requisições requerem header:
+
 ```
 X-API-Key: mt5_trading_secure_key_2025_prod
 ```
@@ -530,9 +552,11 @@ X-API-Key: mt5_trading_secure_key_2025_prod
 ### Endpoints
 
 #### POST /ingest
+
 Enviar candles individuais ou em batch.
 
 **Single Candle:**
+
 ```bash
 curl -X POST "http://localhost:18001/ingest" \
   -H "Content-Type: application/json" \
@@ -550,6 +574,7 @@ curl -X POST "http://localhost:18001/ingest" \
 ```
 
 **Batch:**
+
 ```bash
 curl -X POST "http://localhost:18001/ingest" \
   -H "Content-Type: application/json" \
@@ -563,6 +588,7 @@ curl -X POST "http://localhost:18001/ingest" \
 ```
 
 #### GET /metrics
+
 Estatísticas de dados por símbolo.
 
 ```bash
@@ -570,6 +596,7 @@ curl http://localhost:18001/metrics
 ```
 
 #### GET /signals/next
+
 Obter próximo sinal de trading.
 
 ```bash
@@ -578,6 +605,7 @@ curl "http://localhost:18001/signals/next?account_id=123&symbols=EURUSD,GBPUSD&t
 ```
 
 #### GET /health
+
 Health check da API.
 
 ```bash
@@ -585,6 +613,7 @@ curl http://localhost:18001/health
 ```
 
 ### Timeframes Válidos
+
 `M1`, `M5`, `M15`, `M30`, `H1`, `H4`, `D1`
 
 ---
@@ -605,6 +634,7 @@ RETENTION_DAYS=30 ./backup.sh
 ```
 
 ### Maintenance automation
+
 - Systemd integration (autostart + scheduled checks):
   - systemd/mt5-maintenance.service runs the full maintenance flow on demand/boot
   - systemd/mt5-maintenance.timer triggers it every 5 minutes (persistent)
@@ -616,10 +646,10 @@ bash scripts/install_maintenance_systemd.sh
 ```
 
 This will:
+
 - Install service/timer under /etc/systemd/system
 - Enable the service and start the timer
 - Next runs: every 5 minutes and 2 minutes after boot
-
 
 We ship a maintenance helper to keep containers healthy and avoid port conflicts, now with health checks and subcommands.
 
@@ -647,7 +677,9 @@ bash scripts/maintenance.sh restart-unhealthy
 # Optional prune
 PRUNE=true bash scripts/maintenance.sh prune
 ```
+
 **O que é incluído no backup:**
+
 - Dump completo do PostgreSQL
 - Modelos ML treinados
 - Configurações (docker-compose, .env, Grafana)
@@ -719,24 +751,31 @@ SELECT pg_size_pretty(pg_total_relation_size('market_data'));
 ## 🔧 Troubleshooting
 
 ### Problema: API retorna 401 Unauthorized
+
 **Solução**: Verifique se o header `X-API-Key` está correto no `.env` e no EA.
 
 ### Problema: Container não inicia
-**Solução**: 
+
+**Solução**:
+
 ```bash
 docker compose logs [service_name]
 docker compose down && docker compose up -d
 ```
 
 ### Problema: Dashboard Grafana não carrega
+
 **Solução**:
+
 ```bash
 docker compose restart grafana
 # Verificar: http://localhost:3000/d/mt5-trading-main
 ```
 
 ### Problema: Banco de dados lento
+
 **Solução**:
+
 ```sql
 -- Vacuum full (offline)
 VACUUM FULL market_data;
@@ -746,7 +785,9 @@ mem_limit: 4g
 ```
 
 ### Problema: Modelos ML não treinam
+
 **Solução**:
+
 ```bash
 # Verificar dataset
 docker compose exec db psql -U trader -d mt5_trading -c "SELECT COUNT(*) FROM market_data;"
@@ -770,6 +811,7 @@ docker compose run --rm ml-trainer python prepare_dataset.py
 ## 📝 Changelog
 
 ### v2.0.0 (2025-10-18)
+
 - ✅ Adicionado Terraform para IaC
 - ✅ Dashboard Grafana completo (10 painéis)
 - ✅ 5 novas métricas Prometheus
@@ -779,9 +821,9 @@ docker compose run --rm ml-trainer python prepare_dataset.py
 - ✅ 21 queries SQL úteis
 
 ### v1.0.0 (2021-10-18)
+
 - ✅ Sistema básico de ingestão
 - ✅ TimescaleDB implementation
-
 
 ## 📖 Documentação Completa
 

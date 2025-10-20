@@ -20,7 +20,7 @@ docker exec mt5_db psql -U trader -d mt5_trading -c 'VACUUM (ANALYZE, VERBOSE);'
 # Check and compress chunks older than 30 days
 log "Compressing old chunks..."
 docker exec mt5_db psql -U trader -d mt5_trading -c "
-SELECT compress_chunk(i, if_not_compressed => true) 
+SELECT compress_chunk(i, if_not_compressed => true)
 FROM show_chunks('market_data', older_than => INTERVAL '30 days') i;" >> "$LOG_FILE" 2>&1
 
 # Remove chunks older than 5 years
@@ -37,7 +37,7 @@ FROM show_chunks('market_data') i;" >> "$LOG_FILE" 2>&1
 # Check compression status
 log "Current compression status:"
 docker exec mt5_db psql -U trader -d mt5_trading -c "
-SELECT 
+SELECT
     hypertable_name,
     pg_size_pretty(total_bytes) as total_size,
     pg_size_pretty(total_compressed_bytes) as compressed_size,

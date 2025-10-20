@@ -9,6 +9,7 @@
 ### ☸️ Kubernetes Infrastructure (NOVO!)
 
 #### 1. **Manifests Base** (`k8s/base/`)
+
 - ✅ **namespace.yaml** - Namespace dedicado `mt5-trading`
 - ✅ **configmap.yaml** - Configurações da aplicação e init scripts SQL
 - ✅ **secrets.yaml** - Template para credenciais (DB, API, Grafana)
@@ -24,24 +25,28 @@
 #### 2. **Kustomize Overlays** (`k8s/overlays/`)
 
 **Development** (`dev/`)
+
 - 1 réplica API
 - Log level DEBUG
 - Senhas simples
 - HPA: 1-3 replicas
 
 **Staging** (`staging/`)
+
 - 2 réplicas API
 - Log level INFO
 - Senhas seguras
 - HPA: 2-5 replicas
 
 **Production** (`production/`)
+
 - 3 réplicas API
 - Log level WARNING
 - Senhas production
 - HPA: 3-10 replicas
 
 #### 3. **Helm Chart** (`helm/mt5-trading/`)
+
 - ✅ **Chart.yaml** - Metadata do chart (v2.0.0)
 - ✅ **values.yaml** - 200+ linhas de configuração
 - ✅ **templates/_helpers.tpl** - Helper functions
@@ -51,6 +56,7 @@
 - ✅ **templates/api.yaml** - API Deployment + Service + HPA + Ingress
 
 #### 4. **Scripts de Gerenciamento** (`scripts/`)
+
 - ✅ **k8s-deploy.sh** - Deploy completo com health checks
 - ✅ **k8s-healthcheck.sh** - Verificação de saúde do cluster
 - ✅ **k8s-scale.sh** - Scaling manual de deployments
@@ -58,12 +64,14 @@
 - ✅ **k8s-logs.sh** - Visualização de logs
 
 Todos os scripts com:
+
 - Cores e formatação
 - Validação de parâmetros
 - Múltiplos ambientes
 - Error handling
 
 #### 5. **Documentação** (`docs/`)
+
 - ✅ **K8S_DEPLOYMENT.md** - Guia completo de 400+ linhas
   - Pré-requisitos e setup
   - Deployment com Kustomize
@@ -79,6 +87,7 @@ Todos os scripts com:
 ## 📊 Estatísticas da Implementação
 
 ### Arquivos Criados
+
 - **Kubernetes Manifests**: 11 arquivos
 - **Kustomize Overlays**: 3 ambientes
 - **Helm Chart**: 7 arquivos (Chart + Templates)
@@ -88,6 +97,7 @@ Todos os scripts com:
 **Total**: ~25 arquivos novos
 
 ### Linhas de Código
+
 - **YAML**: ~2,500 linhas
 - **Bash Scripts**: ~600 linhas
 - **Documentation**: ~400 linhas
@@ -97,6 +107,7 @@ Todos os scripts com:
 ### Features Implementadas
 
 #### Deployments (5)
+
 1. **PostgreSQL/TimescaleDB**
    - 1 replica
    - PVC 20Gi
@@ -126,12 +137,14 @@ Todos os scripts com:
    - PVC 2Gi
 
 #### Services (4)
+
 - **postgres-service**: ClusterIP
 - **mt5-api-service**: LoadBalancer
 - **prometheus-service**: ClusterIP
 - **grafana-service**: LoadBalancer
 
 #### Autoscaling
+
 - **HPA para API**
   - CPU: 70%
   - Memory: 80%
@@ -139,6 +152,7 @@ Todos os scripts com:
   - Políticas de scale up/down
 
 #### Storage (4 PVCs)
+
 - **postgres-pvc**: 20Gi
 - **ml-models-pvc**: 5Gi (ReadWriteMany)
 - **grafana-pvc**: 2Gi
@@ -147,11 +161,13 @@ Todos os scripts com:
 **Total Storage**: 37Gi
 
 #### Networking
+
 - **Ingress Routes**: 3 (API, Grafana, Prometheus)
 - **TLS**: Configurado (cert-manager)
 - **LoadBalancers**: 2 (API, Grafana)
 
 #### CronJobs
+
 - **ML Training**: Diário às 2 AM
   - Prepare dataset
   - Train RandomForest
@@ -163,33 +179,38 @@ Todos os scripts com:
 ## 🎯 Capabilities
 
 ### Multi-Environment Support
-✅ Development (dev)  
-✅ Staging (staging)  
-✅ Production (production)  
+
+✅ Development (dev)
+✅ Staging (staging)
+✅ Production (production)
 
 Cada ambiente com configurações específicas:
+
 - Replicas
 - Log levels
 - Resources
 - Senhas
 
 ### Deployment Methods
-✅ **Kustomize** - GitOps friendly  
-✅ **Helm** - Package management  
-✅ **Scripts** - Automated deployment  
+
+✅ **Kustomize** - GitOps friendly
+✅ **Helm** - Package management
+✅ **Scripts** - Automated deployment
 
 ### Operations
-✅ **One-command deploy**: `./scripts/k8s-deploy.sh prod`  
-✅ **Health checks**: Automated verification  
-✅ **Scaling**: Manual e automático (HPA)  
-✅ **Rollback**: One-command rollback  
-✅ **Logs**: Centralized viewing  
+
+✅ **One-command deploy**: `./scripts/k8s-deploy.sh prod`
+✅ **Health checks**: Automated verification
+✅ **Scaling**: Manual e automático (HPA)
+✅ **Rollback**: One-command rollback
+✅ **Logs**: Centralized viewing
 
 ### Monitoring
-✅ **Prometheus**: Métricas automaticamente descobertas  
-✅ **Grafana**: Dashboards provisionados  
-✅ **HPA Metrics**: CPU e Memory  
-✅ **Kubernetes Events**: Tracked  
+
+✅ **Prometheus**: Métricas automaticamente descobertas
+✅ **Grafana**: Dashboards provisionados
+✅ **HPA Metrics**: CPU e Memory
+✅ **Kubernetes Events**: Tracked
 
 ---
 
@@ -251,6 +272,7 @@ helm rollback mt5-trading -n mt5-trading
 ## 📈 Production Ready Features
 
 ### High Availability
+
 - ✅ Multiple API replicas
 - ✅ HPA for auto-scaling
 - ✅ Health checks (liveness/readiness)
@@ -258,6 +280,7 @@ helm rollback mt5-trading -n mt5-trading
 - ✅ Rollback capability
 
 ### Security
+
 - ✅ RBAC configured
 - ✅ ServiceAccounts
 - ✅ Secrets management
@@ -265,6 +288,7 @@ helm rollback mt5-trading -n mt5-trading
 - ✅ TLS/SSL ingress
 
 ### Observability
+
 - ✅ Prometheus metrics
 - ✅ Grafana dashboards
 - ✅ Centralized logging ready
@@ -272,12 +296,14 @@ helm rollback mt5-trading -n mt5-trading
 - ✅ Health check scripts
 
 ### Data Persistence
+
 - ✅ PersistentVolumes
 - ✅ StatefulSet ready (postgres)
 - ✅ Backup strategies documented
 - ✅ Volume snapshots ready
 
 ### CI/CD Ready
+
 - ✅ GitOps compatible (Kustomize)
 - ✅ Helm charts
 - ✅ Automated scripts
@@ -351,23 +377,27 @@ mt5-trading-db/
 ## 🚀 Next Steps (Opcionais)
 
 ### Immediate
+
 - [ ] Testar deploy em cluster real (Minikube/Kind/Cloud)
 - [ ] Validar autoscaling com carga
 - [ ] Configurar persistent volume backups
 
 ### Short Term
+
 - [ ] StatefulSet para PostgreSQL (HA)
 - [ ] NetworkPolicies para isolamento
 - [ ] Resource Quotas por namespace
 - [ ] LimitRanges para pods
 
 ### Medium Term
+
 - [ ] Service Mesh (Istio/Linkerd)
 - [ ] Advanced monitoring (Loki, Tempo)
 - [ ] GitOps com ArgoCD/Flux
 - [ ] Multi-cluster setup
 
 ### Advanced
+
 - [ ] Disaster recovery
 - [ ] Multi-region deployment
 - [ ] Advanced security (OPA, Falco)
@@ -379,18 +409,19 @@ mt5-trading-db/
 
 **Implementação completa de infraestrutura Kubernetes** para a plataforma MT5 Trading com:
 
-✅ **25+ arquivos** de configuração  
-✅ **3,500+ linhas** de código  
-✅ **5 deployments** completos  
-✅ **3 ambientes** configurados  
-✅ **2 métodos** de deploy (Kustomize + Helm)  
-✅ **5 scripts** de gerenciamento  
-✅ **400+ linhas** de documentação  
-✅ **Production-ready** features  
+✅ **25+ arquivos** de configuração
+✅ **3,500+ linhas** de código
+✅ **5 deployments** completos
+✅ **3 ambientes** configurados
+✅ **2 métodos** de deploy (Kustomize + Helm)
+✅ **5 scripts** de gerenciamento
+✅ **400+ linhas** de documentação
+✅ **Production-ready** features
 
 **Status**: ✅ **PRONTO PARA PRODUÇÃO**
 
 A plataforma agora suporta:
+
 - Deploy em qualquer cluster Kubernetes
 - Auto-scaling baseado em métricas
 - Alta disponibilidade
@@ -400,6 +431,6 @@ A plataforma agora suporta:
 
 ---
 
-**Desenvolvido por**: Felipe  
-**Data**: 18 de Outubro de 2025  
-**Versão**: 2.0.0  
+**Desenvolvido por**: Felipe
+**Data**: 18 de Outubro de 2025
+**Versão**: 2.0.0

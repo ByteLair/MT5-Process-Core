@@ -1,7 +1,7 @@
 # 🚀 Sugestões de Melhorias na Infraestrutura
 
-> **Análise:** Outubro 2025  
-> **Status Atual:** Infraestrutura sólida com Docker, K8s, Terraform, Grafana  
+> **Análise:** Outubro 2025
+> **Status Atual:** Infraestrutura sólida com Docker, K8s, Terraform, Grafana
 > **Próximos Passos:** Otimizações e hardening
 
 ---
@@ -9,6 +9,7 @@
 ## 📊 Análise Atual
 
 ### ✅ Pontos Fortes
+
 - ✓ Monitoramento robusto (Prometheus + Grafana)
 - ✓ Kubernetes pronto para produção
 - ✓ TimescaleDB para séries temporais
@@ -16,6 +17,7 @@
 - ✓ Documentação organizada
 
 ### ⚠️ Oportunidades de Melhoria
+
 - Backups automatizados limitados
 - Secrets em plain text (.env)
 - Ausência de CI/CD pipeline completo
@@ -34,6 +36,7 @@
 **Problema:** Backups existem mas não são testados regularmente
 
 **Solução:**
+
 ```yaml
 # docker-compose.yml - Adicionar serviço de backup
 services:
@@ -63,6 +66,7 @@ services:
 ```
 
 **Script de Teste de Restore:**
+
 ```bash
 #!/bin/bash
 # scripts/test_backup_restore.sh
@@ -100,6 +104,7 @@ docker compose exec -T db psql -U trader -c "DROP DATABASE $TEST_DB;"
 ```
 
 **Cronjob para teste semanal:**
+
 ```bash
 # Adicionar ao crontab
 0 3 * * 0 cd /home/felipe/mt5-trading-db && ./scripts/test_backup_restore.sh >> ./logs/backup_test.log 2>&1
@@ -112,6 +117,7 @@ docker compose exec -T db psql -U trader -c "DROP DATABASE $TEST_DB;"
 **Problema:** Senhas em `.env` plain text
 
 **Solução A - Docker Secrets (Mais simples):**
+
 ```bash
 # Criar secrets
 echo "trader123" | docker secret create db_password -
@@ -124,7 +130,7 @@ services:
       - db_password
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-  
+
   api:
     secrets:
       - api_key
@@ -138,6 +144,7 @@ secrets:
 ```
 
 **Solução B - HashiCorp Vault (Mais robusto):**
+
 ```yaml
 # docker-compose.yml
 services:
@@ -161,6 +168,7 @@ volumes:
 ```
 
 **Script de inicialização:**
+
 ```bash
 #!/bin/bash
 # scripts/setup_vault.sh
@@ -193,6 +201,7 @@ vault token create -policy=mt5-api -ttl=720h
 **Problema:** Queries repetitivas sem cache
 
 **Solução:**
+
 ```yaml
 # docker-compose.yml
 services:
@@ -221,6 +230,7 @@ volumes:
 ```
 
 **Implementação no código:**
+
 ```python
 # api/cache.py
 import redis
@@ -245,22 +255,22 @@ def cache_result(ttl: int = 300):
             key_parts = [func.__name__] + [str(arg) for arg in args]
             key_parts += [f"{k}={v}" for k, v in sorted(kwargs.items())]
             cache_key = hashlib.md5("|".join(key_parts).encode()).hexdigest()
-            
+
             # Try to get from cache
             cached = redis_client.get(cache_key)
             if cached:
                 return json.loads(cached)
-            
+
             # Execute function
             result = await func(*args, **kwargs)
-            
+
             # Store in cache
             redis_client.setex(
                 cache_key,
                 ttl,
                 json.dumps(result, default=str)
             )
-            
+
             return result
         return wrapper
     return decorator
@@ -280,6 +290,7 @@ async def get_symbols():
 #### 4. **CI/CD Pipeline Completo**
 
 **Solução - GitHub Actions:**
+
 ```yaml
 # .github/workflows/ci-cd.yml
 name: CI/CD Pipeline
@@ -295,21 +306,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install -r api/requirements.txt
           pip install pytest pytest-cov
-      
+
       - name: Run tests
         run: |
           pytest api/tests/ --cov=api --cov-report=xml
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -320,11 +331,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build Docker image
         run: |
           docker build -t mt5-api:${{ github.sha }} ./api
-      
+
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -348,6 +359,7 @@ jobs:
 ```
 
 **Testes unitários básicos:**
+
 ```python
 # api/tests/test_endpoints.py
 import pytest
@@ -376,37 +388,38 @@ def test_ingest_requires_auth():
 #### 5. **Rate Limiting e DDoS Protection**
 
 **Solução com Nginx:**
+
 ```nginx
 # nginx/nginx.conf
 http {
     limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=ingest_limit:10m rate=100r/s;
-    
+
     upstream api_backend {
         server api:8001;
     }
-    
+
     server {
         listen 80;
         server_name mt5-trading.local;
-        
+
         location /api {
             limit_req zone=api_limit burst=20 nodelay;
             limit_req_status 429;
-            
+
             proxy_pass http://api_backend;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        
+
         location /ingest {
             limit_req zone=ingest_limit burst=200 nodelay;
-            
+
             # Apenas IPs permitidos
             allow 192.168.15.0/24;  # Rede local
             deny all;
-            
+
             proxy_pass http://api_backend;
         }
     }
@@ -414,6 +427,7 @@ http {
 ```
 
 **Docker Compose:**
+
 ```yaml
 services:
   nginx:
@@ -437,6 +451,7 @@ services:
 **Problema:** Conexões não otimizadas com o banco
 
 **Solução:**
+
 ```python
 # api/database.py
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -472,6 +487,7 @@ async_session = sessionmaker(
 ```
 
 **PostgreSQL tuning:**
+
 ```sql
 -- docker/postgres.conf.d/postgresql.conf
 # Conexões
@@ -483,6 +499,7 @@ superuser_reserved_connections = 3
 ```
 
 **PgBouncer:**
+
 ```yaml
 services:
   pgbouncer:
@@ -540,6 +557,7 @@ volumes:
 #### 8. **Disaster Recovery Plan**
 
 **Documentação:**
+
 ```markdown
 # DISASTER_RECOVERY.md
 
@@ -576,6 +594,7 @@ volumes:
 #### 9. **Observabilidade Avançada**
 
 **Loki para Logs:**
+
 ```yaml
 services:
   loki:
@@ -601,6 +620,7 @@ services:
 ```
 
 **Jaeger para Tracing:**
+
 ```yaml
 services:
   jaeger:
@@ -671,21 +691,25 @@ spec:
 ## 📋 Roadmap de Implementação
 
 ### Semana 1-2
+
 - [ ] Sistema de backup robusto + testes
 - [ ] Secrets management (Docker Secrets ou Vault)
 - [ ] Redis cache básico
 
 ### Semana 3-4
+
 - [ ] CI/CD pipeline
 - [ ] Rate limiting com Nginx
 - [ ] Connection pooling otimizado
 
 ### Mês 2
+
 - [ ] Message queue (RabbitMQ/Celery)
 - [ ] Disaster recovery plan
 - [ ] Testes de carga
 
 ### Mês 3+
+
 - [ ] Observabilidade avançada (Loki + Jaeger)
 - [ ] Multi-region deployment
 - [ ] Auto-scaling avançado
@@ -739,5 +763,5 @@ spec:
 
 ---
 
-**Última atualização:** Outubro 2025  
+**Última atualização:** Outubro 2025
 **Próxima revisão:** Janeiro 2026

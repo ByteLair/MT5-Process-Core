@@ -41,6 +41,7 @@ python3 scripts/health-dashboard.py
 ## 📊 Componentes Monitorados
 
 ### 1. Docker Containers
+
 - ✅ mt5_db (PostgreSQL/TimescaleDB)
 - ✅ mt5_api (FastAPI)
 - ✅ mt5_prometheus
@@ -48,36 +49,43 @@ python3 scripts/health-dashboard.py
 - ✅ mt5_pgadmin
 
 **Métricas coletadas:**
+
 - Status (healthy/unhealthy/down)
 - CPU usage (%)
 - Memory usage (%)
 - Response time (ms)
 
 ### 2. API Endpoints
-- ✅ API Health (http://localhost:8001/health)
-- ✅ API Docs (http://localhost:8001/docs)
-- ✅ Prometheus (http://localhost:9090/-/healthy)
-- ✅ Grafana (http://localhost:3000/api/health)
+
+- ✅ API Health (<http://localhost:8001/health>)
+- ✅ API Docs (<http://localhost:8001/docs>)
+- ✅ Prometheus (<http://localhost:9090/-/healthy>)
+- ✅ Grafana (<http://localhost:3000/api/health>)
 
 **Métricas coletadas:**
+
 - HTTP status code
 - Response time (ms)
 
 ### 3. Database
+
 - ✅ Connection test
 - ✅ Database size
 - ✅ Record count
 
 ### 4. System Resources
+
 - ✅ Disk space usage
 - ✅ Alerts on >80% usage
 
 ### 5. CI/CD
+
 - ✅ GitHub Actions Runner status
 
 ## 🗄️ Database Schema
 
 ### Table: health_checks
+
 ```sql
 CREATE TABLE health_checks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,6 +102,7 @@ CREATE TABLE health_checks (
 ```
 
 ### Table: alerts
+
 ```sql
 CREATE TABLE alerts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -109,6 +118,7 @@ CREATE TABLE alerts (
 ## 📈 Dashboard Web (Flask)
 
 ### Features
+
 - ✅ Real-time monitoring
 - ✅ Auto-refresh every 30 seconds
 - ✅ Statistics cards (24h)
@@ -121,6 +131,7 @@ CREATE TABLE alerts (
 **GET /** - Main dashboard HTML
 
 **GET /api/stats** - Get 24h statistics
+
 ```json
 {
   "total_checks": 1440,
@@ -131,6 +142,7 @@ CREATE TABLE alerts (
 ```
 
 **GET /api/recent-checks?limit=50** - Get recent checks
+
 ```json
 [
   {
@@ -148,6 +160,7 @@ CREATE TABLE alerts (
 ```
 
 **GET /api/alerts** - Get active alerts
+
 ```json
 [
   {
@@ -166,9 +179,10 @@ CREATE TABLE alerts (
 ## 📊 Grafana Integration
 
 ### Dashboard Features
+
 - 📈 Health status pie chart (24h)
 - 📊 Total checks counter
-- ✅ Healthy checks counter  
+- ✅ Healthy checks counter
 - 🚨 Active alerts counter
 - 📉 Response time trend graph
 - 📋 Recent checks table
@@ -179,7 +193,7 @@ CREATE TABLE alerts (
 
 2. Será importado automaticamente quando subir o Grafana
 
-3. Acesse: http://localhost:3000/d/health-check-dash
+3. Acesse: <http://localhost:3000/d/health-check-dash>
 
 ## ⏰ Automated Monitoring
 
@@ -188,28 +202,33 @@ CREATE TABLE alerts (
 **Arquivo:** `.github/workflows/health-check.yml`
 
 **Schedule:**
+
 - Health check: A cada 5 minutos
 - Daily report: 5:00 AM UTC-3 (8:00 AM UTC)
 
 **Actions:**
+
 1. Executa health check
 2. Verifica alertas críticos
 3. Gera warning no GitHub Actions se houver alertas
 4. Gera relatório diário automático
 
 ### View Workflow Runs
-https://github.com/Lysk-dot/mt5-trading-db/actions/workflows/health-check.yml
+
+<https://github.com/Lysk-dot/mt5-trading-db/actions/workflows/health-check.yml>
 
 ## 🚨 Alert System
 
 ### Alert Triggers
 
 Alertas são criados quando:
+
 - Componente falha **3 vezes consecutivas** em 5 minutos
 - Disco atinge >90% de uso
 - Database connection falha
 
 ### Alert Types
+
 - `unhealthy` - Component unhealthy
 - `down` - Component down/not running
 - `disk_full` - Disk space critical
@@ -222,9 +241,10 @@ Alertas são criados quando:
 Alerts são resolvidos automaticamente quando o componente volta ao normal após 3 checks consecutivos.
 
 Manual resolution:
+
 ```sql
-UPDATE alerts 
-SET resolved=1, resolved_at=datetime('now') 
+UPDATE alerts
+SET resolved=1, resolved_at=datetime('now')
 WHERE component_name='mt5_db';
 ```
 
@@ -252,6 +272,7 @@ WHERE component_name='mt5_db';
 ### Change Check Frequency
 
 Edit `.github/workflows/health-check.yml`:
+
 ```yaml
 schedule:
   - cron: '*/5 * * * *'  # Every 5 minutes
@@ -262,6 +283,7 @@ schedule:
 ### Change Alert Threshold
 
 Edit `scripts/health-check.sh`:
+
 ```bash
 ALERT_THRESHOLD=3  # Number of consecutive failures
 ```
@@ -269,6 +291,7 @@ ALERT_THRESHOLD=3  # Number of consecutive failures
 ### Add New Component to Monitor
 
 Edit `scripts/health-check.sh`:
+
 ```bash
 check_containers() {
     local containers=("mt5_db" "mt5_api" "mt5_new_service")  # Add here
@@ -279,16 +302,18 @@ check_containers() {
 ## 📊 Query Examples
 
 ### Last 10 failed checks
+
 ```sql
-SELECT * FROM health_checks 
-WHERE status IN ('unhealthy', 'down', 'critical') 
-ORDER BY timestamp DESC 
+SELECT * FROM health_checks
+WHERE status IN ('unhealthy', 'down', 'critical')
+ORDER BY timestamp DESC
 LIMIT 10;
 ```
 
 ### Component uptime (last 24h)
+
 ```sql
-SELECT 
+SELECT
     component_name,
     COUNT(*) as total_checks,
     SUM(CASE WHEN status='healthy' THEN 1 ELSE 0 END) as healthy,
@@ -299,8 +324,9 @@ GROUP BY component_name;
 ```
 
 ### Average response time per component
+
 ```sql
-SELECT 
+SELECT
     component_name,
     ROUND(AVG(response_time_ms), 0) as avg_response_ms,
     MIN(response_time_ms) as min_response_ms,
@@ -312,32 +338,37 @@ GROUP BY component_name;
 ```
 
 ### Active alerts
+
 ```sql
-SELECT * FROM alerts 
-WHERE resolved=0 
+SELECT * FROM alerts
+WHERE resolved=0
 ORDER BY timestamp DESC;
 ```
 
 ## 🧪 Testing
 
 ### Test Health Check
+
 ```bash
 ./scripts/health-check.sh
 ```
 
 ### Test Dashboard
+
 ```bash
 python3 scripts/health-dashboard.py &
 curl http://localhost:5001/api/stats
 ```
 
 ### Test Database
+
 ```bash
 sqlite3 logs/health-checks/health_checks.db "SELECT COUNT(*) FROM health_checks;"
 ```
 
 ### Trigger Manual Workflow
-1. Go to: https://github.com/Lysk-dot/mt5-trading-db/actions
+
+1. Go to: <https://github.com/Lysk-dot/mt5-trading-db/actions>
 2. Select "Health Check Monitoring"
 3. Click "Run workflow"
 
@@ -352,6 +383,7 @@ sqlite3 logs/health-checks/health_checks.db "SELECT COUNT(*) FROM health_checks;
 4. **Set up notifications** - Configure Grafana alerts para notificações críticas
 
 5. **Regular maintenance** - Limpe logs antigos periodicamente:
+
    ```bash
    # Keep last 30 days
    sqlite3 logs/health-checks/health_checks.db "DELETE FROM health_checks WHERE timestamp < datetime('now', '-30 days');"
@@ -360,6 +392,7 @@ sqlite3 logs/health-checks/health_checks.db "SELECT COUNT(*) FROM health_checks;
 ## 🔍 Troubleshooting
 
 ### Dashboard não inicia
+
 ```bash
 # Instalar Flask
 pip install flask
@@ -369,12 +402,14 @@ lsof -i :5001
 ```
 
 ### Database locked
+
 ```bash
 # Verificar processos usando o DB
 fuser logs/health-checks/health_checks.db
 ```
 
 ### Health check falha
+
 ```bash
 # Verificar permissões
 chmod +x scripts/health-check.sh
@@ -384,6 +419,7 @@ which sqlite3
 ```
 
 ### Grafana não mostra dados
+
 1. Verificar se dashboard Flask está rodando (porta 5001)
 2. Verificar datasource no Grafana
 3. Verificar se há dados no database
@@ -397,6 +433,6 @@ which sqlite3
 
 ---
 
-**Última atualização:** Outubro 2025  
+**Última atualização:** Outubro 2025
 **Status:** ✅ Ativo e funcionando
 **Monitoramento:** Automático a cada 5 minutos

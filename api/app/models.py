@@ -1,18 +1,21 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
 
 class Tick(BaseModel):
     ts: datetime = Field(..., description="ISO8601 UTC")
     symbol: str
     timeframe: str
-    open: Optional[float] = None
-    high: Optional[float] = None
-    low: Optional[float] = None
-    close: Optional[float] = None
-    volume: Optional[int] = 0
-    spread: Optional[float] = None
-    meta: Optional[Any] = None
+    open: float | None = None
+    high: float | None = None
+    low: float | None = None
+    close: float | None = None
+    volume: int | None = 0
+    spread: float | None = None
+    meta: Any | None = None
+
 
 class TickBatch(BaseModel):
-    items: List[Tick]
+    items: list[Tick]
