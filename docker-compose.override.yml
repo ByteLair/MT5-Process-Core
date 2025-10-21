@@ -24,10 +24,23 @@ services:
       DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
       ML_SYMBOL: "EURUSD"
       ML_TIMEFRAME: "H1"
+      OMP_NUM_THREADS: "28"
+      OPENBLAS_NUM_THREADS: "28"
+      MKL_NUM_THREADS: "28"
+      NUMEXPR_NUM_THREADS: "28"
+      PYTORCH_NUM_THREADS: "28"
+      OMP_PROC_BIND: "true"
+      OMP_PLACES: "cores"
+      KMP_AFFINITY: "granularity=fine,compact,1,0"
+      MKL_DYNAMIC: "FALSE"
     volumes:
       - ./ml:/app/ml:rw
       - models_mt5:/models
     restart: unless-stopped
+    # Use full server resources for CPU-bound scheduler if needed
+    cpus: 28
+    cpuset: "0-27"
+    mem_limit: 32g
     logging:
       driver: "json-file"
       options:

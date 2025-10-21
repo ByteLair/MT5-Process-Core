@@ -17,9 +17,21 @@ MODEL_PKL = MODELS_DIR / "random_forest.pkl"
 REPORT_JSON = MODELS_DIR / "last_train_report.json"
 
 
-def main():
+def main() -> None:
+    # Tune environment for CPU utilization
+    try:
+        from ml.utils.perf import fast_read_csv, sklearn_thread_limit, tune_environment
+
+        n_threads = tune_environment()
+    except Exception:
+        n_threads = None
     print(f"[ML] Lendo dataset: {DATA}")
-    df = pd.read_csv(DATA, parse_dates=["ts"])
+    try:
+        from ml.utils.perf import fast_read_csv
+
+        df = fast_read_csv(str(DATA), parse_dates=["ts"])
+    except Exception:
+        df = pd.read_csv(DATA, parse_dates=["ts"])
 
     feature_cols = [
         "ret_1",
@@ -57,7 +69,14 @@ def main():
     )
 
     print("[ML] Treinando RandomForest...")
-    model.fit(X_train, y_train)
+    # Ensure BLAS threads are aligned during fit (avoid oversubscription: 1 thread per BLAS lib)
+    try:
+        from ml.utils.perf import sklearn_thread_limit
+
+        with sklearn_thread_limit(1):
+            model.fit(X_train, y_train)
+    except Exception:
+        model.fit(X_train, y_train)
 
     preds = model.predict(X_test)
 

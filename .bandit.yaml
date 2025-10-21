@@ -39,7 +39,6 @@ tests:
   - B306  # insecure_mktemp
   - B307  # eval
   - B308  # mark_safe
-  - B309  # httpsconnection
   - B310  # urllib_urlopen
   - B311  # random
   - B312  # telnetlib
@@ -54,7 +53,6 @@ tests:
   - B321  # ftplib
   - B323  # unverified_context
   - B324  # hashlib_new_insecure_functions
-  - B325  # tempnam
   - B401  # import_telnetlib
   - B402  # import_ftplib
   - B403  # import_pickle

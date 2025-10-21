@@ -16,6 +16,17 @@ if _PROJECT_ROOT not in sys.path:
 
 from ml.models.informer import Informer
 
+_fast_read_csv = None
+try:
+    from ml.utils.perf import fast_read_csv as _fast
+    from ml.utils.perf import tune_environment, tune_torch_threads
+
+    tune_environment()
+    tune_torch_threads()
+    _fast_read_csv = _fast
+except Exception:
+    _fast_read_csv = None
+
 print("=" * 60)
 print("INFORMER - CLASSIFICAÇÃO BINÁRIA DE TRADES POSITIVOS")
 print("=" * 60)
@@ -40,14 +51,20 @@ CONFIG = {
 # Carregar dataset
 DATA_PATH = "ml/data/training_dataset.csv"
 TARGET_COL = "target_ret_1"
-df = pd.read_csv(DATA_PATH)
+if callable(_fast_read_csv):
+    try:
+        df = _fast_read_csv(DATA_PATH)
+    except Exception:
+        df = pd.read_csv(DATA_PATH)
+else:
+    df = pd.read_csv(DATA_PATH)
 print(f"✓ Dataset carregado: {len(df)} registros")
 
 # Seleciona apenas colunas numéricas exceto o alvo
-numeric_cols = [c for c in df.columns if np.issubdtype(df[c].dtype, np.number)]
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 features = [c for c in numeric_cols if c != TARGET_COL]
-X = df[features].values
-y_continuous = df[TARGET_COL].values
+X = df[features].to_numpy()
+y_continuous = df[TARGET_COL].to_numpy(dtype=np.float32)
 
 # CLASSIFICAÇÃO BINÁRIA: target = 1 se retorno > 0 (trade positivo), 0 caso contrário
 y = (y_continuous > 0).astype(np.float32)
@@ -64,12 +81,21 @@ X = (X - X_mean) / X_std
 
 
 # Preparar dados sequenciais
-def create_sequences(X, y, seq_len):
-    Xs, ys = [], []
-    for i in range(len(X) - seq_len):
-        Xs.append(X[i : i + seq_len])
+def create_sequences(x: np.ndarray, y: np.ndarray, seq_len: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Cria sequências para modelos de séries temporais.
+    Args:
+        x: array de features
+        y: array de targets
+        seq_len: tamanho da janela
+    Returns:
+        tuple: (xs, ys) arrays de entrada e saída
+    """
+    xs, ys = [], []
+    for i in range(len(x) - seq_len):
+        xs.append(x[i : i + seq_len])
         ys.append(y[i + seq_len])
-    return np.array(Xs), np.array(ys)
+    return np.array(xs), np.array(ys)
 
 
 print(f"✓ Criando sequências (seq_len={CONFIG['seq_len']})...")

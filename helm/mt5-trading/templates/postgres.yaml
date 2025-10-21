@@ -1,3 +1,4 @@
+{{- /* pragma: allowlist secret */ -}}
 {{- if .Values.postgres.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -5,8 +6,8 @@ metadata:
   name: {{ .Release.Name }}-postgres
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "mt5-trading.labels" . | nindent 4 }}
     app: postgres
+    {{- include "mt5-trading.labels" . | nindent 4 }}
 spec:
   replicas: 1
   strategy:
@@ -20,25 +21,25 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
-        imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
-        ports:
-        - containerPort: {{ .Values.postgres.service.port }}
-          name: postgres
-        env:
-        - name: POSTGRES_USER
-          value: {{ .Values.postgres.auth.username }}
-        - name: POSTGRES_PASSWORD
-          value: {{ .Values.postgres.auth.password }}
-        - name: POSTGRES_DB
-          value: {{ .Values.postgres.auth.database }}
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
-        - name: TIMESCALEDB_TELEMETRY
-          value: {{ .Values.config.timescaledb.telemetry | quote }}
-        volumeMounts:
-        - name: postgres-storage
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.postgres.service.port }}
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.auth.username }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.auth.password }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.auth.database }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: TIMESCALEDB_TELEMETRY
+              value: {{ .Values.config.timescaledb.telemetry | quote }}
+          volumeMounts:
+            - name: postgres-storage
           mountPath: /var/lib/postgresql/data
         resources:
           {{- toYaml .Values.postgres.resources | nindent 10 }}

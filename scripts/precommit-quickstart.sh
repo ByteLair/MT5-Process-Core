@@ -3,11 +3,11 @@
 All rights reserved. | Todos os direitos reservados.
 Private License: This code is the exclusive property of Felipe Petracco Carmo.
 Redistribution, copying, modification or commercial use is NOT permitted without express authorization.
-Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
-Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
+# Licença privada: Este código é propriedade exclusiva de Felipe Petracco Carmo.
+# Não é permitida redistribuição, cópia, modificação ou uso comercial sem autorização expressa.
 # =============================================================
 
-#!/bin/bash
+#!/usr/bin/env bash
 # Quick start guide for pre-commit
 # Run this to see a visual guide
 

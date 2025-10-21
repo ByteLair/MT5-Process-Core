@@ -34,7 +34,7 @@ def has_header(text: str) -> bool:
     return "Copyright (c) 2025 Felipe Petracco Carmo" in text
 
 
-def add_header_to_file(path: pathlib.Path):
+def add_header_to_file(path: pathlib.Path) -> None:
     ext = path.suffix
     name = path.name
     if ext == ".ipynb":

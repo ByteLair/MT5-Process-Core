@@ -4,7 +4,7 @@ import sqlite3
 import subprocess
 
 
-def test_health_check_script_runs():
+def test_health_check_script_runs() -> None:
     """
     Test that the health-check.sh script runs successfully and outputs expected message.
     """
@@ -13,7 +13,7 @@ def test_health_check_script_runs():
     assert "Health check completed" in result.stdout
 
 
-def test_health_check_db_exists():
+def test_health_check_db_exists() -> None:
     """
     Test that the health check database exists and has required tables.
     """
@@ -29,7 +29,7 @@ def test_health_check_db_exists():
     conn.close()
 
 
-def test_health_check_daily_report():
+def test_health_check_daily_report() -> None:
     """
     Test that the health-check.sh script generates a daily report with all expected sections.
     """
@@ -45,7 +45,7 @@ def test_health_check_daily_report():
     assert "RECENT FAILURES" in result.stdout
 
 
-def test_health_check_alerts():
+def test_health_check_alerts() -> None:
     """
     Test that unresolved alerts can be queried from the database without error.
     Does not require any alerts to exist, only that query works and returns a list.

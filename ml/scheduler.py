@@ -5,7 +5,15 @@ import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import create_engine, text
 
-DB_URL = os.environ["DATABASE_URL"]
+try:
+    from ml.utils.perf import tune_environment, tune_torch_threads
+
+    tune_environment()
+    tune_torch_threads()
+except Exception:
+    pass
+
+DB_URL = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
 engine = create_engine(DB_URL, pool_pre_ping=True, future=True)
 MODELS_DIR = os.environ.get("MODELS_DIR", "./models")
 FEATURES = [
@@ -55,7 +63,7 @@ def tick():
             )
 
 
-if __name__ == "__main__":
+def main() -> None:
     sched = BackgroundScheduler()
     sched.add_job(tick, "interval", seconds=15, max_instances=1)
     sched.start()
@@ -66,3 +74,7 @@ if __name__ == "__main__":
             time.sleep(3600)
     except KeyboardInterrupt:
         sched.shutdown()
+
+
+if __name__ == "__main__":
+    main()

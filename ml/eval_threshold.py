@@ -28,7 +28,7 @@ X = df[["mean_close", "volatility", "pct_change"]].values
 p = m.predict_proba(X)[:, 1]
 
 
-def metrics(thr):
+def metrics(thr) -> None:
     pred = np.where(p >= thr, 1, np.where((1 - p) >= thr, 0, -1))  # -1 = flat
     mask = pred != -1
     if mask.sum() == 0:

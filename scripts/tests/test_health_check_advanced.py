@@ -5,7 +5,7 @@ import subprocess
 import time
 
 
-def test_simulate_container_failure():
+def test_simulate_container_failure() -> None:
     """
     Simulate API container failure and verify health-check script detects it.
     Stops mt5_api container, runs health-check, checks output, then restarts container.
@@ -17,14 +17,14 @@ def test_simulate_container_failure():
     subprocess.run(["docker", "start", "mt5_api"], capture_output=True)
 
 
-def test_restore_script():
+def test_restore_script() -> None:
     """
     Check that restore.sh script exists (do not run to avoid overwriting data).
     """
     assert os.path.exists("scripts/restore.sh")
 
 
-def test_performance_endpoints():
+def test_performance_endpoints() -> None:
     """
     Test that key API endpoints respond within 2 seconds and return HTTP 200.
     If endpoint is offline, test does not fail.
@@ -48,7 +48,7 @@ def test_performance_endpoints():
             pass  # Pode estar offline, não falha o teste
 
 
-def test_db_integrity():
+def test_db_integrity() -> None:
     """
     Test that health check database exists and has recent records (last 1 day).
     """
@@ -63,7 +63,7 @@ def test_db_integrity():
     conn.close()
 
 
-def test_logs_indexed():
+def test_logs_indexed() -> None:
     """
     Test that daily health check log files exist in logs/health-checks directory.
     """
@@ -72,7 +72,7 @@ def test_logs_indexed():
     assert any(f.startswith("daily_report_") for f in files)
 
 
-def test_timers_trigger():
+def test_timers_trigger() -> None:
     """
     Test that required systemd timers are active.
     """

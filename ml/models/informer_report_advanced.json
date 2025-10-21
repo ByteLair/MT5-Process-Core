@@ -17,16 +17,16 @@
   },
   "metrics": {
     "threshold_0.5": {
-      "precision": 0.49501329787234044,
-      "recall": 1.0,
-      "auc_roc": 0.4867569549971682,
-      "positive_predictions_pct": 100.0
+      "precision": 0.48699551569506727,
+      "recall": 0.36248331108144194,
+      "auc_roc": 0.4928308384689519,
+      "positive_predictions_pct": 37.067819148936174
     },
     "threshold_optimized": {
-      "threshold": 0.5199999999999998,
-      "precision": 0.4899088541666667,
-      "recall": 0.5053727333781061,
-      "positive_predictions_pct": 51.06382978723404
+      "threshold": 0.5,
+      "precision": 0.48699551569506727,
+      "recall": 0.36248331108144194,
+      "positive_predictions_pct": 37.067819148936174
     }
   }
 }

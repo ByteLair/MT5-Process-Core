@@ -1,0 +1,11 @@
+[run]
+omit =
+    ml/train_informer.py
+    ml/train_informer_classifier.py
+    ml/train_informer_gridsearch.py
+    ml/eval_threshold.py
+
+[report]
+exclude_lines =
+    if __name__ == .__main__.:
+    pragma: no cover

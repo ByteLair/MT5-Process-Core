@@ -5,3 +5,7 @@ joblib
 APScheduler
 SQLAlchemy==2.0.36
 psycopg[binary]==3.2.2
+torch>=2.0.0
+numpy>=1.24.0
+pytest>=7.4.0
+pytest-cov>=4.1.0

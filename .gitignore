@@ -35,3 +35,16 @@ venv/
 
 ml/models/*.pkl
 models/*.pkl
+
+# coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Terraform
+.terraform/
+**/*.tfstate
+**/*.tfstate.*
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup

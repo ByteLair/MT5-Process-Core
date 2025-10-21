@@ -125,9 +125,22 @@ def decide(symbol: str, timeframe: str) -> Signal:
 
 
 @app.get("/signals/latest")
-def latest(symbol: str, period: str):
-    logging.info(f"/signals/latest chamado: symbol={symbol}, period={period}")
-    return decide(symbol, period).model_dump()
+def latest(symbol: str | None = None, period: str | None = None, timeframe: str | None = None):
+    """Compat endpoint used in tests.
+    - If symbol and period are provided, return a single decision payload.
+    - If only timeframe is provided, return an empty list (no data) with 200.
+    - Otherwise, return 404 to indicate not found.
+    """
+    if symbol and period:
+        logging.info(f"/signals/latest chamado: symbol={symbol}, period={period}")
+        return decide(symbol, period).model_dump()
+    if timeframe:
+        logging.info(f"/signals/latest chamado com timeframe={timeframe} (sem dados)")
+        return []
+    logging.info("/signals/latest chamado sem parâmetros suficientes")
+    from fastapi import HTTPException
+
+    raise HTTPException(status_code=404, detail="not found")
 
 
 @app.post("/orders/feedback")

@@ -309,7 +309,7 @@ class ConnectionPoolLoadTester:
         logger.info("Connection pool disposed")
 
 
-def main():
+def main() -> None:
     """
     Main entry point for the load test script.
     Parses command-line arguments, runs the selected test, and prints results.

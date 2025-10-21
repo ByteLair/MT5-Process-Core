@@ -1,6 +1,6 @@
+"""Treinamento simples do Informer com dataset CSV e tuning opcional de CPU."""
 import os
 import sys
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -16,13 +16,36 @@ if _PROJECT_ROOT not in sys.path:
 
 from ml.models.informer import Informer
 
+# Optional performance tuning
+_fast_read_csv = None
+_cpu_count = None
+try:
+    from ml.utils.perf import cpu_count as _cpu
+    from ml.utils.perf import fast_read_csv as _fast
+    from ml.utils.perf import tune_environment, tune_torch_threads
+
+    tune_environment()
+    tune_torch_threads()
+    _fast_read_csv = _fast
+    _cpu_count = _cpu
+except Exception:
+    # perf utils not available; proceed with defaults
+    _fast_read_csv = None
+    _cpu_count = None
+
 # Carregar dataset
 DATA_PATH = "ml/data/training_dataset.csv"
 TARGET_COL = "target_ret_1"
-df = pd.read_csv(DATA_PATH)
+if callable(_fast_read_csv):
+    try:
+        df = _fast_read_csv(DATA_PATH)
+    except Exception:
+        df = pd.read_csv(DATA_PATH)
+else:
+    df = pd.read_csv(DATA_PATH)
 
-# Seleciona apenas colunas numéricas exceto o alvo
-numeric_cols = [c for c in df.columns if np.issubdtype(df[c].dtype, np.number)]
+# Seleciona apenas colunas numéricas exceto o alvo (robusto a pandas dtypes)
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 features = [c for c in numeric_cols if c != TARGET_COL]
 X = df[features].values
 y = df[TARGET_COL].values
@@ -35,15 +58,38 @@ X = (X - X_mean) / X_std
 # Parâmetros Informer
 seq_len = 64  # janela maior ajuda seq models
 pred_len = 1  # prever 1 passo à frente
-batch_size = 128
+if callable(_cpu_count):
+    try:
+        _cores = _cpu_count()
+        batch_size = max(128, _cores * 64)
+    except Exception:
+        batch_size = 128
+else:
+    batch_size = 128
+try:
+    # Allow manual override from environment
+    _env_bs = int(os.getenv("BATCH_SIZE", "0"))
+    if _env_bs > 0:
+        batch_size = _env_bs
+except Exception:
+    pass
 
 
 # Preparar dados sequenciais
-def create_sequences(X, y, seq_len, pred_len):
+def create_sequences(X: np.ndarray, y: np.ndarray, seq_len: int, pred_len: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Cria sequências para modelos de séries temporais.
+    Args:
+        X: array de features
+        y: array de targets
+        seq_len: tamanho da janela
+        pred_len: passos à frente para previsão
+    Returns:
+        tuple: (Xs, ys) arrays de entrada e saída
+    """
     Xs, ys = [], []
     for i in range(len(X) - seq_len - pred_len):
         Xs.append(X[i : i + seq_len])
-        # para regressão 1 passo, use o valor escalar
         ys.append(y[i + seq_len + pred_len - 1])
     return np.array(Xs), np.array(ys)[:, None]
 

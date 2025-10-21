@@ -71,7 +71,7 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def main():
+def main() -> None:
     print(f"[ML] Lendo dados de {SYMBOL} {TIMEFRAME}...")
     df = fetch_market_data(limit=200000)
 

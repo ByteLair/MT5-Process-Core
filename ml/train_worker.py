@@ -31,7 +31,7 @@ df["label"] = (df["fwd_ret_5"] > 0).astype(int)
 
 X = df[["mean_close", "volatility", "pct_change"]]
 y = df["label"]
-model = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
+model = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42, n_jobs=-1)
 model.fit(X, y)
 os.makedirs("/models", exist_ok=True)
 joblib.dump(model, "/models/latest_model.pkl")

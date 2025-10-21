@@ -20,7 +20,7 @@ app = Flask(__name__)
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "logs", "health-checks", "health_checks.db")
 
 
-def get_db():
+def get_db() -> None:
     """
     Get a connection to the health check database.
     Returns:
@@ -32,7 +32,7 @@ def get_db():
 
 
 @app.route("/")
-def dashboard():
+def dashboard() -> None:
     """
     Render the main dashboard HTML page.
     Shows health check stats, recent checks, and active alerts.
@@ -302,7 +302,7 @@ def dashboard():
 
 
 @app.route("/api/stats")
-def api_stats():
+def api_stats() -> None:
     """
     API endpoint: Get health check statistics for the last 24 hours.
     Returns:
@@ -328,7 +328,7 @@ def api_stats():
 
 
 @app.route("/api/recent-checks")
-def api_recent_checks():
+def api_recent_checks() -> None:
     """
     API endpoint: Get recent health checks.
     Query Params:
@@ -350,7 +350,7 @@ def api_recent_checks():
 
 
 @app.route("/api/alerts")
-def api_alerts():
+def api_alerts() -> None:
     """
     API endpoint: Get active alerts.
     Returns:
@@ -368,7 +368,7 @@ def api_alerts():
 
 
 @app.route("/api/component/<component>")
-def api_component_history(component):
+def api_component_history(component) -> None:
     """
     API endpoint: Get health check history for a specific component.
     Args:

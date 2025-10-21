@@ -10,6 +10,26 @@ from sklearn.metrics import precision_score, recall_score, roc_auc_score
 from sklearn.utils import resample
 from torch import nn
 
+try:
+    # Optional performance utilities
+    from ml.utils.perf import cpu_count, fast_read_csv, tune_environment, tune_torch_threads
+
+    # Só configura se estiver executando diretamente (não durante import de testes)
+    if __name__ == "__main__":
+        tune_environment()
+        tune_torch_threads()
+        print(f"✓ Performance utils carregados. CPUs detectados: {cpu_count()}")
+        # Log configuração de threads do ambiente
+        print(f"✓ OMP_NUM_THREADS: {os.getenv('OMP_NUM_THREADS', 'não definido')}")
+        print(f"✓ MKL_NUM_THREADS: {os.getenv('MKL_NUM_THREADS', 'não definido')}")
+        print(f"✓ PYTORCH_NUM_THREADS: {os.getenv('PYTORCH_NUM_THREADS', 'não definido')}")
+        print(f"✓ PyTorch threads: {torch.get_num_threads()}")
+        print(f"✓ PyTorch interop threads: {torch.get_num_interop_threads()}")
+except Exception as e:
+    fast_read_csv = None  # type: ignore
+    if __name__ == "__main__":
+        print(f"⚠ Performance utils não disponíveis: {e}")
+
 # Ensure project root is on sys.path
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_THIS_DIR)
@@ -19,7 +39,10 @@ if _PROJECT_ROOT not in sys.path:
 from ml.models.informer import Informer
 
 
-def add_features(df):
+def add_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adiciona features técnicas ao dataframe de mercado.
+    """
     df["ema_12"] = df["close"].ewm(span=12, adjust=False).mean()
     df["ema_26"] = df["close"].ewm(span=26, adjust=False).mean()
     df["macd"] = df["ema_12"] - df["ema_26"]
@@ -38,49 +61,25 @@ def add_features(df):
     return df
 
 
-DATA_PATH = "ml/data/training_dataset.csv"
-TARGET_COL = "target_ret_1"
-df = pd.read_csv(DATA_PATH)
-df = add_features(df)
-df = df.dropna().reset_index(drop=True)
-drop_cols = ["ts"]
-numeric_cols = [
-    c for c in df.columns if np.issubdtype(df[c].dtype, np.number) and c not in drop_cols
-]
-features = [c for c in numeric_cols if c != TARGET_COL]
-X = df[features].values
-y_continuous = df[TARGET_COL].values
-y = (y_continuous > 0).astype(np.float32)
-
-# Oversample positivos
-X_pos = X[y == 1]
-y_pos = y[y == 1]
-X_neg = X[y == 0]
-y_neg = y[y == 0]
-X_pos_upsampled, y_pos_upsampled = resample(
-    X_pos, y_pos, replace=True, n_samples=len(y_neg), random_state=42
-)
-X_bal = np.vstack([X_neg, X_pos_upsampled])
-y_bal = np.hstack([y_neg, y_pos_upsampled])
-idx = np.random.permutation(len(y_bal))
-X, y = X_bal[idx], y_bal[idx]
-
-# Normalização
-X_mean = X.mean(axis=0)
-X_std = X.std(axis=0) + 1e-8
-X = (X - X_mean) / X_std
-
-
-def create_sequences(X, y, seq_len):
-    Xs, ys = [], []
-    for i in range(len(X) - seq_len):
-        Xs.append(X[i : i + seq_len])
+def create_sequences(x: np.ndarray, y: np.ndarray, seq_len: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Cria sequências para modelos de séries temporais.
+    Args:
+        x: array de features
+        y: array de targets
+        seq_len: tamanho da janela
+    Returns:
+        tuple: (xs, ys) arrays de entrada e saída
+    """
+    xs, ys = [], []
+    for i in range(len(x) - seq_len):
+        xs.append(x[i : i + seq_len])
         ys.append(y[i + seq_len])
-    return np.array(Xs), np.array(ys)
+    return np.array(xs), np.array(ys)
 
 
 # Grid de hiperparâmetros
-param_grid = {
+PARAM_GRID = {
     "seq_len": [32, 64, 128],
     "d_model": [64, 128, 256],
     "e_layers": [2, 3, 4],
@@ -88,15 +87,28 @@ param_grid = {
     "lr": [1e-3, 5e-4],
 }
 
-results = []
+import multiprocessing as mp
 
-for seq_len, d_model, e_layers, dropout, lr in product(
-    param_grid["seq_len"],
-    param_grid["d_model"],
-    param_grid["e_layers"],
-    param_grid["dropout"],
-    param_grid["lr"],
+from joblib import Parallel, delayed
+
+
+def evaluate_config(
+    X: np.ndarray,
+    y: np.ndarray,
+    seq_len: int,
+    d_model: int,
+    e_layers: int,
+    dropout: float,
+    lr: float,
 ):
+    """
+    Avalia uma configuração de hiperparâmetros.
+    Configura threads do PyTorch para evitar oversubscription em ambiente paralelo.
+    """
+    # Dentro de cada worker, limitar threads para evitar contenção
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+
     print(
         f"\n=== Treinando: seq_len={seq_len}, d_model={d_model}, e_layers={e_layers}, dropout={dropout}, lr={lr} ==="
     )
@@ -107,7 +119,6 @@ for seq_len, d_model, e_layers, dropout, lr in product(
     X_train, y_train = X_seq[:train_end], y_seq[:train_end]
     X_val, y_val = X_seq[train_end:val_end], y_seq[train_end:val_end]
     X_test, y_test = X_seq[val_end:], y_seq[val_end:]
-    device = torch.device("cpu")
     X_train = torch.tensor(X_train, dtype=torch.float32)
     y_train = torch.tensor(y_train, dtype=torch.float32)
     X_val = torch.tensor(X_val, dtype=torch.float32)
@@ -129,12 +140,15 @@ for seq_len, d_model, e_layers, dropout, lr in product(
     best_val_loss = float("inf")
     patience = 2
     patience_counter = 0
-    for epoch in range(6):  # epochs reduzidos para grid
+    # Batch size menor por worker quando rodando em paralelo
+    # Cada worker processa uma config; batch pequeno evita contenção de memória
+    batch_size = int(os.getenv("BATCH_SIZE", "32"))
+    for epoch in range(6):
         model.train()
         train_loss = 0
-        for i in range(0, len(X_train), 64):
-            xb = X_train[i : i + 64]
-            yb = y_train[i : i + 64]
+        for i in range(0, len(X_train), batch_size):
+            xb = X_train[i : i + batch_size]
+            yb = y_train[i : i + batch_size]
             optimizer.zero_grad()
             logits = model(xb).squeeze(-1)
             loss = loss_fn(logits, yb)
@@ -155,14 +169,11 @@ for seq_len, d_model, e_layers, dropout, lr in product(
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             patience_counter = 0
-            torch.save(model.state_dict(), "ml/models/informer_grid_best.pt")
         else:
             patience_counter += 1
             if patience_counter >= patience:
                 print(f"✓ Early stopping na época {epoch+1}")
                 break
-    model.load_state_dict(torch.load("ml/models/informer_grid_best.pt"))
-    model.eval()
     with torch.no_grad():
         test_logits = model(X_test).squeeze(-1)
         test_probs = torch.sigmoid(test_logits).numpy()
@@ -171,20 +182,107 @@ for seq_len, d_model, e_layers, dropout, lr in product(
     precision_05 = precision_score(y_test_np, test_preds_05, zero_division=0)
     recall_05 = recall_score(y_test_np, test_preds_05, zero_division=0)
     auc = roc_auc_score(y_test_np, test_probs)
-    results.append(
-        {
-            "seq_len": seq_len,
-            "d_model": d_model,
-            "e_layers": e_layers,
-            "dropout": dropout,
-            "lr": lr,
-            "precision": precision_05,
-            "recall": recall_05,
-            "auc_roc": auc,
-        }
-    )
     print(f"Test Precision: {precision_05:.4f} | Recall: {recall_05:.4f} | AUC: {auc:.4f}")
+    return {
+        "seq_len": seq_len,
+        "d_model": d_model,
+        "e_layers": e_layers,
+        "dropout": dropout,
+        "lr": lr,
+        "precision": float(precision_05),
+        "recall": float(recall_05),
+        "auc_roc": float(auc),
+    }
 
-with open("ml/models/informer_gridsearch_results.json", "w") as f:
-    json.dump(results, f, indent=2)
-print("✓ Grid search concluído e resultados salvos!")
+
+def main():
+    """Executa grid search de hiperparâmetros para o modelo Informer."""
+    DATA_PATH = "ml/data/training_dataset.csv"
+    TARGET_COL = "target_ret_1"
+
+    # Carregar dados
+    if callable(fast_read_csv):
+        try:
+            df = fast_read_csv(DATA_PATH)
+        except Exception:
+            df = pd.read_csv(DATA_PATH)
+    else:
+        df = pd.read_csv(DATA_PATH)
+
+    df = add_features(df)
+    df = df.dropna().reset_index(drop=True)
+    drop_cols = ["ts"]
+    numeric_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c not in drop_cols]
+    features = [c for c in numeric_cols if c != TARGET_COL]
+    X = df[features].to_numpy()
+    y_continuous = df[TARGET_COL].to_numpy(dtype=np.float32)
+    y = (y_continuous > 0).astype(np.float32)
+
+    # Oversample positivos
+    X_pos = X[y == 1]
+    y_pos = y[y == 1]
+    X_neg = X[y == 0]
+    y_neg = y[y == 0]
+    X_pos_upsampled, y_pos_upsampled = resample(
+        X_pos, y_pos, replace=True, n_samples=len(y_neg), random_state=42
+    )
+    X_bal = np.vstack([X_neg, X_pos_upsampled])
+    y_bal = np.hstack([y_neg, y_pos_upsampled])
+    idx = np.random.permutation(len(y_bal))
+    X, y = X_bal[idx], y_bal[idx]
+
+    # Normalização
+    X_mean = X.mean(axis=0)
+    X_std = X.std(axis=0) + 1e-8
+    X = (X - X_mean) / X_std
+
+    # Grid search
+    param_list = list(
+        product(
+            PARAM_GRID["seq_len"],
+            PARAM_GRID["d_model"],
+            PARAM_GRID["e_layers"],
+            PARAM_GRID["dropout"],
+            PARAM_GRID["lr"],
+        )
+    )
+
+    # Determinar número de jobs baseado em CPUs disponíveis
+    n_jobs = int(os.getenv("N_JOBS", "-1"))
+    if n_jobs == -1:
+        n_jobs = mp.cpu_count()
+        print(f"✓ Usando todos os {n_jobs} cores disponíveis para grid search")
+    else:
+        print(f"✓ Usando {n_jobs} cores para grid search (configurado via N_JOBS)")
+
+    # Parallelize across CPU cores usando processes
+    # prefer="processes" é crucial para contornar GIL do Python e utilizar todos os cores
+    print(f"✓ Total de {len(param_list)} configurações a testar")
+    print("✓ Iniciando grid search paralelo...")
+    results = Parallel(n_jobs=n_jobs, prefer="processes", verbose=10)(
+        delayed(evaluate_config)(X, y, *cfg) for cfg in param_list
+    )
+
+    print(f"\n{'='*80}")
+    print(f"✓ Grid search concluído! {len(results)} configurações testadas.")
+    print(f"{'='*80}")
+
+    # Salvar resultados
+    with open("ml/models/informer_gridsearch_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+    print("✓ Resultados salvos em ml/models/informer_gridsearch_results.json")
+
+    # Mostrar top 3 configurações
+    sorted_results = sorted(results, key=lambda x: x.get("auc_roc", 0), reverse=True)
+    print("\n🏆 Top 3 configurações por AUC-ROC:")
+    for i, res in enumerate(sorted_results[:3], 1):
+        print(
+            f"{i}. seq_len={res['seq_len']}, d_model={res['d_model']}, "
+            f"e_layers={res['e_layers']}, dropout={res['dropout']:.1f}, "
+            f"lr={res['lr']:.0e} → AUC={res['auc_roc']:.4f}, "
+            f"Prec={res['precision']:.4f}, Rec={res['recall']:.4f}"
+        )
+
+
+if __name__ == "__main__":
+    main()
