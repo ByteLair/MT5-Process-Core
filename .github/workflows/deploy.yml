@@ -14,4 +14,6 @@ jobs:
         run: |
           cd /home/felipe/mt5-trading-db
           git pull
-          docker compose up -d api
+          # Pull latest image (if applicable) and update only the API service without touching dependencies (DB)
+          docker compose pull api || true
+          docker compose up -d --no-deps --remove-orphans api
