@@ -3,7 +3,7 @@ psycopg2-binary
 scikit-learn==1.5.2
 joblib
 APScheduler
-SQLAlchemy==2.0.36
+SQLAlchemy==2.0.44
 psycopg[binary]==3.2.2
 torch>=2.0.0
 numpy>=1.24.0
