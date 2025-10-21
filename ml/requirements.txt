@@ -1,6 +1,6 @@
 pandas
 psycopg2-binary
-scikit-learn==1.5.2
+scikit-learn==1.7.2
 joblib
 APScheduler
 SQLAlchemy==2.0.36
