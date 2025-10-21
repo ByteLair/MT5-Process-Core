@@ -11,7 +11,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run health check
         run: |
@@ -37,7 +37,7 @@ jobs:
     if: github.event.schedule == '0 8 * * *'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Generate daily report
         run: |

@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: self-hosted  # Roda no seu servidor
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Deploy
         run: |
