@@ -11,6 +11,7 @@ from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
+
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,6 +25,7 @@ except Exception:  # pragma: no cover - fallback for different loaders
         from ..db import engine as ENGINE  # type: ignore
 
 API_KEY = os.getenv("API_KEY", "supersecretkey")
+DISABLE_TICK_INGEST = os.getenv("DISABLE_TICK_INGEST", "true").lower() in {"1", "true", "yes"}
 
 router = APIRouter(tags=["ingest"])
 
@@ -284,6 +286,10 @@ def ingest_tick(data: TickWrapper, x_api_key: str | None = Header(None)):
     start_time = time.time()
     try:
         auth(x_api_key)
+
+        # Se ticks estiverem desabilitados por política, retornar 410
+        if DISABLE_TICK_INGEST:
+            raise HTTPException(status_code=410, detail="Tick ingestion disabled. Use /ingest with timeframe='M1'.")
 
         # Para consistência, computamos bucket de minuto por tick (sem persistir ainda em market_data)
         details = []

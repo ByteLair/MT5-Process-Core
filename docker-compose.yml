@@ -172,6 +172,7 @@ services:
       # - ./dados_historicos.csv:/app/scripts/dados_historicos.csv:ro  # Already included in scripts mount
 
   tick-aggregator:
+    profiles: ["ticks"]
     build:
       context: ./api
       dockerfile: Dockerfile
