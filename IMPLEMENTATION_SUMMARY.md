@@ -274,7 +274,7 @@ ea-pusher:
 **Environment Variables** (in `.env`):
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| -------- | ------- | ----------- |
 | `EA_SERVER_IP` | 192.168.15.18 | EA server IP address |
 | `EA_SERVER_PORT` | 8080 | EA server port |
 | `EA_API_KEY` | mt5_trading_secure_key_2025_prod | API key |
