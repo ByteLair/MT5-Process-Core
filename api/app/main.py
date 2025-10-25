@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from .ingest import router as ingest_router
 from .metrics import router as metrics_router
 from .signals import router as signals_router
+from .ea_signals import router as ea_signals_router
 
 # Adicionar diretório pai ao path para imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -158,6 +159,7 @@ def health():
 app.include_router(signals_router)
 app.include_router(ingest_router)
 app.include_router(metrics_router)
+app.include_router(ea_signals_router)
 
 # Expor /prometheus para Prometheus scrapes
 metrics_app = make_asgi_app(registry=REGISTRY)

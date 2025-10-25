@@ -244,6 +244,46 @@ services:
     mem_limit: 1g
 
 
+  ea-pusher:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: mt5-api
+    container_name: mt5_ea_pusher
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      EA_SERVER_IP: ${EA_SERVER_IP:-192.168.15.18}
+      EA_SERVER_PORT: ${EA_SERVER_PORT:-8080}
+      EA_API_KEY: ${EA_API_KEY:-mt5_trading_secure_key_2025_prod}
+      EA_PUSH_INTERVAL: ${EA_PUSH_INTERVAL:-30}
+      EA_PUSH_ENABLED: ${EA_PUSH_ENABLED:-true}
+      EA_REQUEST_TIMEOUT: ${EA_REQUEST_TIMEOUT:-10}
+      DB_HOST: "db"
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "run_ea_pusher.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f run_ea_pusher || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512m"
+    mem_limit: 512m
+
 
   pgadmin:
     image: dpage/pgadmin4:8.12
