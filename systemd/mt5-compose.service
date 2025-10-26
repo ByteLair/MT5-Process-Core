@@ -5,7 +5,7 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
 User=felipe
 Group=docker
 Environment=HOME=/home/felipe

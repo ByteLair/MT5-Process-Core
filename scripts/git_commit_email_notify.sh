@@ -3,7 +3,7 @@
 # Envia email com status do repositório a cada commit
 
 EMAIL="kuramopr@gmail.com"
-REPO_DIR="/home/felipe/mt5-trading-db"
+REPO_DIR="/home/felipe/MT5-Process-Core-full"
 cd "$REPO_DIR"
 
 LAST_COMMIT=$(git log -1 --pretty=format:'%h - %an, %ad : %s' --date=iso)

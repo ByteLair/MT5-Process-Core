@@ -10,7 +10,7 @@
 
 ### Weekly Tasks (Sunday 4:15 AM)
 
-The maintenance script `/home/felipe/mt5-trading-db/scripts/db_maintenance.sh` performs:
+The maintenance script `/home/felipe/MT5-Process-Core-full/scripts/db_maintenance.sh` performs:
 
 - Full VACUUM ANALYZE
 - Compression of chunks older than 30 days
@@ -522,7 +522,7 @@ docker run --rm \
 # 3. Configuration backup
 log "Backing up configurations..."
 tar czf "$BACKUP_DIR/configs/config_$DATE.tar.gz" \
-    -C /home/felipe/mt5-trading-db \
+    -C /home/felipe/MT5-Process-Core-full \
     docker-compose.yml \
     .env \
     api/config.py
@@ -616,10 +616,10 @@ The backup monitoring system (`scripts/monitor_backups.sh`) checks:
 
 ```bash
 # Hourly monitoring check
-0 * * * * /home/felipe/mt5-trading-db/scripts/monitor_backups.sh
+0 * * * * /home/felipe/MT5-Process-Core-full/scripts/monitor_backups.sh
 
 # Post-backup verification
-45 2 * * * /home/felipe/mt5-trading-db/scripts/monitor_backups.sh
+45 2 * * * /home/felipe/MT5-Process-Core-full/scripts/monitor_backups.sh
 ```
 
 #### 3. Alert Channels
@@ -809,7 +809,7 @@ WHERE i NOT IN (
 EOF
 
 # Run maintenance script
-/home/felipe/mt5-trading-db/scripts/db_maintenance.sh
+/home/felipe/MT5-Process-Core-full/scripts/db_maintenance.sh
 ```
 
 ### Performance Issues

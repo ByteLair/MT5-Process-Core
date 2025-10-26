@@ -5,8 +5,8 @@ After=docker.service network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/maintenance.sh full
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/maintenance.sh full
 TimeoutStartSec=300
 RemainAfterExit=false
 

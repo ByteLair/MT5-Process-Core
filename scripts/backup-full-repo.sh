@@ -32,7 +32,7 @@ fi
 
 BACKUP_API_URL=${BACKUP_API_URL:-""}
 BACKUP_API_TOKEN=${BACKUP_API_TOKEN:-""}
-REPO_DIR=${REPO_DIR:-/home/felipe/mt5-trading-db}
+REPO_DIR=${REPO_DIR:-/home/felipe/MT5-Process-Core-full}
 TMP_DIR=${TMP_DIR:-/tmp}
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_FILE="${TMP_DIR}/mt5-trading-db-full-backup-${TIMESTAMP}.tar.gz"

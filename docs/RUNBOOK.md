@@ -68,7 +68,7 @@ ls -lth ml/models/ | head -5
 
 ```bash
 # Criar branch de release
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 git checkout -b release/api-v1.2.0
 
 # Atualizar versão

@@ -90,7 +90,7 @@ fi
 log_info "Configurando variáveis de ambiente..."
 
 if [ ! -f /etc/default/mt5-backup ]; then
-    cp /home/felipe/mt5-trading-db/.env.backup /etc/default/mt5-backup
+    cp /home/felipe/MT5-Process-Core-full/.env.backup /etc/default/mt5-backup
     chmod 600 /etc/default/mt5-backup
     chown root:root /etc/default/mt5-backup
     log_success "Arquivo de configuração criado: /etc/default/mt5-backup"
@@ -107,7 +107,7 @@ fi
 # ============================================================================
 
 log_info "Configurando permissões do script..."
-chmod +x /home/felipe/mt5-trading-db/scripts/backup.sh
+chmod +x /home/felipe/MT5-Process-Core-full/scripts/backup.sh
 log_success "Script de backup configurado"
 
 # ============================================================================
@@ -115,8 +115,8 @@ log_success "Script de backup configurado"
 # ============================================================================
 
 log_info "Instalando serviço systemd..."
-cp /home/felipe/mt5-trading-db/systemd/mt5-backup.service /etc/systemd/system/
-cp /home/felipe/mt5-trading-db/systemd/mt5-backup.timer /etc/systemd/system/
+cp /home/felipe/MT5-Process-Core-full/systemd/mt5-backup.service /etc/systemd/system/
+cp /home/felipe/MT5-Process-Core-full/systemd/mt5-backup.timer /etc/systemd/system/
 systemctl daemon-reload
 log_success "Serviço systemd instalado"
 

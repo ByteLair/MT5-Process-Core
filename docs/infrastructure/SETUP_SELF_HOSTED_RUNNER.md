@@ -61,7 +61,7 @@ jobs:
 
       - name: Deploy
         run: |
-          cd /home/felipe/mt5-trading-db
+          cd /home/felipe/MT5-Process-Core-full
           git pull
           docker compose up -d api
 ```

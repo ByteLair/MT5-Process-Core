@@ -1,0 +1,39 @@
+[Unit]
+Description=MT5 Trading DB Backup Service
+Documentation=file:///home/felipe/mt5-trading-db/docs/backup.md
+After=network-online.target postgresql.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/felipe/mt5-trading-db
+
+# Carregar variáveis de ambiente
+EnvironmentFile=/etc/default/mt5-backup
+
+
+# Executar fluxo semanal completo (banco, repositório, monitoramento)
+ExecStart=/usr/bin/env bash -lc '/home/felipe/mt5-trading-db/scripts/weekly-backup-flow.sh'
+
+# Timeout de 30 minutos para backup grande
+TimeoutStartSec=1800
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mt5-backup
+
+# Restart policy
+Restart=no
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+# Permitir leitura do /home para executar o script (e manter escrita restrita a /var/backups/mt5)
+ProtectHome=read-only
+ReadWritePaths=/var/backups/mt5
+
+[Install]
+WantedBy=multi-user.target

@@ -136,7 +136,7 @@ fi
 # 2. Stop Services
 ################################################################################
 echo -e "${BLUE}[2/5]${NC} Stopping services..."
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 docker-compose down
 echo -e "${GREEN}✓${NC} Services stopped"
 

@@ -5,7 +5,7 @@ Para receber um email com o status do repositório a cada commit:
 1. Adicione o seguinte hook ao seu repositório:
 
   ```bash
-  echo '#!/bin/bash\nbash /home/felipe/mt5-trading-db/scripts/git_commit_email_notify.sh' > .git/hooks/post-commit
+  echo '#!/bin/bash\nbash /home/felipe/MT5-Process-Core-full/scripts/git_commit_email_notify.sh' > .git/hooks/post-commit
   chmod +x .git/hooks/post-commit
   ```
 
@@ -434,7 +434,7 @@ Instalado em tempo de execução em:
 
 Conteúdo (resumo):
 
-- WorkingDirectory: `/home/felipe/mt5-trading-db`
+- WorkingDirectory: `/home/felipe/MT5-Process-Core-full`
 - ExecStart: `~/.venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port 9101`
 - Logs: `~/mt5-trading-db/logs/api/`
 - Restart: `always`

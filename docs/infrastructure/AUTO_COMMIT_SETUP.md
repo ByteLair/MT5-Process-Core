@@ -38,7 +38,7 @@ O workflow `.github/workflows/auto-commit.yml` já está configurado!
 Execute o script quando quiser:
 
 ```bash
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 ./scripts/auto-commit.sh
 ```
 
@@ -51,7 +51,7 @@ Se quiser executar localmente no servidor:
 crontab -e
 
 # Adicionar linha (4:00 AM todos os dias)
-0 4 * * * cd /home/felipe/mt5-trading-db && ./scripts/auto-commit.sh >> /home/felipe/mt5-trading-db/logs/auto-commit.log 2>&1
+0 4 * * * cd /home/felipe/MT5-Process-Core-full && ./scripts/auto-commit.sh >> /home/felipe/MT5-Process-Core-full/logs/auto-commit.log 2>&1
 ```
 
 ## 📋 Formato da Mensagem de Commit

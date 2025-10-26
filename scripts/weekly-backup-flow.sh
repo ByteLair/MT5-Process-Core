@@ -16,7 +16,7 @@ if [ "$(id -u)" -ne 0 ]; then
 	exit 1
 fi
 
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 
 echo "[FLOW] Iniciando backup do banco de dados..."
 bash scripts/backup.sh

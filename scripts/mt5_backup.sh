@@ -6,7 +6,7 @@ BACKUP_DIR="/backups/mt5"
 RETAIN_DAYS=14
 DATE=$(date +%Y%m%d)
 LOG_FILE="/var/log/mt5/backup.log"
-DOCKER_COMPOSE_DIR="/home/felipe/mt5-trading-db"
+DOCKER_COMPOSE_DIR="/home/felipe/MT5-Process-Core-full"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"

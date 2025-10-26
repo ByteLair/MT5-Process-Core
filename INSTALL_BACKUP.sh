@@ -43,7 +43,7 @@ REPOSITÓRIO GITHUB:
 
 1️⃣  EXECUTAR SCRIPT DE INSTALAÇÃO:
 
-   cd /home/felipe/mt5-trading-db
+   cd /home/felipe/MT5-Process-Core-full
    sudo ./scripts/setup-backup.sh
 
    O script irá:

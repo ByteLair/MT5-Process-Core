@@ -3,7 +3,7 @@
 # Gera relatório diário de status dos serviços, últimos commits e testes, enviando email único
 
 EMAIL="kuramopr@gmail.com"
-REPO_DIR="/home/felipe/mt5-trading-db"
+REPO_DIR="/home/felipe/MT5-Process-Core-full"
 cd "$REPO_DIR"
 
 # Status dos serviços

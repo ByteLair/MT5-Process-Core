@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/start_github_runner.sh
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/start_github_runner.sh
 RemainAfterExit=true
 
 [Install]

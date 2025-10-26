@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installer for systemd service + timer
 UNIT_DIR="/etc/systemd/system"
-REPO_DIR="/home/felipe/mt5-trading-db"
+REPO_DIR="/home/felipe/MT5-Process-Core-full"
 
 copy_unit() {
   local src="$1" dst="$2"

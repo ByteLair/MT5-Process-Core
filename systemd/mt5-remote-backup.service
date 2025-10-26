@@ -4,8 +4,8 @@ After=mt5-update.service mt5-tests.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/remote_backup.sh
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/remote_backup.sh
 
 [Install]
 WantedBy=multi-user.target

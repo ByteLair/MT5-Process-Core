@@ -44,7 +44,7 @@ Pre-commit é um framework que gerencia e mantém hooks Git multi-linguagem. Ele
 ### 1. Ativar o ambiente virtual
 
 ```bash
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 source .venv/bin/activate
 ```
 

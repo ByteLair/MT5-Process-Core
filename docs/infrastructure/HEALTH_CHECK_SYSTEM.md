@@ -16,7 +16,7 @@ Sistema completo de monitoramento de saúde para containers, API, database e pip
 ### Executar Health Check Manual
 
 ```bash
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 ./scripts/health-check.sh
 ```
 
@@ -251,7 +251,7 @@ WHERE component_name='mt5_db';
 ## 📁 File Structure
 
 ```
-/home/felipe/mt5-trading-db/
+/home/felipe/MT5-Process-Core-full/
 ├── scripts/
 │   ├── health-check.sh           # Main health check script
 │   └── health-dashboard.py       # Flask web dashboard

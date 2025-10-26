@@ -1,0 +1,56 @@
+# Recovery README
+
+This document explains how to recover the stack and restore the TimescaleDB backup `db_backup.dump` created during the recovery operations.
+
+Paths and assumptions
+- Project root: replace <PROJECT_ROOT> with the repository path where you run the commands. Current working directory used for automated updates is the root of the repo (`$(pwd)` when run).
+- Backup file: `./db_backup.dump` (custom format created by pg_dump)
+
+Quick restore steps (fresh host)
+
+1. Ensure Docker is installed and running.
+2. Ensure your user is in the `docker` group or run docker commands with `sudo`.
+3. Create required host directories (this repo provides `scripts/fix_bind_mounts_permissions.sh`):
+
+```bash
+cd <PROJECT_ROOT>
+sudo ./scripts/fix_bind_mounts_permissions.sh
+```
+
+4. Start the stack (or only DB if you prefer):
+
+```bash
+# Full stack
+sudo docker compose up -d --build
+
+# Or only db service
+sudo docker compose up -d --build db
+```
+
+5. If you start only the DB, restore the dump into `mt5_trading` database:
+
+```bash
+# Start a temporary container with the same volume mount
+sudo docker run -d --name temp_pg_restore -e POSTGRES_USER=trader -e POSTGRES_PASSWORD=trader123 -e POSTGRES_DB=mt5_trading -v mt5_db_data:/var/lib/postgresql/data timescale/timescaledb:2.14.2-pg16
+
+# Wait until ready inside container
+sudo docker exec temp_pg_restore bash -c "until pg_isready -U trader -d mt5_trading; do sleep 1; done"
+
+# Copy dump into container (if not already in volume)
+sudo docker cp ./db_backup.dump temp_pg_restore:/tmp/db_backup.dump
+
+# Ensure timescaledb extension exists
+sudo docker exec temp_pg_restore psql -U trader -d mt5_trading -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+
+# Restore
+sudo docker exec temp_pg_restore pg_restore -U trader -d mt5_trading /tmp/db_backup.dump
+
+# Cleanup
+sudo docker rm -f temp_pg_restore
+```
+
+Notes
+- The dump was created in custom format (-F c). Use `pg_restore` to restore. For TimescaleDB special objects (continuous aggregates, chunking), follow TimescaleDB restore guidance (create extension before restore, consider restoring schema first).
+- Systemd units and scripts previously referenced absolute paths (e.g. `/home/felipe/mt5-trading-db`). The repo contains a script `scripts/update_project_paths.sh` which rewrites those to the current repo path and creates `.bak` backups. Use with caution and review diffs.
+
+If you want me to perform the restore now (or bring the entire stack up), tell me and I'll run the steps for you.

@@ -72,7 +72,7 @@ minikube addons enable metrics-server
 ### 1. Build das Imagens
 
 ```bash
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 
 # Build API
 docker build -t mt5-trading-api:latest -f api/Dockerfile ./api

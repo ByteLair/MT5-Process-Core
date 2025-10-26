@@ -1,0 +1,8 @@
+[Unit]
+Description=MT5 docker healthcheck runner
+
+[Service]
+Type=oneshot
+ExecStart=/home/felipe/mt5-trading-db/scripts/health_unhealthy_check.sh
+StandardOutput=journal
+StandardError=journal

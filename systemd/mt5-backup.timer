@@ -1,6 +1,6 @@
 [Unit]
 Description=MT5 Trading DB Backup Timer
-Documentation=file:///home/felipe/mt5-trading-db/docs/backup.md
+Documentation=file:///home/felipe/MT5-Process-Core-full/docs/backup.md
 Requires=mt5-backup.service
 
 

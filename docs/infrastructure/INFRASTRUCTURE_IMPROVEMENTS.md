@@ -107,7 +107,7 @@ docker compose exec -T db psql -U trader -c "DROP DATABASE $TEST_DB;"
 
 ```bash
 # Adicionar ao crontab
-0 3 * * 0 cd /home/felipe/mt5-trading-db && ./scripts/test_backup_restore.sh >> ./logs/backup_test.log 2>&1
+0 3 * * 0 cd /home/felipe/MT5-Process-Core-full && ./scripts/test_backup_restore.sh >> ./logs/backup_test.log 2>&1
 ```
 
 ---
@@ -351,7 +351,7 @@ jobs:
         run: |
           # SSH para servidor e atualizar
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd /home/felipe/mt5-trading-db
+            cd /home/felipe/MT5-Process-Core-full
             git pull
             docker compose pull
             docker compose up -d --no-deps api

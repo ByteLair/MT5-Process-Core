@@ -2,7 +2,7 @@
 # Adjust PostgreSQL memory settings based on total system RAM
 set -euo pipefail
 
-CONF_FILE="/home/felipe/mt5-trading-db/docker/postgres.conf.d/postgresql.conf"
+CONF_FILE="/home/felipe/MT5-Process-Core-full/docker/postgres.conf.d/postgresql.conf"
 TOTAL_RAM_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 TOTAL_RAM_GB=$((TOTAL_RAM_KB / 1024 / 1024))
 

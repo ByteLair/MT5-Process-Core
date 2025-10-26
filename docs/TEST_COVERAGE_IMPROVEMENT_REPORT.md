@@ -127,7 +127,7 @@
 Um relatório visual completo foi gerado em:
 
 ```
-/home/felipe/mt5-trading-db/htmlcov/index.html
+/home/felipe/MT5-Process-Core-full/htmlcov/index.html
 ```
 
 ### Como Visualizar

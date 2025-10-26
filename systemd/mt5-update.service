@@ -4,8 +4,8 @@ After=network.target docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/update_stack.sh
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/update_stack.sh
 
 [Install]
 WantedBy=multi-user.target

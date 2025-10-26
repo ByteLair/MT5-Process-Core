@@ -1,0 +1,18 @@
+[Unit]
+Description=MT5 Trading DB Stack
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/felipe/mt5-trading-db
+User=felipe
+Group=docker
+Environment=HOME=/home/felipe
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
+ExecStart=/snap/bin/docker-compose up -d
+ExecStop=/snap/bin/docker-compose down
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

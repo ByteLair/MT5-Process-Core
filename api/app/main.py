@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import FastAPI
+from fastapi import Request
 from prometheus_client import REGISTRY, make_asgi_app
 from pydantic import BaseModel
 
@@ -36,6 +37,27 @@ logging.basicConfig(
 )
 
 app = FastAPI(title="MT5 Trade Bridge")
+
+# Verbose logging control via env var
+API_LOG_VERBOSE = os.environ.get("API_LOG_VERBOSE", "false").lower() in {"1", "true", "yes"}
+
+
+# Middleware to log request bodies for /ingest endpoints when verbose is enabled
+@app.middleware("http")
+async def log_ingest_requests(request: Request, call_next):
+    try:
+        if API_LOG_VERBOSE and request.method == "POST" and request.url.path.startswith("/ingest"):
+            body = await request.body()
+            # Truncate large bodies to avoid log flooding
+            max_len = 2000
+            display = body.decode("utf-8", errors="replace") if body else ""
+            if len(display) > max_len:
+                display = display[:max_len] + "..."
+            logging.info(f"[verbose] incoming {request.method} {request.url.path} body={display}")
+    except Exception as e:
+        logging.warning(f"failed to log ingest request body: {e}")
+    response = await call_next(request)
+    return response
 
 # Configurar tracing com Jaeger
 try:

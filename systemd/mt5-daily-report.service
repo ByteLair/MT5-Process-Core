@@ -3,8 +3,8 @@ Description=Relatório diário unificado do projeto MT5
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/daily_report.sh
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/daily_report.sh
 
 [Install]
 WantedBy=multi-user.target

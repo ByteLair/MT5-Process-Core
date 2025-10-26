@@ -15,12 +15,12 @@ jobs:
 
       - name: Run health check
         run: |
-          cd /home/felipe/mt5-trading-db
+          cd /home/felipe/MT5-Process-Core-full
           ./scripts/health-check.sh
 
       - name: Check for critical alerts
         run: |
-          cd /home/felipe/mt5-trading-db
+          cd /home/felipe/MT5-Process-Core-full
           ALERT_COUNT=$(sqlite3 logs/health-checks/health_checks.db "SELECT COUNT(*) FROM alerts WHERE resolved=0;")
           echo "Active alerts: $ALERT_COUNT"
 
@@ -41,12 +41,12 @@ jobs:
 
       - name: Generate daily report
         run: |
-          cd /home/felipe/mt5-trading-db
+          cd /home/felipe/MT5-Process-Core-full
           ./scripts/health-check.sh --report
 
       - name: Archive report
         run: |
-          cd /home/felipe/mt5-trading-db/logs/health-checks
+          cd /home/felipe/MT5-Process-Core-full/logs/health-checks
           TODAY=$(date +%Y-%m-%d)
           if [ -f "daily_report_$TODAY.txt" ]; then
             echo "Daily report generated successfully"

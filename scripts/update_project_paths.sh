@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Update absolute old project paths to current repository root
+OLD_PATH="/home/felipe/MT5-Process-Core-full"
+NEW_PATH="$(pwd)"
+if [[ "$OLD_PATH" == "$NEW_PATH" ]]; then
+  echo "Old path equals new path; nothing to do."
+  exit 0
+fi
+
+echo "Replacing occurrences of:\n  $OLD_PATH\nwith:\n  $NEW_PATH"
+
+# Find files that contain the OLD_PATH
+files=$(grep -RIl "$OLD_PATH" --binary-files=without-match || true)
+if [[ -z "$files" ]]; then
+  echo "No files reference $OLD_PATH"
+  exit 0
+fi
+
+echo "Found files to update:"; echo "$files"
+
+# For each file, create a backup and replace
+for f in $files; do
+  echo "- Updating $f"
+  cp "$f" "$f.bak"
+  sed -i "s|$OLD_PATH|$NEW_PATH|g" "$f"
+done
+
+echo "Update complete. Backups created with .bak suffix."

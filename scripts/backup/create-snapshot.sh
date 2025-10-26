@@ -25,7 +25,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO_DIR="/home/felipe/mt5-trading-db"
+REPO_DIR="/home/felipe/MT5-Process-Core-full"
 BACKUP_BASE_DIR="/home/felipe/backups/snapshots"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 SNAPSHOT_NAME="mt5-snapshot-${TIMESTAMP}"

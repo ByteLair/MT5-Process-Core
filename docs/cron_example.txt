@@ -2,4 +2,4 @@
 # Run every 5 minutes to ensure services are up
 # Requires sudo for killing docker-proxy when needed
 
-*/5 * * * * cd /home/felipe/mt5-trading-db && /bin/bash scripts/maintenance.sh >> logs/maintenance.log 2>&1
+*/5 * * * * cd /home/felipe/MT5-Process-Core-full && /bin/bash scripts/maintenance.sh >> logs/maintenance.log 2>&1

@@ -130,14 +130,16 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    user: "${UID}:${GID}"
     environment:
-      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/${POSTGRES_DB:-mt5_trading}"
       PORT: ${API_PORT_INTERNAL:-8001}
       UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
       DB_HOST: "db"
       DB_PORT: "5432"
       DB_USER: "trader"
       DB_PASS: "trader123"
+      DISABLE_TICK_INGEST: "false"
       USE_PGBOUNCER: "false"
       APP_NAME: "mt5-trading-api"
     depends_on:
@@ -169,6 +171,7 @@ services:
     mem_limit: 2g
     volumes:
       - ./scripts:/app/scripts:rw
+      - ./logs:/app/logs:rw
       # - ./dados_historicos.csv:/app/scripts/dados_historicos.csv:ro  # Already included in scripts mount
 
   tick-aggregator:
@@ -181,8 +184,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    user: "${UID}:${GID}"
     environment:
-      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/${POSTGRES_DB:-mt5_trading}"
       TICK_AGG_INTERVAL: ${TICK_AGG_INTERVAL:-5}
       DB_HOST: "db"
       DB_PORT: "5432"
@@ -216,8 +220,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    user: "${UID}:${GID}"
     environment:
-      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/mt5_trading"
+      DATABASE_URL: "postgresql+psycopg://trader:trader123@db:5432/${POSTGRES_DB:-mt5_trading}"
       INDICATORS_INTERVAL: ${INDICATORS_INTERVAL:-60}
       SYMBOLS: ${SYMBOLS:-EURUSD,GBPUSD,USDJPY}
       DB_HOST: "db"
@@ -227,10 +232,11 @@ services:
         condition: service_healthy
     command: ["python", "run_indicators_worker.py"]
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f run_indicators_worker || exit 1"]
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep run_indicators_worker >/dev/null || exit 1"]
       interval: 30s
-      timeout: 5s
-      retries: 3
+      timeout: 10s
+      retries: 6
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -277,6 +283,7 @@ services:
     image: ml-trainer
     container_name: mt5_ml_trainer
     restart: unless-stopped
+    user: "${UID}:${GID}"
     environment:
       DB_HOST: "db"
       DB_NAME: "${POSTGRES_DB:-mt5_trading}"

@@ -4,7 +4,7 @@
 
 EMAIL="kuramopr@gmail.com"
 REPORT="/tmp/vuln_report.txt"
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 
 # Python
 if [ -f requirements.txt ]; then

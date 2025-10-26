@@ -4,11 +4,11 @@ After=default.target network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/felipe/mt5-trading-db
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
 Environment=API_PORT=9101
-Environment=LOG_DIR=/home/felipe/mt5-trading-db/logs/api
-ExecStartPre=/usr/bin/mkdir -p /home/felipe/mt5-trading-db/logs/api
-ExecStart=/home/felipe/mt5-trading-db/.venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port ${API_PORT} --log-level info --proxy-headers
+Environment=LOG_DIR=/home/felipe/MT5-Process-Core-full/logs/api
+ExecStartPre=/usr/bin/mkdir -p /home/felipe/MT5-Process-Core-full/logs/api
+ExecStart=/home/felipe/MT5-Process-Core-full/.venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port ${API_PORT} --log-level info --proxy-headers
 Restart=always
 RestartSec=3
 

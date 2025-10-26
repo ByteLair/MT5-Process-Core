@@ -706,7 +706,7 @@ limits_config:
 ### 1. Subir os serviços
 
 ```bash
-cd /home/felipe/mt5-trading-db
+cd /home/felipe/MT5-Process-Core-full
 docker-compose up -d loki promtail jaeger
 docker-compose restart grafana
 ```

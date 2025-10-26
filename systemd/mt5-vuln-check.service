@@ -3,8 +3,8 @@ Description=Verificação diária de vulnerabilidades em dependências
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/felipe/mt5-trading-db
-ExecStart=/bin/bash /home/felipe/mt5-trading-db/scripts/check_vulnerabilities.sh
+WorkingDirectory=/home/felipe/MT5-Process-Core-full
+ExecStart=/bin/bash /home/felipe/MT5-Process-Core-full/scripts/check_vulnerabilities.sh
 
 [Install]
 WantedBy=multi-user.target
