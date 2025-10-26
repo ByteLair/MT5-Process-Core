@@ -86,7 +86,7 @@ jobs:
 
       - name: Save test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-logs-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./coverage.xml
