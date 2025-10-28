@@ -1,0 +1,15 @@
+{"ts":"2025-10-24T23:59:59Z","req_id":1,"endpoint":"http://192.168.15.20:18003/health","direction":"health","request":"GET","response":"{\"status\":\"ok\"}","headers":"date: Tue, 28 Oct 2025 01:43:14 GMT
+server: uvicorn
+content-length: 15
+content-type: application/json
+"}
+{"ts":"2025-10-24T23:59:59Z","req_id":1,"endpoint":"http://192.168.15.20:18003/health","direction":"health","request":"GET","response":"{\"status\":\"ok\"}","headers":"date: Tue, 28 Oct 2025 01:44:15 GMT
+server: uvicorn
+content-length: 15
+content-type: application/json
+"}
+{"ts":"2025-10-24T23:59:59Z","req_id":2,"endpoint":"http://192.168.15.20:18003/ingest","direction":"ingest","request":"{\"items\":[{\"ts\":\"2025-10-24T23:58:00Z\",\"symbol\":\"EURUSD\",\"timeframe\":\"M1\",\"open\":1.16247,\"high\":1.16253,\"low\":1.16247,\"close\":1.16253,\"volume\":12},{\"ts\":\"2025-10-24T23:58:00Z\",\"symbol\":\"GBPUSD\",\"timeframe\":\"M1\",\"open\":1.33083,\"high\":1.33102,\"low\":1.33073,\"close\":1.33092,\"volume\":72},{\"ts\":\"2025-10-24T23:58:00Z\",\"symbol\":\"USDCHF\",\"timeframe\":\"M1\",\"open\":0.79516,\"high\":0.79538,\"low\":0.79507,\"close\":0.79515,\"volume\":132},{\"ts\":\"2025-10-24T2...","response":"{\"detail\":\"(psycopg.errors.UndefinedColumn) column \\\"bid\\\" of relation \\\"market_data\\\" does not exist\\nLINE 3: ...ymbol, timeframe, open, high, low, close, volume, bid, ask, ...\\n                                                             ^\\n[SQL: \\n            INSERT INTO market_data\\n                (ts, symbol, timeframe, open, high, low, close, volume, bid, ask, spread,\\n                 rsi, macd, macd_signal, macd_hist, atr, bb_upper, bb_middle, bb_lower)\\n            VALUES (%(ts)s...","headers":"date: Tue, 28 Oct 2025 01:45:18 GMT
+server: uvicorn
+content-length: 1246
+content-type: application/json
+"}

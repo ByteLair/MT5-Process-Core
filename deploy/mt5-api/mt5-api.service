@@ -1,0 +1,18 @@
+[Unit]
+Description=MT5 Ingest API (FastAPI + Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=mt5api
+Group=mt5api
+WorkingDirectory=/opt/mt5-api
+Environment="PATH=/opt/mt5-api/venv/bin"
+EnvironmentFile=-/opt/mt5-api/.env
+ExecStart=/opt/mt5-api/venv/bin/uvicorn api:app --host 0.0.0.0 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+{
+  "file": "Files/history_USDGEL_M1.jsonl",
+  "received": 229,
+  "inserted": 0,
+  "errors": [
+    "batch POST status=500 body={\"detail\":\"(psycopg.errors.UndefinedColumn) column \\\"bid\\\" of relation \\\"market_data\\\" does not exist\\nLINE 3: ...ymbol, timeframe, open, high, low, close, volume, bid, ask, ...\\n                                                             ^\\n[SQL: \\n            INSERT INTO market_data\\n                (ts, symbol, timeframe, open, high, low, close, volume, bid, ask, spread,\\n                 rsi, macd, macd_signal, macd_hist, atr, bb_upper, bb_middle, bb_lower)\\n            VALUES (%(ts)s, %(symbol)s, %(timeframe)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s, %(bid)s, %(ask)s, %(spread)s,\\n                    %(rsi)s, %(macd)s, %(macd_signal)s, %(macd_hist)s, %(atr)s, %(bb_upper)s, %(bb_middle)s, %(bb_lower)s)\\n            ON CONFLICT (symbol, timeframe, ts) DO NOTHING\\n            ]\\n[parameters: {'ts': datetime.datetime(2018, 1, 18, 0, 0, tzinfo=TzInfo(0)), 'symbol': 'USDGEL', 'timeframe': 'M1', 'open': 2.5367, 'high': 2.5367, 'low': 2.5367, 'close': 2.5367, 'volume': 1, 'bid': None, 'ask': None, 'spread': None, 'rsi': None, 'macd': None, 'macd_signal': None, 'macd_hist': None, 'atr': None, 'bb_upper': None, 'bb_middle': None, 'bb_lower': None}]\\n(Background on this error at: https://sqlalche.me/e/20/f405)\"}"
+  ]
+}
