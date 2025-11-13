@@ -12,8 +12,8 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       - --path.rootfs=/rootfs
-      - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)
-      - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+      - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($$|/)
+      - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$$
     # No explicit ports needed with host networking
     logging:
       driver: "json-file"
@@ -74,6 +74,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     logging:
       driver: "json-file"
@@ -107,6 +108,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
@@ -119,7 +121,8 @@ services:
           memory: "256m"
     mem_limit: 256m
     networks:
-      - default
+      default:
+        aliases: [pgbouncer, mt5_pgbouncer]
 
   api:
     build:
@@ -158,6 +161,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 40s
     logging:
       driver: "json-file"
       options:
@@ -474,3 +478,18 @@ volumes:
   grafana_data:
   loki_data:
   jaeger_data:
+
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-mt5
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: "1500"
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

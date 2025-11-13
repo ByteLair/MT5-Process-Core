@@ -6,11 +6,15 @@ Documentação completa da plataforma MT5 Trading Database com Machine Learning,
 
 ## 📋 Índice Geral
 
+> 📖 **Novo:** Veja o [Índice Completo](INDICE_COMPLETO.md) com todos os 70+ documentos organizados!
+
 ### 🚀 [Quick Start](#quick-start)
 
 ### ☸️ [Kubernetes](#kubernetes)
 
 ### 🏗️ [Infraestrutura](#infraestrutura)
+
+### 🧪 [Testes](#testes)
 
 ### 📖 [Guias](#guias)
 
@@ -96,6 +100,7 @@ Documentação sobre infraestrutura como código (IaC).
 | Documento | Descrição |
 |-----------|-----------|
 | **[Terraform Dashboard Summary](infrastructure/TERRAFORM_DASHBOARD_SUMMARY.md)** | Guia Terraform + Grafana |
+| **[Relatório PgBouncer](infrastructure/RELATORIO_PGBOUNCER_TESTES.md)** | Fix PgBouncer DNS + Validação |
 
 ### 🔧 Componentes
 
@@ -131,6 +136,41 @@ http://localhost:9090
 
 # Ver métricas da API
 http://localhost:18001/prometheus
+```
+
+---
+
+## 🧪 Testes
+
+Documentação sobre testes automatizados, cobertura e qualidade de código.
+
+### 📄 Documentos
+
+| Documento | Descrição | Status |
+|-----------|-----------|--------|
+| **[Relatório de Cobertura](testing/RELATORIO_COBERTURA_TESTES.md)** | Análise completa de cobertura | ✅ 26% |
+| **[Guia de Testes](testing/GUIA_TESTES.md)** | Como executar e criar testes | 📝 |
+
+### 📊 Status Atual
+
+- **127 testes** implementados
+- **74 testes** passando (58%)
+- **26% cobertura** de código
+- **6 módulos** de teste
+
+### 🎯 Executar Testes
+
+```bash
+# Todos os testes
+docker exec -e PYTHONPATH=/app mt5_api pytest /app/tests/ -v
+
+# Com cobertura
+docker exec -e PYTHONPATH=/app mt5_api pytest /app/tests/ -v \
+  --cov=app --cov-report=html --cov-report=term-missing
+
+# Ver relatório
+docker cp mt5_api:/app/htmlcov ./htmlcov
+xdg-open htmlcov/index.html
 ```
 
 ---
@@ -177,6 +217,7 @@ Documentação de referência técnica.
 |-----------|-----------|-----|
 | **[SQL Queries](reference/SQL_QUERIES.md)** | 21 queries úteis | Análise de dados |
 | **[Project Structure](reference/PROJECT_STRUCTURE.md)** | Estrutura completa | Overview do projeto |
+| **[Análise Completa](architecture/ANALISE_COMPLETA_PROJETO.md)** | Arquitetura detalhada | Visão técnica |
 
 ### 🗂️ SQL Queries
 
@@ -372,11 +413,12 @@ Acesse: <http://localhost:18001/docs>
 | Categoria | Documentos | Linhas | Status |
 |-----------|-----------|--------|--------|
 | **Kubernetes** | 4 | 1,250+ | ✅ Completo |
-| **Infraestrutura** | 1 | 150+ | ✅ Completo |
+| **Infraestrutura** | 2 | 300+ | ✅ Completo |
+| **Testes** | 2 | 850+ | ✅ Completo |
 | **Guias** | 1 | 250+ | ✅ Completo |
-| **Referência** | 2 | 450+ | ✅ Completo |
+| **Referência** | 3 | 950+ | ✅ Completo |
 | **API** | - | - | 📝 Swagger UI |
-| **Total** | **8** | **2,100+** | ✅ |
+| **Total** | **12** | **3,600+** | ✅ |
 
 ---
 
@@ -426,25 +468,33 @@ MIT License - Veja [LICENSE](../LICENSE)
 
 ```
 docs/
-├── README.md                    # 👈 Você está aqui
+├── README.md                           # 👈 Você está aqui
 │
-├── kubernetes/                  # ☸️ Kubernetes
-│   ├── K8S_DEPLOYMENT.md       # Guia completo
-│   ├── K8S_QUICK_REFERENCE.md  # Comandos rápidos
+├── kubernetes/                         # ☸️ Kubernetes
+│   ├── K8S_DEPLOYMENT.md              # Guia completo
+│   ├── K8S_QUICK_REFERENCE.md         # Comandos rápidos
 │   ├── K8S_IMPLEMENTATION_SUMMARY.md
-│   └── K8S_PRESENTATION.md     # Apresentação
+│   └── K8S_PRESENTATION.md            # Apresentação
 │
-├── infrastructure/              # 🏗️ Infraestrutura
-│   └── TERRAFORM_DASHBOARD_SUMMARY.md
+├── infrastructure/                     # 🏗️ Infraestrutura
+│   ├── TERRAFORM_DASHBOARD_SUMMARY.md
+│   └── RELATORIO_PGBOUNCER_TESTES.md  # Fix PgBouncer
 │
-├── guides/                      # 📖 Guias práticos
-│   └── EA_INTEGRATION_GUIDE.md # Integração MT5
+├── testing/                            # 🧪 Testes
+│   ├── RELATORIO_COBERTURA_TESTES.md  # Cobertura 26%
+│   └── GUIA_TESTES.md                 # Como testar
 │
-├── reference/                   # 📚 Referência
-│   ├── SQL_QUERIES.md          # Queries úteis
-│   └── PROJECT_STRUCTURE.md    # Estrutura completa
+├── architecture/                       # 🏛️ Arquitetura
+│   └── ANALISE_COMPLETA_PROJETO.md    # Análise completa
 │
-└── api/                         # 🔌 API (Swagger UI)
+├── guides/                             # 📖 Guias práticos
+│   └── EA_INTEGRATION_GUIDE.md        # Integração MT5
+│
+├── reference/                          # 📚 Referência
+│   ├── SQL_QUERIES.md                 # Queries úteis
+│   └── PROJECT_STRUCTURE.md           # Estrutura completa
+│
+└── api/                                # 🔌 API (Swagger UI)
     └── (documentação interativa em /docs)
 ```
 
