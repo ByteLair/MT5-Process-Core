@@ -295,9 +295,10 @@ def main():
         logger.error(f"❌ Erro ao conectar: {e}")
         sys.exit(1)
     
-    # Calcular indicadores para EURUSD H1
-    symbol = "EURUSD"
-    timeframe = "H1"
+    # Calcular indicadores - configurável via argumentos
+    import sys
+    symbol = sys.argv[1] if len(sys.argv) > 1 else "EURUSD"
+    timeframe = sys.argv[2] if len(sys.argv) > 2 else "H1"
     
     try:
         # Calcular

@@ -1,0 +1,17 @@
+# Forex Data Updater - Cron Schedule
+# Atualiza dados a cada 6 horas e calcula indicadores
+
+# Atualizar dados M1 a cada 6 horas
+0 */6 * * * /usr/local/bin/python /app/scripts/update_forex_data.py >> /var/log/forex-updater/update.log 2>&1
+
+# Calcular indicadores após atualização (15 minutos depois)
+15 */6 * * * /usr/local/bin/python /app/scripts/calculate_indicators_incremental.py >> /var/log/forex-updater/indicators.log 2>&1
+
+# Verificar saúde do banco (diário às 03:00)
+0 3 * * * /usr/local/bin/python /app/scripts/check_data_health.py >> /var/log/forex-updater/health.log 2>&1
+
+# Limpar logs antigos (semanal, domingo 04:00)
+0 4 * * 0 find /var/log/forex-updater -name "*.log" -mtime +30 -delete
+
+# Log de atividade do cron
+* * * * * echo "$(date) - Cron is alive" >> /var/log/forex-updater/cron-heartbeat.log
