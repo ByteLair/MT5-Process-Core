@@ -48,3 +48,13 @@ coverage.xml
 **/*.tfstate.*
 infra/terraform/terraform.tfstate
 infra/terraform/terraform.tfstate.backup
+
+# Backups
+backups/
+*.bak
+*.backup
+
+# Arquivos temporários
+ssh
+symbol
+timeframe
