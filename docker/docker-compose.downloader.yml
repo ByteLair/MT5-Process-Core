@@ -5,30 +5,69 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.downloader
+    image: mt5-downloader:latest
     container_name: dukascopy_downloader
-    restart: unless-stopped  # Restart automático se cair
-    networks:
-      - default
+    restart: unless-stopped
+    
+    volumes:
+      - downloader_data:/app/data
+    
     environment:
       - DB_HOST=mt5_db
       - DB_PORT=5432
       - DB_NAME=mt5_trading
       - DB_USER=trader
-      - DB_PASS=trader123
+      - DB_PASSWORD=${DB_PASSWORD}
       - PYTHONUNBUFFERED=1
-    volumes:
-      - downloader_data:/app/data  # Persistir checkpoint
+    
+    # Health check: verifica se checkpoint está sendo atualizado
+    healthcheck:
+      test: |
+        python3 -c "
+        import json, os
+        from datetime import datetime, timedelta
+        try:
+            with open('/app/data/checkpoint.json') as f:
+                data = json.load(f)
+                updated = datetime.fromisoformat(data['updated_at'])
+                if datetime.now() - updated > timedelta(minutes=10):
+                    exit(1)
+        except:
+            # Primeiro minuto, ainda não criou checkpoint
+            if os.path.exists('/app/data/checkpoint.json'):
+                exit(1)
+        exit(0)
+        "
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 2m
+    
+    # Limites de recursos
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512m"
+        reservations:
+          cpus: "0.5"
+          memory: "256m"
+    
+    # Log rotation
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "50m"
+        max-file: "5"
+    
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: mt5-process-core_default
 
 volumes:
   downloader_data:
     driver: local
-
-networks:
-  default:
-    name: mt5-process-core_default
-    external: true

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  dukascopy_downloader:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.downloader
+    container_name: dukascopy_downloader
+    restart: unless-stopped  # Restart automático se cair
+    networks:
+      - default
+    environment:
+      - DB_HOST=mt5_db
+      - DB_PORT=5432
+      - DB_NAME=mt5_trading
+      - DB_USER=trader
+      - DB_PASS=trader123
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - downloader_data:/app/data  # Persistir checkpoint
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  downloader_data:
+    driver: local
+
+networks:
+  default:
+    name: mt5-process-core_default
+    external: true

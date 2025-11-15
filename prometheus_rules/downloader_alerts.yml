@@ -1,0 +1,39 @@
+groups:
+  - name: downloader_alerts
+    interval: 30s
+    rules:
+      - alert: DownloaderContainerDown
+        expr: absent(container_last_seen{name="dukascopy_downloader"}) == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container dukascopy_downloader está parado"
+          description: "O container de download não está rodando há mais de 2 minutos"
+      
+      - alert: DownloaderHighMemory
+        expr: container_memory_usage_bytes{name="dukascopy_downloader"} / container_spec_memory_limit_bytes{name="dukascopy_downloader"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Downloader usando >90% da memória"
+          description: "Uso de memória: {{ $value | humanizePercentage }}"
+      
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Espaço em disco abaixo de 10%"
+          description: "Apenas {{ $value | humanizePercentage }} disponível em /"
+      
+      - alert: DatabaseDown
+        expr: pg_up{instance="mt5_db:5432"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL não está respondendo"
+          description: "Banco mt5_db está down"
