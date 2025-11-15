@@ -1,0 +1,97 @@
+{
+  "analysis_date": "2025-11-14",
+  "model": "RandomForestClassifier",
+  "approach": "conservative",
+  "criteria": {
+    "min_precision": 0.6,
+    "min_recall": 0.1,
+    "min_expected_value": 0
+  },
+  "recommended_threshold": 0.35000000000000003,
+  "top_thresholds": [
+    {
+      "threshold": 0.35000000000000003,
+      "precision": 0.8321323391189924,
+      "recall": 1.0,
+      "f1_score": 0.9083757994459455,
+      "tp": 13280,
+      "fp": 2679,
+      "fn": 0,
+      "tn": 24038,
+      "signal_rate": 0.3990049253694027,
+      "signals_per_day": 88,
+      "expected_value": 6.642646782379849,
+      "profit_factor": 4.957073534901083
+    },
+    {
+      "threshold": 0.34,
+      "precision": 0.8308828129888006,
+      "recall": 1.0,
+      "f1_score": 0.9076307965690462,
+      "tp": 13280,
+      "fp": 2703,
+      "fn": 0,
+      "tn": 24014,
+      "signal_rate": 0.399604970372778,
+      "signals_per_day": 88,
+      "expected_value": 6.6176562597760125,
+      "profit_factor": 4.91305956344802
+    },
+    {
+      "threshold": 0.33,
+      "precision": 0.8286017345729082,
+      "recall": 1.0,
+      "f1_score": 0.9062681270686184,
+      "tp": 13280,
+      "fp": 2747,
+      "fn": 0,
+      "tn": 23970,
+      "signal_rate": 0.4007050528789659,
+      "signals_per_day": 89,
+      "expected_value": 6.572034691458164,
+      "profit_factor": 4.834364761558064
+    },
+    {
+      "threshold": 0.32,
+      "precision": 0.824537439463554,
+      "recall": 1.0,
+      "f1_score": 0.9038317566187981,
+      "tp": 13280,
+      "fp": 2826,
+      "fn": 0,
+      "tn": 23891,
+      "signal_rate": 0.4026802010150761,
+      "signals_per_day": 89,
+      "expected_value": 6.49074878927108,
+      "profit_factor": 4.699221514508139
+    },
+    {
+      "threshold": 0.36000000000000004,
+      "precision": 0.8307867875483421,
+      "recall": 0.9867469879518073,
+      "f1_score": 0.9020755171582969,
+      "tp": 13104,
+      "fp": 2669,
+      "fn": 176,
+      "tn": 24048,
+      "signal_rate": 0.39435457659324447,
+      "signals_per_day": 87,
+      "expected_value": 6.6157357509668415,
+      "profit_factor": 4.909704008992132
+    }
+  ],
+  "risk_management": {
+    "max_risk_per_trade": 0.01,
+    "max_concurrent_trades": 5,
+    "stop_loss_pips": 10,
+    "take_profit_pips": 15,
+    "risk_reward_ratio": 1.5
+  },
+  "warnings": [
+    "Trading forex is high risk",
+    "Past performance does not guarantee future results",
+    "Always use stop loss",
+    "Never risk more than 1% per trade",
+    "Paper trading required before live trading"
+  ]
+}

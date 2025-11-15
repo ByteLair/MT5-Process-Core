@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+LABEL maintainer="MT5-Process-Core"
+LABEL description="Container para download de dados históricos FOREX"
+
+# Instalar dependências do sistema
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        postgresql-client \
+        curl \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar diretório de trabalho
+WORKDIR /app
+
+# Copiar requirements
+COPY requirements-downloader.txt /app/
+
+# Instalar dependências Python
+RUN pip install --no-cache-dir -r requirements-downloader.txt
+
+# Criar diretórios para checkpoint e dados
+RUN mkdir -p /app/data
+
+# Copiar scripts
+COPY scripts/data/download_dukascopy_10years.py /app/
+
+# Dar permissão de execução
+RUN chmod +x /app/download_dukascopy_10years.py
+
+# Comando padrão
+CMD ["python", "-u", "/app/download_dukascopy_10years.py"]

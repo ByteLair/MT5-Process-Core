@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-11-14T23:44:07.173224",
+  "model": "RandomForestClassifier",
+  "dataset": {
+    "symbol": "EURUSD",
+    "timeframe": "M1",
+    "total_samples": 199995,
+    "train_samples": 159996,
+    "test_samples": 39999,
+    "features": 19
+  },
+  "metrics": {
+    "precision": 0.7352941176470589,
+    "recall": 0.0018839487565938207,
+    "auc_roc": 0.6284628788157945,
+    "positive_rate": 0.0008500212505312632
+  },
+  "feature_importance": [
+    {
+      "feature": "bb_lower",
+      "importance": 0.0793210048685786
+    },
+    {
+      "feature": "bb_upper",
+      "importance": 0.07664299945259083
+    },
+    {
+      "feature": "macd_signal",
+      "importance": 0.07656645171677078
+    },
+    {
+      "feature": "bb_middle",
+      "importance": 0.07351017100661292
+    },
+    {
+      "feature": "macd",
+      "importance": 0.07055231513171883
+    },
+    {
+      "feature": "atr",
+      "importance": 0.06377639127315642
+    },
+    {
+      "feature": "macd_hist",
+      "importance": 0.06301513841827341
+    },
+    {
+      "feature": "close",
+      "importance": 0.06267220316686105
+    },
+    {
+      "feature": "minute",
+      "importance": 0.06121444919102448
+    },
+    {
+      "feature": "rsi",
+      "importance": 0.06004612460558201
+    },
+    {
+      "feature": "low",
+      "importance": 0.05813261520975878
+    },
+    {
+      "feature": "high",
+      "importance": 0.05758478213996025
+    },
+    {
+      "feature": "open",
+      "importance": 0.0552059543262338
+    },
+    {
+      "feature": "hour",
+      "importance": 0.054161291934404096
+    },
+    {
+      "feature": "volume",
+      "importance": 0.04112178289540284
+    },
+    {
+      "feature": "weekday",
+      "importance": 0.026209469183057013
+    },
+    {
+      "feature": "is_ny",
+      "importance": 0.008074215825226739
+    },
+    {
+      "feature": "is_london",
+      "importance": 0.006703706760156397
+    },
+    {
+      "feature": "is_asian",
+      "importance": 0.005488932894630943
+    }
+  ]
+}
