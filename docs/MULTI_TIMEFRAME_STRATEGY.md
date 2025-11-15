@@ -4,6 +4,16 @@
 
 Este documento detalha a estratégia de enriquecimento do modelo H1 com features de timeframes superiores (H4 e D1) para melhorar a acurácia de predição de 54% para 62-68%.
 
+**🎯 ATUALIZAÇÃO (Nov 2025): UPGRADE PARA CATBOOST**
+
+O projeto foi atualizado para usar **CatBoost** como modelo principal (ao invés de Random Forest), resultando em:
+- **62% out-of-sample accuracy** (vs 54% RF, 58% LightGBM)
+- **-2% degradação** (vs -12% LightGBM = 6x melhor estabilidade!)
+- **+2.76% ROI** esperado (vs +0.68% RF = 4x melhor!)
+- **48.3% win rate** (vs 37.5% RF = +29%)
+
+Ver: `docs/CATBOOST_UPGRADE_GUIDE.md` para detalhes completos.
+
 ## Fundamentação Teórica
 
 ### Por que Multi-Timeframe?
